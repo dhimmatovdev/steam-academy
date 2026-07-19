@@ -25,7 +25,7 @@ Tavsif: Kompyuterning umumiy tashqi ko'rinishi (tizim bloki, monitor, klaviatura
 Tavsiya etilgan o'lcham: 800x500px
 Format: PNG yoki JPG
 -->
-![Zamonaviy kompyuter tizimi](../../../assets/computer-fundamentals/lesson-01-01.png)
+![Zamonaviy kompyuter tizimi](/src/content/docs/computer-fundamentals/rasmlar/1.2.png)
 
 ---
 
@@ -47,7 +47,7 @@ Tavsif: IPOS tsiklining sxematik (diagramma) tasviri — 4 ta blok va o'qlar bil
 Tavsiya etilgan o'lcham: 900x400px
 Format: PNG (shaffof fon tavsiya etiladi)
 -->
-![IPOS tsikli sxemasi](../../../assets/computer-fundamentals/lesson-01-02.png)
+![IPOS tsikli sxemasi](/src/content/docs/computer-fundamentals/rasmlar/1.1.png)
 
 ---
 
@@ -71,7 +71,7 @@ Tavsif: Kompyuterlarning turli sohalarda qo'llanilishi (ta'lim, tibbiyot, bank, 
 Tavsiya etilgan o'lcham: 1000x600px
 Format: PNG yoki JPG
 -->
-![Kompyuterlarning qo'llanilish sohalari](../../../assets/computer-fundamentals/lesson-01-03.png)
+![Kompyuterlarning qo'llanilish sohalari](/src/content/docs/computer-fundamentals/rasmlar/1.3.png)
 
 - 🏫 **Ta'lim** — onlayn darslar, elektron kitoblar
 - 🏥 **Tibbiyot** — kasalliklarni tashxislash, tibbiy jihozlarni boshqarish
