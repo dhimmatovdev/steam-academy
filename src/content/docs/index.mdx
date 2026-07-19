@@ -1,40 +1,63 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
-template: splash # Remove or comment out this line to display the site sidebar on this page.
+title: STEAM Academy
+description: IT va STEAM yo'nalishlari bo'yicha professional o'quv qo'llanmalar platformasi
+template: splash
 hero:
-  tagline: Congrats on setting up a new Starlight project!
+  tagline: Dasturlash, sun'iy intellekt, robototexnika va zamonaviy IT ko'nikmalarini bosqichma-bosqich o'rganing
   image:
-    file: ../../assets/houston.webp
+    file: ../../assets/hero-logo.png
   actions:
-    - text: Example Guide
-      link: /guides/example/
+    - text: Kurslarni boshlash
+      link: /computer-fundamentals/
       icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
-      icon: external
+      variant: primary
+    - text: Barcha yo'nalishlar
+      link: /guides/
+      icon: list-format
       variant: minimal
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-## Next steps
+## 📚 Yo'nalishlar
 
 <CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
+	<Card title="💻 Computer Fundamentals" icon="laptop">
+		Kompyuter savodxonligi, apparat va dasturiy ta'minot asoslari
 	</Card>
-	<Card title="Change page layout" icon="document">
-		Delete `template: splash` in `src/content/docs/index.mdx` to display a
-		sidebar on this page.
+	<Card title="🐍 Python (Basic & Intermediate)" icon="seti:python">
+		Nol darajadan boshlab Python dasturlash tilini chuqur o'rganish
 	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
+	<Card title="🧮 Algorithms" icon="puzzle">
+		Algoritmik fikrlash va masalalarni yechish ko'nikmalari
 	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
+	<Card title="🌐 Web Development" icon="seti:html">
+		Zamonaviy veb-saytlar va veb-ilovalar yaratish
 	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
+	<Card title="🗄️ SQL" icon="seti:db">
+		Ma'lumotlar bazalari bilan ishlash asoslari
+	</Card>
+	<Card title="🔧 Git & GitHub" icon="github">
+		Versiyalarni boshqarish va jamoaviy loyihalar ustida ishlash
+	</Card>
+	<Card title="🤖 Robotics" icon="rocket">
+		Robototexnika asoslari va amaliy loyihalar
+	</Card>
+	<Card title="🧠 AI Fundamentals" icon="star">
+		Sun'iy intellekt asoslari va zamonaviy AI vositalaridan foydalanish
+	</Card>
+</CardGrid>
+
+## 🎯 Nega aynan biz?
+
+<CardGrid>
+	<Card title="Bosqichma-bosqich" icon="approve-check">
+		Har bir mavzu asosdan murakkabga tomon, tushunarli tilda tushuntiriladi
+	</Card>
+	<Card title="Amaliy loyihalar" icon="open-book">
+		Har bir modul yakunida mini-lab va loyihalar bilan bilim mustahkamlanadi
+	</Card>
+	<Card title="O'zbek tilida" icon="translate">
+		Barcha darsliklar ona tilida, sodda va aniq uslubda yozilgan
 	</Card>
 </CardGrid>
