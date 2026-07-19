@@ -5,7 +5,7 @@ template: splash
 hero:
   tagline: Dasturlash, sun'iy intellekt, robototexnika va zamonaviy IT ko'nikmalarini bosqichma-bosqich o'rganing
   image:
-    file: ../../assets/hero-logo.png
+    file: ../../assets/steam-logo.png
   actions:
     - text: Kurslarni boshlash
       link: /computer-fundamentals/
@@ -17,47 +17,69 @@ hero:
       variant: minimal
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+<div class="steam-grid-section">
+	<p class="steam-grid-eyebrow">9 ta modul</p>
+	<h2 class="steam-grid-title">O'quv yo'nalishlari</h2>
+	<div class="steam-periodic-grid">
+		<a class="steam-element" href="/computer-fundamentals/">
+			<div class="num">01</div>
+			<div class="symbol">Cf</div>
+			<div class="name">Computer Fundamentals</div>
+		</a>
+		<a class="steam-element" href="/python-basic/">
+			<div class="num">02</div>
+			<div class="symbol">Py</div>
+			<div class="name">Python Basic</div>
+		</a>
+		<a class="steam-element" href="/python-intermediate/">
+			<div class="num">03</div>
+			<div class="symbol">Pi</div>
+			<div class="name">Python Intermediate</div>
+		</a>
+		<a class="steam-element" href="/algorithms/">
+			<div class="num">04</div>
+			<div class="symbol">Al</div>
+			<div class="name">Algorithms</div>
+		</a>
+		<a class="steam-element" href="/git-github/">
+			<div class="num">05</div>
+			<div class="symbol">Gt</div>
+			<div class="name">Git &amp; GitHub</div>
+		</a>
+		<a class="steam-element" href="/sql/">
+			<div class="num">06</div>
+			<div class="symbol">Sq</div>
+			<div class="name">SQL</div>
+		</a>
+		<a class="steam-element" href="/web-development/">
+			<div class="num">07</div>
+			<div class="symbol">Wb</div>
+			<div class="name">Web Development</div>
+		</a>
+		<a class="steam-element" href="/robotics/">
+			<div class="num">08</div>
+			<div class="symbol">Rb</div>
+			<div class="name">Robotics</div>
+		</a>
+		<a class="steam-element" href="/ai-fundamentals/">
+			<div class="num">09</div>
+			<div class="symbol">Ai</div>
+			<div class="name">AI Fundamentals</div>
+		</a>
+	</div>
+</div>
 
-## 📚 Yo'nalishlar
-
-<CardGrid stagger>
-	<Card title="💻 Computer Fundamentals" icon="laptop">
-		Kompyuter savodxonligi, apparat va dasturiy ta'minot asoslari
-	</Card>
-	<Card title="🐍 Python (Basic & Intermediate)" icon="seti:python">
-		Nol darajadan boshlab Python dasturlash tilini chuqur o'rganish
-	</Card>
-	<Card title="🧮 Algorithms" icon="puzzle">
-		Algoritmik fikrlash va masalalarni yechish ko'nikmalari
-	</Card>
-	<Card title="🌐 Web Development" icon="seti:html">
-		Zamonaviy veb-saytlar va veb-ilovalar yaratish
-	</Card>
-	<Card title="🗄️ SQL" icon="seti:db">
-		Ma'lumotlar bazalari bilan ishlash asoslari
-	</Card>
-	<Card title="🔧 Git & GitHub" icon="github">
-		Versiyalarni boshqarish va jamoaviy loyihalar ustida ishlash
-	</Card>
-	<Card title="🤖 Robotics" icon="rocket">
-		Robototexnika asoslari va amaliy loyihalar
-	</Card>
-	<Card title="🧠 AI Fundamentals" icon="star">
-		Sun'iy intellekt asoslari va zamonaviy AI vositalaridan foydalanish
-	</Card>
-</CardGrid>
-
-## 🎯 Nega aynan biz?
-
-<CardGrid>
-	<Card title="Bosqichma-bosqich" icon="approve-check">
-		Har bir mavzu asosdan murakkabga tomon, tushunarli tilda tushuntiriladi
-	</Card>
-	<Card title="Amaliy loyihalar" icon="open-book">
-		Har bir modul yakunida mini-lab va loyihalar bilan bilim mustahkamlanadi
-	</Card>
-	<Card title="O'zbek tilida" icon="translate">
-		Barcha darsliklar ona tilida, sodda va aniq uslubda yozilgan
-	</Card>
-</CardGrid>
+<div class="steam-why-row">
+	<div>
+		<h3>Bosqichma-bosqich</h3>
+		<p>Har bir mavzu asosdan murakkabga tomon, tushunarli tilda tushuntiriladi.</p>
+	</div>
+	<div>
+		<h3>Amaliy loyihalar</h3>
+		<p>Har bir modul yakunida mini-lab va loyihalar bilan bilim mustahkamlanadi.</p>
+	</div>
+	<div>
+		<h3>O'zbek tilida</h3>
+		<p>Barcha darsliklar ona tilida, sodda va aniq uslubda yozilgan.</p>
+	</div>
+</div>

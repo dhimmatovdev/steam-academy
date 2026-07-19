@@ -1,0 +1,174 @@
+/* ==========================================================================
+   STEAM Academy — custom Starlight theme
+   Signature concept: course modules rendered as "elements" in a periodic
+   table, tying the visual language directly to the STEAM/Science subject.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap');
+
+:root {
+	/* Palette */
+	--sa-bg: #10152a;
+	--sa-bg-raised: #171d38;
+	--sa-card: #1a2140;
+	--sa-border: #2a3358;
+	--sa-text: #f1f1ec;
+	--sa-text-muted: #8c93ad;
+	--sa-cyan: #5eead4;
+	--sa-amber: #fbbf24;
+
+	/* Fonts */
+	--sa-font-display: 'Space Grotesk', system-ui, sans-serif;
+	--sa-font-body: 'Inter', system-ui, sans-serif;
+	--sa-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+	/* Starlight theme tokens — dark mode */
+	--sl-color-accent-low: #1f3d3a;
+	--sl-color-accent: #2dd4bf;
+	--sl-color-accent-high: #99f6e9;
+	--sl-color-white: #ffffff;
+	--sl-color-gray-1: #f1f1ec;
+	--sl-color-gray-2: #c9cddc;
+	--sl-color-gray-3: #8c93ad;
+	--sl-color-gray-4: #565f83;
+	--sl-color-gray-5: #383f61;
+	--sl-color-gray-6: #232a4a;
+	--sl-color-gray-7: #171d38;
+	--sl-color-black: #10152a;
+
+	--sl-font: var(--sa-font-body);
+	--sl-font-mono: var(--sa-font-mono);
+}
+
+/* Light mode gets a restrained, coherent counterpart */
+:root[data-theme='light'] {
+	--sa-bg: #f7f7f2;
+	--sa-bg-raised: #ffffff;
+	--sa-card: #ffffff;
+	--sa-border: #e0e0d6;
+	--sa-text: #10152a;
+	--sa-text-muted: #5b6178;
+
+	--sl-color-accent-low: #d4f5f0;
+	--sl-color-accent: #0f9d8f;
+	--sl-color-accent-high: #0b6b61;
+	--sl-color-gray-1: #171d38;
+	--sl-color-gray-2: #383f61;
+	--sl-color-gray-3: #5b6178;
+	--sl-color-gray-4: #9098b3;
+	--sl-color-gray-5: #c9cddc;
+	--sl-color-gray-6: #e6e8f0;
+	--sl-color-gray-7: #f2f3f8;
+	--sl-color-white: #10152a;
+	--sl-color-black: #ffffff;
+}
+
+/* Headings use the display face, everything else stays on body face */
+h1, h2, h3, h4, .hero h1, .hero .tagline {
+	font-family: var(--sa-font-display);
+	letter-spacing: -0.01em;
+}
+
+/* ==========================================================================
+   Periodic module grid — the signature element
+   ========================================================================== */
+
+.steam-grid-section {
+	margin: 3.5rem 0;
+}
+
+.steam-grid-eyebrow {
+	font-family: var(--sa-font-mono);
+	font-size: 0.8rem;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--sa-cyan);
+	margin-bottom: 0.5rem;
+}
+
+.steam-grid-title {
+	font-family: var(--sa-font-display);
+	font-size: 1.9rem;
+	font-weight: 700;
+	margin: 0 0 2rem 0;
+}
+
+.steam-periodic-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	gap: 0.9rem;
+}
+
+.steam-element {
+	position: relative;
+	display: block;
+	aspect-ratio: 1 / 1;
+	padding: 0.7rem;
+	background: var(--sa-card);
+	border: 1px solid var(--sa-border);
+	border-radius: 10px;
+	text-decoration: none;
+	color: var(--sa-text);
+	overflow: hidden;
+	transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.steam-element:hover,
+.steam-element:focus-visible {
+	transform: translateY(-4px);
+	border-color: var(--sa-cyan);
+	box-shadow: 0 8px 24px -8px rgba(94, 234, 212, 0.35);
+	outline: none;
+}
+
+.steam-element .num {
+	font-family: var(--sa-font-mono);
+	font-size: 0.7rem;
+	color: var(--sa-text-muted);
+}
+
+.steam-element .symbol {
+	font-family: var(--sa-font-mono);
+	font-weight: 700;
+	font-size: 1.8rem;
+	line-height: 1;
+	margin-top: 0.35rem;
+	color: var(--sa-cyan);
+}
+
+.steam-element:nth-child(4n+1) .symbol { color: var(--sa-amber); }
+
+.steam-element .name {
+	font-size: 0.72rem;
+	color: var(--sa-text-muted);
+	margin-top: 0.4rem;
+	line-height: 1.25;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.steam-element { transition: none; }
+}
+
+/* ==========================================================================
+   Quiet supporting row (kept deliberately plain next to the grid)
+   ========================================================================== */
+
+.steam-why-row {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 1.5rem;
+	margin: 3rem 0;
+	padding-top: 2rem;
+	border-top: 1px solid var(--sa-border);
+}
+
+.steam-why-row h3 {
+	font-size: 1rem;
+	margin: 0 0 0.4rem 0;
+}
+
+.steam-why-row p {
+	font-size: 0.9rem;
+	color: var(--sa-text-muted);
+	margin: 0;
+}
