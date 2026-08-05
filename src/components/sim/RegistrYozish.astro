@@ -1,0 +1,402 @@
+---
+/**
+ * RegistrYozish — 8-dars, ikkinchi simulyator.
+ *
+ * Kichkina RAM: 4 ta manzil, har birida 4 bitlik registr. O'quvchi manzilni
+ * tanlaydi, qiymatni bit-bit teradi va "Yozish" bosadi — qiymat jadvalga
+ * tushadi. Tanlangan manzildagi qiymat doim "o'qish" qatorida ko'rinadi:
+ * o'qish — bu shunchaki qarash, yozish esa taktni talab qiladi.
+ *
+ * Manzillar atayin ikkilikda ko'rsatilgan (00, 01, 10, 11) — manzil ham
+ * shunchaki bitlar ekani ta'kidlanadi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+const MANZILLAR = [0, 1, 2, 3];
+/** Qiymat bitlari chapdan o'ngga: katta razryad birinchi. */
+const BITLAR = [3, 2, 1, 0];
+---
+
+<Simulyator
+	sarlavha="Registr va manzil: kichkina RAM"
+	korsatma="Manzilni tanlang, qiymatni bit-bit terib, Yozish tugmasini bosing."
+	blok={2}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda 4 manzilli kichkina xotira bor: har manzilda 4 bitlik registr.
+			Yozish uchun manzil tanlanadi, qiymat teriladi va yozish buyrug'i beriladi.
+			O'qish esa shunchaki manzildagi qiymatga qarash.
+		</p>
+		<p>
+			JavaScript'siz sinash: daftarga 4 qatorli jadval chizing (manzil 00, 01, 10, 11)
+			va unga qiymatlar "yozib", keyin istalgan manzildan "o'qib" ko'ring.
+		</p>
+	</Fragment>
+
+	<div class="ry not-content">
+		<div class="panel">
+			<div class="guruh" role="group" aria-label="Manzil tanlash">
+				<span class="guruh-yorliq">manzil</span>
+				<div class="guruh-tugmalar">
+					{
+						MANZILLAR.map((m) => (
+							<button
+								type="button"
+								class:list={['manzil-tugma', { tanlangan: m === 0 }]}
+								data-manzil={m}
+								aria-pressed={m === 0 ? 'true' : 'false'}
+							>
+								{m.toString(2).padStart(2, '0')}
+							</button>
+						))
+					}
+				</div>
+			</div>
+
+			<div class="guruh" role="group" aria-label="Yoziladigan qiymat">
+				<span class="guruh-yorliq">qiymat</span>
+				<div class="guruh-tugmalar">
+					{
+						BITLAR.map((bit) => (
+							<button
+								type="button"
+								class="qiymat-bit"
+								data-bit={bit}
+								aria-label={`Qiymatning ${bit}-biti`}
+							>
+								0
+							</button>
+						))
+					}
+					<span class="onlik" data-onlik-qiymat>= 0</span>
+				</div>
+			</div>
+
+			<button type="button" class="sim-tugma yozish">Yozish</button>
+		</div>
+
+		<table class="xotira">
+			<thead>
+				<tr>
+					<th>Manzil</th>
+					<th>Saqlangan bitlar</th>
+					<th>O'nlikda</th>
+				</tr>
+			</thead>
+			<tbody>
+				{
+					MANZILLAR.map((m) => (
+						<tr data-qator={m}>
+							<td class="manzil-katak">{m.toString(2).padStart(2, '0')}</td>
+							<td class="bitlar-katak">
+								{BITLAR.map((bit) => (
+									<span class="xot-bit" data-xot={`${m}-${bit}`}>
+										0
+									</span>
+								))}
+							</td>
+							<td class="onlik-katak" data-xot-onlik={m}>
+								0
+							</td>
+						</tr>
+					))
+				}
+			</tbody>
+		</table>
+
+		<p class="oqish" data-oqish></p>
+
+		<ul class="topshiriqlar" aria-label="Topshiriqlar">
+			<li data-topshiriq="0">10-manzilga 9 sonini yozing</li>
+			<li data-topshiriq="1">00-manzilga 12 sonini yozing</li>
+			<li data-topshiriq="2">To'rtala manzilda ham noldan farqli qiymat tursin</li>
+		</ul>
+
+		<p class="hukm" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.ry');
+		if (!qutu) return;
+
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+		const oqishEl = qutu.querySelector<HTMLElement>('[data-oqish]')!;
+		const bajarildi = new Set<number>();
+
+		let manzil = 0;
+		/* Har katak 0..15 oralig'idagi son sifatida saqlanadi */
+		const xotira = [0, 0, 0, 0];
+		const qiymatBitlar = [0, 0, 0, 0];
+
+		const onlik = (bitlar: number[]) => bitlar.reduce((y, bit, i) => y + bit * 2 ** i, 0);
+		const bitOl = (son: number, bit: number) => (son >> bit) & 1;
+
+		function yangila() {
+			for (const t of qutu.querySelectorAll<HTMLButtonElement>('.manzil-tugma')) {
+				const bu = Number(t.dataset.manzil) === manzil;
+				t.classList.toggle('tanlangan', bu);
+				t.setAttribute('aria-pressed', String(bu));
+			}
+
+			for (const t of qutu.querySelectorAll<HTMLButtonElement>('.qiymat-bit')) {
+				const bit = qiymatBitlar[Number(t.dataset.bit)]!;
+				t.textContent = String(bit);
+				t.dataset.yoniq = bit ? 'ha' : 'yoq';
+			}
+			qutu.querySelector('[data-onlik-qiymat]')!.textContent = `= ${onlik(qiymatBitlar)}`;
+
+			for (let m = 0; m < 4; m++) {
+				for (let bit = 0; bit < 4; bit++) {
+					const el = qutu.querySelector<HTMLElement>(`[data-xot="${m}-${bit}"]`)!;
+					const q = bitOl(xotira[m]!, bit);
+					el.textContent = String(q);
+					el.dataset.yoniq = q ? 'ha' : 'yoq';
+				}
+				qutu.querySelector(`[data-xot-onlik="${m}"]`)!.textContent = String(xotira[m]);
+				qutu.querySelector<HTMLElement>(`tr[data-qator="${m}"]`)!.dataset.tanlangan =
+					m === manzil ? 'ha' : 'yoq';
+			}
+
+			oqishEl.textContent = `O'qish: ${manzil.toString(2).padStart(2, '0')}-manzilda hozir ${xotira[manzil]} turibdi.`;
+
+			qutu.querySelectorAll<HTMLElement>('[data-topshiriq]').forEach((li, i) => {
+				li.dataset.bajarildi = bajarildi.has(i) ? 'ha' : 'yoq';
+			});
+		}
+
+		function topshiriqTekshir() {
+			if (xotira[2] === 9) bajarildi.add(0);
+			if (xotira[0] === 12) bajarildi.add(1);
+			if (xotira.every((q) => q !== 0)) bajarildi.add(2);
+			if (bajarildi.size === 3) {
+				amalBelgila('registr-yozish');
+				hukmEl.textContent =
+					"Hammasi joyida! Haqiqiy RAM xuddi shunday ishlaydi — faqat manzillar 2 bit emas, 30-40 bit bo'ladi.";
+			}
+		}
+
+		for (const t of qutu.querySelectorAll<HTMLButtonElement>('.manzil-tugma')) {
+			t.addEventListener('click', () => {
+				manzil = Number(t.dataset.manzil);
+				if (bajarildi.size < 3) hukmEl.textContent = '';
+				yangila();
+			});
+		}
+
+		for (const t of qutu.querySelectorAll<HTMLButtonElement>('.qiymat-bit')) {
+			t.addEventListener('click', () => {
+				const bit = Number(t.dataset.bit);
+				qiymatBitlar[bit] = qiymatBitlar[bit] ? 0 : 1;
+				yangila();
+			});
+		}
+
+		qutu.querySelector<HTMLButtonElement>('.yozish')!.addEventListener('click', () => {
+			xotira[manzil] = onlik(qiymatBitlar);
+			topshiriqTekshir();
+			if (bajarildi.size < 3) {
+				hukmEl.textContent = `Yozildi: ${manzil.toString(2).padStart(2, '0')}-manzilga ${xotira[manzil]}.`;
+			}
+			yangila();
+
+			// Yozilgan qatorni bir lahza ajratib ko'rsatamiz
+			const qator = qutu.querySelector<HTMLElement>(`tr[data-qator="${manzil}"]`)!;
+			qator.dataset.yozildi = 'ha';
+			setTimeout(() => {
+				delete qator.dataset.yozildi;
+			}, 400);
+		});
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			manzil = 0;
+			xotira.fill(0);
+			qiymatBitlar.fill(0);
+			bajarildi.clear();
+			hukmEl.textContent = '';
+			yangila();
+		});
+
+		yangila();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.panel {
+		display: flex;
+		flex-direction: column;
+		gap: 0.7rem;
+		align-items: flex-start;
+	}
+
+	.guruh {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.guruh-yorliq {
+		width: 3.6rem;
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.guruh-tugmalar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.3rem;
+	}
+
+	.manzil-tugma,
+	.qiymat-bit {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 2.2rem;
+		height: 2.2rem;
+		margin: 0;
+		padding: 0 0.4rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-3);
+		font-family: var(--sl-font-mono);
+		font-size: 0.95rem;
+		cursor: pointer;
+	}
+
+	.manzil-tugma:focus-visible,
+	.qiymat-bit:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.manzil-tugma.tanlangan,
+	.qiymat-bit[data-yoniq='ha'] {
+		border-color: var(--blok-2);
+		background: var(--blok-2-fon);
+		color: var(--blok-2);
+		font-weight: 700;
+	}
+
+	.onlik {
+		margin-left: 0.3rem;
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.xotira {
+		width: 100%;
+		max-width: 24rem;
+		margin: 1.1rem 0 0 0;
+		border-collapse: collapse;
+	}
+
+	.xotira th {
+		padding: 0.3rem 0.4rem;
+		border-bottom: 1px solid var(--sl-color-gray-5);
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--sl-color-gray-3);
+		text-align: left;
+	}
+
+	.xotira td {
+		padding: 0.35rem 0.4rem;
+		border-bottom: 1px solid var(--sl-color-gray-6);
+		font-family: var(--sl-font-mono);
+		font-size: 0.95rem;
+		color: var(--sl-color-gray-2);
+		transition: background 0.2s ease;
+	}
+
+	.xotira tr[data-tanlangan='ha'] .manzil-katak {
+		color: var(--blok-2);
+		font-weight: 700;
+	}
+
+	.xotira tr[data-yozildi='ha'] td {
+		background: var(--blok-2-fon);
+	}
+
+	.xot-bit {
+		display: inline-block;
+		min-width: 1.1rem;
+		text-align: center;
+	}
+
+	.xot-bit[data-yoniq='ha'] {
+		color: var(--blok-2);
+		font-weight: 700;
+	}
+
+	.oqish {
+		margin: 0.8rem 0 0 0;
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.topshiriqlar {
+		margin: 1rem 0 0 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.topshiriqlar li {
+		position: relative;
+		padding-left: 1.5rem;
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.topshiriqlar li::before {
+		content: '○';
+		position: absolute;
+		left: 0.2rem;
+		color: var(--sl-color-gray-4);
+	}
+
+	.topshiriqlar li[data-bajarildi='ha'] {
+		color: var(--blok-1);
+	}
+
+	.topshiriqlar li[data-bajarildi='ha']::before {
+		content: '✓';
+		color: var(--blok-1);
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 1.4em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.xotira td {
+			transition: none;
+		}
+	}
+</style>

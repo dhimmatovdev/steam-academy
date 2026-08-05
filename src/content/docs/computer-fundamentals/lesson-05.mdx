@@ -1,0 +1,172 @@
+---
+title: '5-dars: Mantiq va Bul algebrasi'
+description: "AND, OR, NOT va XOR amallari. Haqiqat jadvali va mantiqiy ifodalarni baholash."
+sidebar:
+  label: '5-dars'
+  order: 5
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import HaqiqatJadvali from '../../../components/sim/HaqiqatJadvali.astro';
+import MantiqQulf from '../../../components/sim/MantiqQulf.astro';
+
+<Bloknoma blok={2} />
+
+## Nega bu muhim
+
+Birinchi blokda ma'lumotni bitga aylantirdik. Endi savol o'zgaradi: bu bitlar ustida **qanday amal bajarish** mumkin?
+
+Javob 1847-yilda, kompyuterlar paydo bo'lishidan yuz yil oldin topilgan. Ingliz matematigi **Jorj Bul** fikrlash qoidalarini matematik amallar shaklida yozdi. U kompyuter haqida o'ylamagan edi — lekin butun raqamli texnika aynan uning algebrasiga qurilgan.
+
+Bu blokdan boshlab biz apparatni **quramiz**. Va poydevor mana shu darsda.
+
+<Maqsad>
+- AND, OR, NOT va XOR amallarining har birini tushuntira olasiz
+- haqiqat jadvalini o'zingiz tuza olasiz
+- bir necha amaldan tuzilgan mantiqiy ifodani baholay olasiz
+- NAND nima ekanligini va nega u alohida ahamiyatga ega ekanligini bilasiz
+</Maqsad>
+
+## Nazariya
+
+### Bul algebrasi: faqat ikki qiymat
+
+Oddiy algebrada o'zgaruvchi cheksiz qiymat oladi. Bul algebrasida esa faqat ikkitasi bor: **0** va **1**. Yoki boshqacha aytganda: **yolg'on** va **rost**.
+
+<Atama soz="Bul algebrasi" eng="Boolean algebra">
+	Faqat ikki qiymat (0 va 1) ustida ishlaydigan matematik tizim. Asosiy amallari:
+	AND, OR va NOT.
+</Atama>
+
+Bu cheklov kamchilik emas, aksincha — kuch. Bitni elektr signali bilan ifodalash mumkin (tok bor / yo'q), demak Bul amallarini **elektr sxema** bilan bajarish mumkin. Aynan shuni 6-darsda qilamiz.
+
+### Uchta asosiy amal
+
+**AND** — ikkisi ham rost bo'lsa, natija rost. "Yomg'ir yo'q **va** darsim tugagan bo'lsa, futbol o'ynayman."
+
+**OR** — kamida bittasi rost bo'lsa, natija rost. "Kartada pul bor **yoki** naqd pulim bor bo'lsa, sotib olaman."
+
+**NOT** — qiymatni teskarisiga aylantiradi. Bitta kirish oladi.
+
+| A | B | A AND B | A OR B | NOT A |
+|---|---|---------|--------|-------|
+| 0 | 0 | 0 | 0 | 1 |
+| 0 | 1 | 0 | 1 | 1 |
+| 1 | 0 | 0 | 1 | 0 |
+| 1 | 1 | 1 | 1 | 0 |
+
+<Atama soz="haqiqat jadvali" eng="truth table">
+	Amalning barcha mumkin bo'lgan kirishlari va ularga mos chiqishlarini to'liq
+	ko'rsatadigan jadval. Ikki kirish uchun 4 qator, uch kirish uchun 8 qator bo'ladi.
+</Atama>
+
+### XOR — "yoki" so'zining ikkinchi ma'nosi
+
+O'zbek tilida ham, ingliz tilida ham "yoki" so'zi ikki xil ishlatiladi.
+
+"Choy **yoki** kofe?" — bunda odatda bittasini tanlaysiz, ikkisini emas. Bu **XOR**.
+
+"Kartada **yoki** naqdda pulim bor" — ikkisi ham bo'lsa ham gap to'g'ri. Bu **OR**.
+
+XOR (eksklyuziv OR) chiqishi 1 bo'ladi faqat kirishlar **bir-biridan farq qilganda**.
+
+| A | B | A XOR B |
+|---|---|---------|
+| 0 | 0 | 0 |
+| 0 | 1 | 1 |
+| 1 | 0 | 1 |
+| 1 | 1 | 0 |
+
+<Muhim turi="sir">
+	XOR ni boshqacha ham ta'riflash mumkin: **ikkilik qo'shishning eng oxirgi raqami**.
+	0+0=0, 0+1=1, 1+0=1, 1+1=**10** — oxirgi raqam 0. Aynan XOR jadvali. Shu sababli
+	7-darsda qo'shuvchi qurganda XOR asosiy qism bo'ladi.
+</Muhim>
+
+### NAND: bittasi hammasini almashtiradi
+
+NAND — bu AND ning teskarisi. Ya'ni AND dan keyin NOT.
+
+| A | B | A NAND B |
+|---|---|----------|
+| 0 | 0 | 1 |
+| 0 | 1 | 1 |
+| 1 | 0 | 1 |
+| 1 | 1 | 0 |
+
+Ko'rinishidan oddiy va unchalik qiziq emas. Lekin NAND'ning hayratlanarli xususiyati bor: **faqat NAND darvozalaridan boshqa barcha amallarni qurish mumkin**.
+
+<Muhim turi="gap">
+	NAND **universal darvoza**. AND, OR, NOT, XOR — hammasi faqat NAND'lardan yasaladi.
+	Demak butun protsessorni bitta turdagi qismdan qurish mumkin. Keyingi darsda buni
+	o'z qo'lingiz bilan qilasiz.
+</Muhim>
+
+Bu zavod uchun juda qulay: bir xil qismni millionlab ishlab chiqarish oson va arzon.
+
+## Sinab ko'r
+
+Birinchi navbatda jadvallarni **o'zingiz** to'ldiring. Yodlamang — o'ylab toping. Beshta amalning hammasini to'g'ri to'ldirsangiz nishon ochiladi.
+
+<HaqiqatJadvali />
+
+Endi amallarni birlashtirishga o'tamiz. Beshta qulf, har biri oldingisidan qiyinroq.
+
+<MantiqQulf />
+
+## Xulosa
+
+- **Bul algebrasi** faqat 0 va 1 ustida ishlaydi — shu sababli elektr sxema bilan bajariladi
+- **AND**: ikkisi ham 1. **OR**: kamida bittasi 1. **NOT**: teskarisi
+- **XOR**: faqat kirishlar farq qilganda 1. Bu ikkilik qo'shishning oxirgi raqami
+- **Haqiqat jadvali** — amalning barcha holatlarini to'liq ko'rsatadi
+- **NAND universal**: faqat undan barcha boshqa amallarni qurish mumkin
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Uch kirishli amalning haqiqat jadvalida nechta qator bo'ladi? Nega?">
+	8 qator. Har kirish 2 qiymat oladi, uch kirish uchun 2³ = 8 kombinatsiya bor.
+	Umumiy qoida: n kirish uchun 2ⁿ qator.
+</Sinov>
+
+<Sinov raqam={2} savol="`(A OR B) AND (NOT C)` ifodasi A=1, B=0, C=1 bo'lganda nimaga teng?">
+	Ichkaridan boshlaymiz: `A OR B` = 1 OR 0 = 1. `NOT C` = NOT 1 = 0.
+	Keyin: 1 AND 0 = **0**. Ifoda yolg'on.
+</Sinov>
+
+<Sinov raqam={3} savol="OR va XOR qanday holatda turlicha natija beradi?">
+	Faqat bitta holatda: ikki kirish ham 1 bo'lganda. OR 1 beradi, XOR esa 0 beradi.
+	Qolgan uch qatorda ular bir xil.
+</Sinov>
+
+<Sinov raqam={4} savol="`A NAND A` nimaga teng? Bu qaysi amalni beradi?">
+	NAND jadvalida ikki kirish bir xil bo'lgan qatorlarni olamiz: 0 NAND 0 = 1,
+	1 NAND 1 = 0. Ya'ni kirish teskarisiga aylandi — bu **NOT**. Bitta NAND'ni
+	o'ziga ulab NOT olindi.
+</Sinov>
+
+<Sinov raqam={5} savol="Nega zavod uchun hamma narsani NAND'dan qurish qulay?">
+	Bitta turdagi qismni millionlab ishlab chiqarish arzon va ishonchli: bitta
+	ishlab chiqarish liniyasi, bitta sifat nazorati, bitta zaxira qism. Turli-tuman
+	darvozalarni alohida ishlab chiqarish esa qimmatroq va murakkabroq.
+</Sinov>
+
+<Amaliyot daqiqa={25} daraja="o'rta">
+	Quyidagi 5 ifoda uchun **to'liq haqiqat jadvalini** tuzing. Uch kirishli
+	ifodalarda 8 qator bo'lishini yodda tuting.
+
+	1. `NOT (A AND B)`
+	2. `(NOT A) OR (NOT B)`
+	3. `A XOR A`
+	4. `(A AND B) OR (A AND C)`
+	5. `A AND (B OR C)`
+
+	Jadvallarni tuzib bo'lgach, ikkita savolga javob bering:
+
+	- 1 va 2-ifodalar jadvali bir xil chiqdimi? Agar ha — bu nimani anglatadi?
+	- 4 va 5-ifodalar jadvali bir xil chiqdimi? Bu qaysi algebraik qonunni eslatadi?
+
+	Topshiriladigan natija: 5 ta jadval va ikki savolga yozma javob.
+</Amaliyot>
+
+<DarsTugadi dars={5} blok={2} />

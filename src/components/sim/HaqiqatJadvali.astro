@@ -1,0 +1,369 @@
+---
+/**
+ * HaqiqatJadvali — 5-dars simulyatori.
+ *
+ * O'quvchi amalni tanlaydi va haqiqat jadvalining chiqish ustunini O'ZI
+ * to'ldiradi. Har bosishda darhol tekshiriladi.
+ *
+ * Pedagogik maqsad: haqiqat jadvalini yodlash emas, qurish. Yodlangan
+ * jadval bir haftada esdan chiqadi, o'zi to'ldirgan jadval esa qoladi.
+ *
+ * Katakcha uch holatli: bo'sh -> 0 -> 1 -> bo'sh. Shu sababli o'quvchi
+ * "hali javob bermadim" holatini ham ko'rsata oladi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+const AMALLAR = [
+	{ id: 'AND', nom: 'AND', izoh: 'ikkisi ham 1 bo‘lsa' },
+	{ id: 'OR', nom: 'OR', izoh: 'kamida bittasi 1 bo‘lsa' },
+	{ id: 'NOT', nom: 'NOT', izoh: 'teskarisi' },
+	{ id: 'XOR', nom: 'XOR', izoh: 'faqat bittasi 1 bo‘lsa' },
+	{ id: 'NAND', nom: 'NAND', izoh: 'AND ning teskarisi' },
+];
+---
+
+<Simulyator
+	sarlavha="Haqiqat jadvali"
+	korsatma="Amalni tanlang va chiqish ustunini o'zingiz to'ldiring. Katakni bosib 0 va 1 ni almashtiring."
+	blok={2}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda mantiqiy amallarning haqiqat jadvalini o'zingiz to'ldirasiz va
+			darhol tekshirasiz.
+		</p>
+		<p>
+			JavaScript'siz sinash: daftarga to'rt qatorli jadval chizing (00, 01, 10, 11) va
+			har amal uchun chiqish ustunini to'ldirib chiqing.
+		</p>
+	</Fragment>
+
+	<div class="hj not-content">
+		<div class="amallar" role="group" aria-label="Amalni tanlash">
+			{
+				AMALLAR.map((a, i) => (
+					<button
+						type="button"
+						class:list={['amal', { tanlangan: i === 0 }]}
+						data-amal={a.id}
+						aria-pressed={i === 0 ? 'true' : 'false'}
+						title={a.izoh}
+					>
+						{a.nom}
+					</button>
+				))
+			}
+		</div>
+
+		<p class="tarif"></p>
+
+		<table>
+			<thead>
+				<tr>
+					<th class="ustun-a">A</th>
+					<th class="ustun-b">B</th>
+					<th>Chiqish</th>
+				</tr>
+			</thead>
+			<tbody>
+				{
+					[0, 1, 2, 3].map((q) => (
+						<tr data-qator={q}>
+							<td class="kirish a" />
+							<td class="kirish b" />
+							<td class="javob">
+								<button type="button" class="katak" data-qiymat="" aria-label={`${q + 1}-qator chiqishi`}>
+									·
+								</button>
+							</td>
+						</tr>
+					))
+				}
+			</tbody>
+		</table>
+
+		<p class="hukm" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="tekshir">Tekshirish</button>
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	type Amal = 'AND' | 'OR' | 'NOT' | 'XOR' | 'NAND';
+
+	/** Har amal uchun to'g'ri chiqish. NOT faqat A ni oladi. */
+	const HISOB: Record<Amal, (a: number, b: number) => number> = {
+		AND: (a, b) => (a && b ? 1 : 0),
+		OR: (a, b) => (a || b ? 1 : 0),
+		NOT: (a) => (a ? 0 : 1),
+		XOR: (a, b) => (a !== b ? 1 : 0),
+		NAND: (a, b) => (a && b ? 0 : 1),
+	};
+
+	const TARIF: Record<Amal, string> = {
+		AND: 'AND: chiqish 1 bo‘lishi uchun IKKI kirish ham 1 bo‘lishi kerak.',
+		OR: 'OR: chiqish 1 bo‘lishi uchun KAMIDA BITTA kirish 1 bo‘lsa yetadi.',
+		NOT: 'NOT: bitta kirishni teskarisiga aylantiradi. B ishlatilmaydi.',
+		XOR: 'XOR: chiqish 1 bo‘ladi faqat kirishlar BIR-BIRIDAN FARQ qilganda.',
+		NAND: 'NAND: AND ning aynan teskarisi. Bu darvoza 6-darsda hammasini quradi.',
+	};
+
+	/** To'rt qatorli haqiqat jadvalining kirishlari. */
+	const QATORLAR: [number, number][] = [
+		[0, 0],
+		[0, 1],
+		[1, 0],
+		[1, 1],
+	];
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.hj');
+		if (!qutu) return;
+
+		const tarifEl = qutu.querySelector<HTMLElement>('.tarif')!;
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+		const qatorlar = [...qutu.querySelectorAll<HTMLTableRowElement>('tbody tr')];
+		const ustunB = qutu.querySelector<HTMLElement>('.ustun-b')!;
+
+		let amal: Amal = 'AND';
+		/** 5 ta amalning barchasi to'g'ri to'ldirilganda nishon beriladi */
+		const yechilgan = new Set<Amal>();
+
+		function jadvalniChiz() {
+			const bittaKirish = amal === 'NOT';
+			ustunB.hidden = bittaKirish;
+			tarifEl.textContent = TARIF[amal];
+
+			qatorlar.forEach((tr, i) => {
+				const [a, b] = QATORLAR[i]!;
+				const aEl = tr.querySelector<HTMLElement>('.a')!;
+				const bEl = tr.querySelector<HTMLElement>('.b')!;
+				const katak = tr.querySelector<HTMLButtonElement>('.katak')!;
+
+				aEl.textContent = String(a);
+				bEl.textContent = String(b);
+				bEl.hidden = bittaKirish;
+
+				/* NOT bitta kirish bilan ishlaydi -> jadval ikki qatorga qisqaradi.
+				   Qolgan ikki qatorni yashiramiz, o'chirmaymiz: amal almashganda
+				   ular qaytishi kerak. */
+				tr.hidden = bittaKirish && i > 1;
+
+				katak.dataset.qiymat = '';
+				katak.textContent = '·';
+				delete katak.dataset.holat;
+			});
+
+			hukmEl.textContent = '';
+			delete qutu.dataset.holat;
+		}
+
+		function tekshir(ovozsiz = false) {
+			const koriladigan = qatorlar.filter((tr) => !tr.hidden);
+			let toldirilgan = 0;
+			let togri = 0;
+
+			for (const tr of koriladigan) {
+				const i = Number(tr.dataset.qator);
+				const [a, b] = QATORLAR[i]!;
+				const katak = tr.querySelector<HTMLButtonElement>('.katak')!;
+				const berilgan = katak.dataset.qiymat;
+
+				if (berilgan === '') {
+					delete katak.dataset.holat;
+					continue;
+				}
+				toldirilgan++;
+				const kutilgan = HISOB[amal](a, b);
+				const shuTogri = Number(berilgan) === kutilgan;
+				katak.dataset.holat = shuTogri ? 'togri' : 'xato';
+				if (shuTogri) togri++;
+			}
+
+			if (toldirilgan < koriladigan.length) {
+				if (!ovozsiz) {
+					hukmEl.textContent = `${koriladigan.length - toldirilgan} qator hali to‘ldirilmagan.`;
+					delete qutu.dataset.holat;
+				}
+				return;
+			}
+
+			if (togri === koriladigan.length) {
+				qutu.dataset.holat = 'togri';
+				yechilgan.add(amal);
+				hukmEl.textContent =
+					yechilgan.size >= 5
+						? `${amal} to‘g‘ri. Beshta amalning hammasini to‘ldirdingiz!`
+						: `${amal} to‘g‘ri. Yechilgan amallar: ${yechilgan.size}/5.`;
+				if (yechilgan.size >= 5) amalBelgila('haqiqat-jadvali');
+			} else {
+				qutu.dataset.holat = 'xato';
+				hukmEl.textContent = `${koriladigan.length - togri} qator xato. Qizil kataklarni qayta o‘ylab ko‘ring.`;
+			}
+		}
+
+		for (const tr of qatorlar) {
+			const katak = tr.querySelector<HTMLButtonElement>('.katak')!;
+			katak.addEventListener('click', () => {
+				// Uch holat: bo'sh -> 0 -> 1 -> bo'sh
+				const hozir = katak.dataset.qiymat;
+				const keyingi = hozir === '' ? '0' : hozir === '0' ? '1' : '';
+				katak.dataset.qiymat = keyingi;
+				katak.textContent = keyingi === '' ? '·' : keyingi;
+				delete katak.dataset.holat;
+				tekshir(true);
+			});
+		}
+
+		for (const t of qutu.querySelectorAll<HTMLButtonElement>('.amal')) {
+			t.addEventListener('click', () => {
+				amal = t.dataset.amal as Amal;
+				for (const b of qutu.querySelectorAll<HTMLButtonElement>('.amal')) {
+					const bu = b === t;
+					b.classList.toggle('tanlangan', bu);
+					b.setAttribute('aria-pressed', String(bu));
+				}
+				jadvalniChiz();
+			});
+		}
+
+		qobiq.querySelector<HTMLButtonElement>('.tekshir')!.addEventListener('click', () => tekshir());
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', jadvalniChiz);
+
+		jadvalniChiz();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.amallar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+
+	.amal {
+		margin: 0;
+		padding: 0.35rem 0.75rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-3);
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		font-weight: 700;
+		cursor: pointer;
+	}
+
+	.amal:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.amal.tanlangan {
+		border-color: var(--blok-2);
+		background: var(--blok-2-fon);
+		color: var(--blok-2);
+	}
+
+	.tarif {
+		margin: 0.9rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	table {
+		width: 100%;
+		max-width: 22rem;
+		margin: 0.5rem 0 0 0;
+		border-collapse: collapse;
+	}
+
+	th {
+		padding: 0.4rem 0.5rem;
+		border-bottom: 1px solid var(--sl-color-gray-5);
+		font-family: var(--sl-font-mono);
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--sl-color-gray-3);
+		text-align: center;
+	}
+
+	td {
+		padding: 0.3rem 0.5rem;
+		border-bottom: 1px solid var(--sl-color-gray-6);
+		text-align: center;
+	}
+
+	.kirish {
+		font-family: var(--sl-font-mono);
+		font-size: 1rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.katak {
+		width: 2.4rem;
+		height: 2.1rem;
+		margin: 0;
+		padding: 0;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-4);
+		font-family: var(--sl-font-mono);
+		font-size: 1rem;
+		font-weight: 700;
+		cursor: pointer;
+	}
+
+	.katak:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.katak[data-qiymat='0'],
+	.katak[data-qiymat='1'] {
+		color: var(--sl-color-white);
+		border-color: var(--sl-color-gray-4);
+	}
+
+	/* Tekshirish natijasi rang bilan: yashil/qizil emas, blok ranglari bilan
+	   -- rang ko'rmaydigan o'quvchi uchun matnli hukm ham beriladi */
+	.katak[data-holat='togri'] {
+		border-color: var(--blok-1);
+		background: var(--blok-1-fon);
+		color: var(--blok-1);
+	}
+
+	.katak[data-holat='xato'] {
+		border-color: var(--blok-5);
+		background: var(--blok-5-fon);
+		color: var(--blok-5);
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 1.4em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	.hj[data-holat='togri'] .hukm {
+		font-weight: 600;
+		color: var(--blok-1);
+	}
+
+	.hj[data-holat='xato'] .hukm {
+		color: var(--blok-5);
+	}
+</style>

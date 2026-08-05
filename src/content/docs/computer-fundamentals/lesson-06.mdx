@@ -1,0 +1,142 @@
+---
+title: '6-dars: Tranzistordan darvozaga'
+description: "Tranzistor qanday qilib mantiqiy amalga aylanadi. NAND darvozasi va uning universalligi amalda."
+sidebar:
+  label: '6-dars'
+  order: 6
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import NANDQurilma from '../../../components/sim/NANDQurilma.astro';
+
+<Bloknoma blok={2} />
+
+## Nega bu muhim
+
+O'tgan darsda AND, OR va NOT qog'ozda edi. Lekin telefoningiz qog'ozda hisoblamaydi — u elektr bilan hisoblaydi. Demak qayerdadir matematik amal fizik qurilmaga aylanishi kerak.
+
+O'sha aylanish nuqtasi — **tranzistor**. Cho'ntagingizdagi telefonda ulardan taxminan 15 milliard dona bor. Bu darsda tranzistor qanday qilib mantiqqa aylanishini ko'rasiz va NAND'ning universalligini o'z qo'lingiz bilan isbotlaysiz.
+
+<Maqsad>
+- tranzistor nima qilishini bir gapda ayta olasiz
+- ikki tranzistordan qanday qilib NAND chiqishini tushuntira olasiz
+- faqat NAND'lardan NOT, AND, OR va XOR qura olasiz
+- De Morgan qonunini amalda ishlatgan bo'lasiz
+</Maqsad>
+
+## Nazariya
+
+### Tranzistor: elektr boshqaradigan kalit
+
+Devordagi chiroq kalitini barmog'ingiz bosadi. Tranzistor — xuddi shunday kalit, faqat uni barmoq emas, **boshqa elektr signali** bosadi.
+
+<Atama soz="tranzistor" eng="transistor">
+	Uch oyoqli elektron qurilma: boshqaruv oyog'iga signal kelsa, qolgan ikki oyoq
+	orasidan tok o'tadi. Ya'ni elektr bilan boshqariladigan kalit.
+</Atama>
+
+Shu bitta g'oyada butun sir yotadi. Kalitni signal boshqarsa, kalitning chiqishi **boshqa kalitni** boshqaray oladi. Zanjir hosil bo'ladi: signal signalni, u esa keyingisini boshqaradi.
+
+Endi 0 va 1 ga qaytamiz: tok bor — 1, tok yo'q — 0. Tranzistor esa bitlarni bir-biriga ta'sir qildiruvchi vosita.
+
+### Ikki kalitdan bitta amal
+
+Ikki tranzistorni **ketma-ket** ulaymiz: tok manbadan chiqishga yetishi uchun ikkalasi ham ochiq bo'lishi kerak. A ham 1, B ham 1 bo'lsagina zanjir tutashadi.
+
+Sxemani shunday ulash mumkinki, zanjir tutashganda chiqish **0** ga tortiladi, tutashmaganda **1** ligicha qoladi. Natijani yozib chiqsak: ikkisi ham 1 bo'lganda 0, qolgan hollarda 1.
+
+Bu jadvalni o'tgan darsda ko'rgansiz — bu **NAND**. Ikki tranzistor, bitta rezistor — va matematik amal fizik qurilmaga aylandi.
+
+<Atama soz="mantiq darvozasi" eng="logic gate">
+	Bir yoki ikki bitli kirishni olib, haqiqat jadvaliga muvofiq bitta bit chiqaruvchi
+	elektron sxema. Tranzistorlardan yig'iladi.
+</Atama>
+
+### Nega aynan NAND?
+
+Sabab fizikada: tranzistorli sxemada NAND (va uning ukasi NOR) **eng kam qism** bilan chiqadi. AND yasash uchun esa NAND'dan keyin yana NOT qo'yish kerak — ya'ni AND aslida NAND'dan *qimmatroq*.
+
+O'tgan darsda aytdik: NAND universal, undan hamma amal chiqadi. Endi ikkala fakt birlashadi — **eng arzon darvoza ayni paytda universal ham**. Shu sababli zavodlar millionlab bir xil NAND ishlab chiqaradi, qolganini esa ulardan yig'adi.
+
+<Muhim turi="gap">
+	Abstraksiya zinasining birinchi pog'onasi shu yerda: tranzistorni bir marta
+	tushundik — endi uni **unutamiz** va faqat darvozalar bilan o'ylaymiz. 7-darsda
+	darvozalarni ham unutib, qo'shuvchi bloklar bilan o'ylaymiz.
+</Muhim>
+
+### De Morgan: teskarilash ko'chasi
+
+NAND'dan OR yasashda bitta qonun yordam beradi. **De Morgan qonuni**: `A OR B` = `NOT((NOT A) AND (NOT B))`.
+
+So'z bilan: "kamida bittasi rost" degani "ikkisi ham yolg'on — degani yolg'on". Ikki marta teskarilash orqali OR butunlay AND va NOT'lar bilan yozildi. Quyidagi simulyatorda OR qulfini ochayotganda aynan shu formuladan foydalanasiz.
+
+<Muhim turi="sir">
+	Zamonaviy protsessorda tranzistor o'lchami taxminan 5 nanometr — soch tolasi
+	undan 10 000 barobar yo'g'on. Shu sababli bir chipga milliardlab tranzistor
+	sig'adi va hammasi shu darsdagi ikki kalitli sxemaning avlodlari.
+</Muhim>
+
+## Sinab ko'r
+
+Oldingizda 4 ta NAND darvozasi. Har darvozaning kirishini ro'yxatdan tanlang — sxema o'zi chiziladi, haqiqat jadvali esa har o'zgarishda tekshiriladi. NOT'dan boshlang, XOR'gacha yetib boring. Qiynalsangiz — `Maslahat` tugmasi bor.
+
+<NANDQurilma />
+
+To'rttasini ham qurdingizmi? Endi "NAND universal" degan gap siz uchun yodlangan fakt emas — o'zingiz isbotlagan teorema.
+
+## Xulosa
+
+- **Tranzistor** — elektr boshqaradigan kalit: signal boshqa signalni ulaydi yoki uzadi
+- Ikki tranzistor ketma-ket ulansa **NAND** chiqadi — eng arzon darvoza
+- Eng arzon darvoza ayni paytda **universal**: NOT, AND, OR, XOR hammasi undan yig'iladi
+- **De Morgan qonuni** OR'ni AND va NOT orqali yozib beradi: ikki marta teskarila
+- Abstraksiya: tranzistorni tushundik va unutdik — endi faqat darvozalar bilan o'ylaymiz
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Tranzistor bilan oddiy chiroq kalitining asosiy farqi nimada?">
+	Chiroq kalitini barmoq bosadi, tranzistorni esa elektr signali boshqaradi. Aynan shu
+	farq zanjir qurishga imkon beradi: bir tranzistorning chiqishi boshqasini boshqaradi,
+	signal signalni uzatadi — va sxema o'z-o'zidan "hisoblaydi".
+</Sinov>
+
+<Sinov raqam={2} savol="Ikki tranzistor ketma-ket ulanganda nega aynan NAND chiqadi, AND emas?">
+	Zanjir ikkala kirish 1 bo'lgandagina tutashadi va tutashganda chiqishni 0 ga tortadi.
+	Ya'ni "ikkisi ham 1 → chiqish 0" — bu NAND. AND olish uchun bu natijani yana bir
+	bosqichda teskarilash kerak, ya'ni AND qimmatroq qurilma.
+</Sinov>
+
+<Sinov raqam={3} savol="Simulyatorda AND qurish uchun nechta NAND kerak bo'ldi va nega?">
+	Ikkita. Birinchisi NAND(A, B) ni beradi — bu AND'ning teskarisi. Ikkinchisi shu
+	natijani o'ziga ulab (NAND(N1, N1)) NOT vazifasini bajaradi. Teskarining teskarisi —
+	asl AND.
+</Sinov>
+
+<Sinov raqam={4} savol="De Morgan qonunini o'z so'zingiz bilan ayting va OR qulfida qanday ishlatilganini tushuntiring.">
+	"Kamida bittasi rost" bilan "ikkisi ham yolg'on emas" — bir xil gap. Sxemada: A va B
+	alohida-alohida teskarilanadi (ikki NOT), natijalar NAND'ga kiradi. NAND o'zi "AND +
+	NOT" bo'lgani uchun jami uch NAND bilan OR chiqadi.
+</Sinov>
+
+<Sinov raqam={5} savol="Zavod nuqtai nazaridan NAND'ning ikki afzalligi nimada?">
+	Birinchisi: tranzistorda u eng kam qism bilan chiqadi — arzon. Ikkinchisi: u universal,
+	demak bitta turdagi darvozadan istalgan sxemani yig'ish mumkin. Bitta ishlab chiqarish
+	liniyasi, bitta sifat nazorati — million dona bir xil qism.
+</Sinov>
+
+<Amaliyot daqiqa={30} daraja="o'rta">
+	[nandgame.com](https://nandgame.com) — haqiqiy muhandislik o'yini: NAND'dan boshlab
+	butun kompyuter yig'iladi. Bu darsda birinchi 5 darajani tugating (Invert, Nand → And,
+	Or, Xor va Half Adder'gacha).
+
+	Har daraja uchun daftaringizga yozing: nechta NAND ishlatdingiz va simulyatordagi
+	yechimingiz bilan bir xil chiqdimi?
+
+	Oxirgi daraja — Half Adder — 7-darsning kirish eshigi. Uni tugatganda qaysi ikki
+	amal kerak bo'lganini alohida belgilab qo'ying.
+
+	Topshiriladigan natija: 5 daraja tugatilgan ekran skrinshoti + har daraja bo'yicha
+	NAND'lar soni yozilgan daftar sahifasi.
+</Amaliyot>
+
+<DarsTugadi dars={6} blok={2} />

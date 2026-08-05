@@ -1,0 +1,314 @@
+---
+/**
+ * MantiqQulf — 5-dars simulyatori (jumboq).
+ *
+ * Eshik mantiqiy shart bilan qulflangan. O'quvchi uchta kalitni bosib
+ * shartni bajaradi. Shart matnda ham, formulada ham beriladi.
+ *
+ * Pedagogik maqsad: mantiqiy ifodani O'QISH va BAHOLASH. Haqiqat jadvali
+ * amalni o'rgatadi, jumboq esa ifodani birlashtirishga majbur qiladi.
+ *
+ * Jumboqlar ketma-ket qiyinlashadi va oxirgisida XOR paydo bo'ladi.
+ */
+import Simulyator from '../Simulyator.astro';
+---
+
+<Simulyator
+	sarlavha="Mantiq qulfi"
+	korsatma="Kalitlarni bosib eshik shartini bajaring. Shart yuqorida yozilgan."
+	blok={2}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu jumboqda eshik mantiqiy shart bilan qulflangan. Uchta kalitni to'g'ri holatga
+			qo'yib eshikni ochasiz.
+		</p>
+		<p>
+			JavaScript'siz sinash: daftarga sakkiz qatorli jadval chizing (000 dan 111 gacha)
+			va har shart uchun qaysi qatorlar eshikni ochishini belgilang.
+		</p>
+	</Fragment>
+
+	<div class="mq not-content" data-holat="yopiq">
+		<p class="progress">
+			Jumboq <strong class="raqam">1</strong>/5
+		</p>
+
+		<div class="shart">
+			<p class="shart-matn"></p>
+			<p class="shart-formula"></p>
+		</div>
+
+		<div class="kalitlar" role="group" aria-label="Kalitlar">
+			{
+				['A', 'B', 'C'].map((nom) => (
+					<button type="button" class="kalit" data-kalit={nom} aria-pressed="false">
+						<span class="kalit-nom">{nom}</span>
+						<span class="kalit-holat">0</span>
+					</button>
+				))
+			}
+		</div>
+
+		<div class="eshik">
+			<p class="eshik-matn">Eshik yopiq</p>
+		</div>
+
+		<p class="hukm" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="keyingi" disabled>Keyingi jumboq</button>
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	interface Jumboq {
+		matn: string;
+		formula: string;
+		/** Shart bajarilganmi? */
+		tekshir: (a: boolean, b: boolean, c: boolean) => boolean;
+	}
+
+	const JUMBOQLAR: Jumboq[] = [
+		{
+			matn: 'A va B kalitlari ikkisi ham yoqilgan bo‘lishi kerak. C ahamiyatsiz.',
+			formula: 'A AND B',
+			tekshir: (a, b) => a && b,
+		},
+		{
+			matn: 'A yoqilgan, B esa o‘chirilgan bo‘lishi kerak.',
+			formula: 'A AND (NOT B)',
+			tekshir: (a, b) => a && !b,
+		},
+		{
+			matn: 'Kamida bittasi yoqilgan bo‘lsin, lekin C o‘chirilgan bo‘lishi shart.',
+			formula: '(A OR B) AND (NOT C)',
+			tekshir: (a, b, c) => (a || b) && !c,
+		},
+		{
+			matn: 'Aynan BITTA kalit yoqilgan bo‘lsin — ikkitasi ham, uchtasi ham emas.',
+			formula: 'aynan bitta 1',
+			tekshir: (a, b, c) => [a, b, c].filter(Boolean).length === 1,
+		},
+		{
+			matn: 'A va B bir-biridan farq qilsin, va C yoqilgan bo‘lsin.',
+			formula: '(A XOR B) AND C',
+			tekshir: (a, b, c) => a !== b && c,
+		},
+	];
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.mq');
+		if (!qutu) return;
+
+		const raqamEl = qutu.querySelector<HTMLElement>('.raqam')!;
+		const matnEl = qutu.querySelector<HTMLElement>('.shart-matn')!;
+		const formulaEl = qutu.querySelector<HTMLElement>('.shart-formula')!;
+		const eshikMatnEl = qutu.querySelector<HTMLElement>('.eshik-matn')!;
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+		const kalitlar = [...qutu.querySelectorAll<HTMLButtonElement>('.kalit')];
+		const keyingiTugma = qobiq.querySelector<HTMLButtonElement>('.keyingi')!;
+
+		let joriy = 0;
+		const yechilgan = new Set<number>();
+
+		function holat(): [boolean, boolean, boolean] {
+			return kalitlar.map((k) => k.getAttribute('aria-pressed') === 'true') as [
+				boolean,
+				boolean,
+				boolean,
+			];
+		}
+
+		function tekshir() {
+			const [a, b, c] = holat();
+			const ochildi = JUMBOQLAR[joriy]!.tekshir(a, b, c);
+
+			qutu.dataset.holat = ochildi ? 'ochiq' : 'yopiq';
+			eshikMatnEl.textContent = ochildi ? 'Eshik ochildi' : 'Eshik yopiq';
+
+			if (ochildi) {
+				yechilgan.add(joriy);
+				const oxirgimi = joriy === JUMBOQLAR.length - 1;
+				keyingiTugma.disabled = oxirgimi;
+				hukmEl.textContent = oxirgimi
+					? `Hammasi yechildi! ${JUMBOQLAR.length}/${JUMBOQLAR.length}`
+					: 'To‘g‘ri. Keyingi jumboqqa o‘tishingiz mumkin.';
+				if (yechilgan.size >= JUMBOQLAR.length) amalBelgila('mantiq-qulf');
+			} else {
+				keyingiTugma.disabled = true;
+				hukmEl.textContent = '';
+			}
+		}
+
+		function jumboqniChiz() {
+			const j = JUMBOQLAR[joriy]!;
+			raqamEl.textContent = String(joriy + 1);
+			matnEl.textContent = j.matn;
+			formulaEl.textContent = j.formula;
+
+			// Har yangi jumboqda kalitlar nolga qaytadi
+			for (const k of kalitlar) {
+				k.setAttribute('aria-pressed', 'false');
+				k.querySelector('.kalit-holat')!.textContent = '0';
+			}
+			tekshir();
+		}
+
+		for (const k of kalitlar) {
+			k.addEventListener('click', () => {
+				const yoqilgan = k.getAttribute('aria-pressed') === 'true';
+				k.setAttribute('aria-pressed', String(!yoqilgan));
+				k.querySelector('.kalit-holat')!.textContent = yoqilgan ? '0' : '1';
+				tekshir();
+			});
+		}
+
+		keyingiTugma.addEventListener('click', () => {
+			if (joriy < JUMBOQLAR.length - 1) {
+				joriy++;
+				jumboqniChiz();
+			}
+		});
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			joriy = 0;
+			jumboqniChiz();
+		});
+
+		jumboqniChiz();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.progress {
+		margin: 0;
+		font-family: var(--sl-font-mono);
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.progress strong {
+		color: var(--blok-2);
+	}
+
+	.shart {
+		margin-top: 0.6rem;
+		padding: 0.75rem 0.9rem;
+		border: 1px solid var(--blok-2-chegara);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--blok-2-fon);
+	}
+
+	.shart-matn {
+		margin: 0;
+		font-size: 0.95rem;
+		line-height: 1.5;
+		color: var(--sl-color-white);
+	}
+
+	.shart-formula {
+		margin: 0.4rem 0 0 0;
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		color: var(--blok-2);
+	}
+
+	.kalitlar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-top: 1rem;
+	}
+
+	.kalit {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.2rem;
+		flex: 1 1 4rem;
+		min-width: 0;
+		margin: 0;
+		padding: 0.6rem 0.4rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		cursor: pointer;
+	}
+
+	.kalit:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.kalit-nom {
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.kalit-holat {
+		font-family: var(--sl-font-mono);
+		font-size: 1.35rem;
+		font-weight: 700;
+		line-height: 1;
+		color: var(--sl-color-gray-4);
+	}
+
+	.kalit[aria-pressed='true'] {
+		border-color: var(--blok-2);
+		background: var(--blok-2-fon);
+	}
+
+	.kalit[aria-pressed='true'] .kalit-holat {
+		color: var(--blok-2);
+	}
+
+	.eshik {
+		margin-top: 1rem;
+		padding: 1.1rem;
+		border: 2px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		text-align: center;
+	}
+
+	.eshik-matn {
+		margin: 0;
+		font-weight: 700;
+		font-size: 1rem;
+		color: var(--sl-color-gray-4);
+	}
+
+	.mq[data-holat='ochiq'] .eshik {
+		border-color: var(--blok-1);
+		background: var(--blok-1-fon);
+	}
+
+	.mq[data-holat='ochiq'] .eshik-matn {
+		color: var(--blok-1);
+	}
+
+	.hukm {
+		margin: 0.8rem 0 0 0;
+		min-height: 1.4em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	.mq[data-holat='ochiq'] .hukm {
+		font-weight: 600;
+		color: var(--blok-1);
+	}
+</style>

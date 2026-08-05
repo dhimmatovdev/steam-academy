@@ -1,0 +1,151 @@
+---
+title: '8-dars: Xotirani qurish'
+description: "Flip-flop bitni qanday eslab qoladi. Takt, registr va manzilli xotira — RAM'gacha yo'l."
+sidebar:
+  label: '8-dars'
+  order: 8
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import FlipFlopSimulyator from '../../../components/sim/FlipFlopSimulyator.astro';
+import RegistrYozish from '../../../components/sim/RegistrYozish.astro';
+
+<Bloknoma blok={2} />
+
+## Nega bu muhim
+
+O'tgan darsdagi qo'shuvchining bitta kamchiligi bor: u **unutuvchan**. Kirishni o'zgartirdingiz — natija ham o'sha zahoti o'zgardi, eskisidan iz ham qolmadi. Bunday sxema hisoblaydi, lekin hech narsani **eslab qololmaydi**.
+
+Xotirasiz esa kompyuter yo'q: oraliq natijani qayerdadir saqlash kerak. Bu darsda blokning oxirgi jumbog'ini yechamiz — darvozalardan **xotira** yasaymiz. Shu bilan protsessor qurish uchun hamma qism qo'lda bo'ladi.
+
+<Maqsad>
+- darvozalar zanjiri nega o'z-o'zidan eslab qola olmasligini tushuntira olasiz
+- teskari bog'lanish bitni qanday ushlab turishini bilasiz
+- takt nima uchun kerakligini va GHz nimani o'lchashini ayta olasiz
+- registr va manzilli xotira (RAM) qanday tuzilganini bilasiz
+</Maqsad>
+
+## Nazariya
+
+### Muammo: signal oqib o'tadi va yo'qoladi
+
+Shu paytgacha qurgan sxemalarimizda signal bir tomonga oqadi: kirishdan chiqishga. Kirish o'zgardi — chiqish o'zgardi. Sxemaning "hozirgi holati" degan tushunchasi yo'q, u faqat ayni damdagi kirishning aksi.
+
+Eslab qolish uchun esa qiymat kirish o'zgargandan **keyin ham** turishi kerak. Savol: signalni qayerda "ushlab turamiz"?
+
+### Yechim: ilonning o'z dumini tishlashi
+
+Hiyla ajablanarli darajada sodda: darvozaning **chiqishini o'z kirishiga qaytarib ulaymiz**. Bunga teskari bog'lanish deyiladi.
+
+Ikkita NAND darvozasini bir-birining kirishiga chalkashtirib ulasangiz, sxema ikki barqaror holatdan birida "qotib" turadi: yo 0, yo 1. Tashqi signal uni bir holatdan ikkinchisiga ag'daradi — shundan **flip-flop** ("ag'dar-to'ntar") degan nom kelib chiqqan.
+
+<Atama soz="flip-flop" eng="flip-flop">
+	Bir bitni saqlovchi sxema. Teskari bog'langan darvozalardan tuziladi: chiqish
+	kirishga qaytarilgani uchun qiymat o'z-o'zini ushlab turadi.
+</Atama>
+
+Bitta flip-flop — bitta bit. Million dona flip-flop — million bitlik xotira. Yangi g'oya kerak emas, faqat ko'paytirish kerak.
+
+### Takt: hammani bir qadamga soluvchi baraban
+
+Protsessorda milliardlab darvoza bor va signal ular orqali turli tezlikda o'tadi. Agar har flip-flop signalni kelgan zahoti qabul qilsa, hali "pishmagan" oraliq qiymatlar yozilib qolib, tartibsizlik boshlanadi.
+
+Yechim — **takt**: butun sxemaga birdek uriladigan zarba. Flip-floplar yangi qiymatni faqat takt zarbida yozadi. Zarblar orasida esa signallar bemalol joyiga yetib, tinchlanib oladi.
+
+<Atama soz="takt" eng="clock">
+	Sxemadagi barcha flip-floplarga bir vaqtda boradigan davriy signal. Yangi qiymatlar
+	faqat takt zarbida yoziladi — shu tufayli butun sxema bir qadamda yuradi.
+</Atama>
+
+<Muhim turi="sir">
+	Protsessor tavsifidagi "3.2 GHz" — aynan shu taktning tezligi: sekundiga
+	3 milliard 200 million zarba. Har zarbada millionlab flip-flop bir vaqtda
+	yangi qiymat yozib oladi.
+</Muhim>
+
+### Registrdan RAM'gacha
+
+To'rtta flip-flopni yonma-yon qo'yib, bitta taktga ulasak — 4 bitlik **registr** hosil bo'ladi: bitta sonni saqlaydigan katakcha. Protsessor ichida ana shunday registrlardan bir hovuch bor va ular eng tez xotira hisoblanadi.
+
+Endi ko'p registr kerak bo'lsa-chi? Ularni qatorga teramiz va har biriga **raqam** beramiz. Bu raqam manzil deyiladi: "7-katakka yoz", "3-katakdan o'qi". Qaysi katakka murojaat qilmang, vaqt bir xil ketadi.
+
+<Atama soz="RAM" eng="random access memory">
+	Manzilli xotira: istalgan katakka to'g'ridan-to'g'ri, bir xil vaqtda murojaat
+	qilinadi. Kompyuterning asosiy ish xotirasi shu tarzda tuzilgan.
+</Atama>
+
+<Muhim turi="gap">
+	Blok yakunlandi, qo'lda uchta qurilma bor: **darvozalar** (qaror), **summator**
+	(hisob) va **registr** (xotira). 9-darsda ularni bitta sxemaga ulaymiz —
+	va bu sxemaning nomi protsessor bo'ladi.
+</Muhim>
+
+## Sinab ko'r
+
+Avval bitta bit. Uchala topshiriqni bajaring — asosiy sinov ikkinchisida: D o'zgargani bilan Q joyidan qimirlamaydi.
+
+<FlipFlopSimulyator />
+
+Endi shu bitlardan yasalgan kichkina RAM: 4 manzil, har birida 4 bitlik registr. Yozish taktni talab qiladi, o'qish esa — shunchaki qarash.
+
+<RegistrYozish />
+
+## Xulosa
+
+- Oddiy darvoza zanjiri **eslab qolmaydi** — chiqish faqat ayni damdagi kirishning aksi
+- **Teskari bog'lanish** (chiqish → kirish) sxemani ikki barqaror holatli qiladi — bu flip-flop
+- **Takt** hamma flip-flopni bir qadamga soladi; GHz — sekundiga milliard zarba
+- To'rt flip-flop = 4 bitlik **registr**; manzillangan registrlar qatori = **RAM**
+- Blok 2 tugadi: qaror (darvoza) + hisob (summator) + xotira (registr) — protsessorga tayyormiz
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Qo'shuvchi sxema bilan flip-flopning tub farqi nimada?">
+	Qo'shuvchida signal bir yo'nalishda oqib o'tadi: chiqish faqat hozirgi kirishga
+	bog'liq. Flip-flopda chiqish kirishga qaytarilgan — shu halqa tufayli sxema oldingi
+	holatini ushlab turadi, ya'ni xotiraga ega.
+</Sinov>
+
+<Sinov raqam={2} savol="Simulyatorda D ni o'zgartirganingizda Q nega o'zgarmadi?">
+	Chunki D flip-flop yangi qiymatni faqat takt zarbida qabul qiladi. Takt kelmaguncha
+	ichidagi halqa eski qiymatni aylantirib turaveradi. Aynan shu xususiyat uni
+	xotira qiladi.
+</Sinov>
+
+<Sinov raqam={3} savol="Takt umuman bo'lmasa nima buziladi?">
+	Har flip-flop signal yetib kelgan zahoti yozib olaveradi. Signallar sxemaning turli
+	qismlaridan turli kechikish bilan keladi, shuning uchun hali hisoblanib bo'lmagan
+	oraliq qiymatlar saqlanib qoladi. Takt hammani bir qadamga solib, faqat "tinchlangan"
+	qiymatlar yozilishini kafolatlaydi.
+</Sinov>
+
+<Sinov raqam={4} savol="8 bitlik registr yasash uchun nima kerak? 16 manzilli xotira uchun manzil necha bit bo'ladi?">
+	8 bitlik registr — bitta taktga ulangan 8 ta flip-flop. 16 manzilni farqlash uchun
+	2ⁿ ≥ 16 bo'lishi kerak, ya'ni manzil 4 bit: 0000 dan 1111 gacha.
+</Sinov>
+
+<Sinov raqam={5} savol="RAM nomidagi 'random access' — tasodifiy murojaat — nimani anglatadi?">
+	Istalgan manzilga to'g'ridan-to'g'ri va bir xil vaqtda murojaat qilish mumkinligini.
+	Taqqoslang: magnit lentada o'rtadagi qo'shiqqa yetish uchun lentani o'rab borish
+	kerak edi. RAM'da esa 0-katak ham, oxirgi katak ham birdek yaqin.
+</Sinov>
+
+<Amaliyot daqiqa={30} daraja="qiyin">
+	**Birinchi qism.** Daftarda quyidagi jadvalni to'ldiring. D flip-flopga shu
+	ketma-ketlik beriladi: D = 1, takt, D = 0, D = 1, takt, D = 0, takt. Har qadamdan
+	keyin Q nimaga teng? (Boshlang'ich Q = 0 deb oling.)
+
+	**Ikkinchi qism.** "Nega takt kerak?" savoliga o'z so'zingiz bilan bir paragraf javob
+	yozing. Javobda kamida bitta o'xshatish ishlating — orkestr dirijyori, svetofor,
+	eshkak eshuvchilar jamoasi yoki o'zingiz topgan boshqa misol.
+
+	**Qo'shimcha (xohlovchilar uchun).** Kompyuteringizga bepul
+	[Logisim Evolution](https://github.com/logisim-evolution/logisim-evolution) dasturini
+	o'rnatib, unda 4 bitlik registr yig'ing: 4 ta D flip-flop, umumiy takt tugmasi va
+	4 ta kirish. Ishlagan sxemaning skrinshotini oling.
+
+	Topshiriladigan natija: to'ldirilgan jadval, takt haqidagi paragraf va (bo'lsa)
+	Logisim skrinshoti.
+</Amaliyot>
+
+<DarsTugadi dars={8} blok={2} />

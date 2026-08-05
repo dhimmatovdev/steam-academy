@@ -1,0 +1,359 @@
+---
+/**
+ * FlipFlopSimulyator — 8-dars, birinchi simulyator.
+ *
+ * Bitta D flip-flop: o'quvchi D kirishni almashtiradi va `Takt` bosadi.
+ * Asosiy kashfiyot: D ni o'zgartirish Q ga TA'SIR QILMAYDI — yangi qiymat
+ * faqat takt zarbida yoziladi. Ya'ni sxema bitni "eslab qoladi".
+ *
+ * Q tarixi lentasi har takt zarbidan keyin bir katak chapga suriladi —
+ * "xotira vaqt bo'ylab" g'oyasi ko'zga ko'rinadi.
+ *
+ * Uch topshiriq ketma-ket ochiladi: yoz → saqlanganini sina → qayta yoz.
+ */
+import Simulyator from '../Simulyator.astro';
+
+/** Tarix lentasi kataklari soni qat'iy — shablonda yasaladi. */
+const TARIX = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+---
+
+<Simulyator
+	sarlavha="Flip-flop: bitta bitlik xotira"
+	korsatma="D kirishni tanlang, so'ng Takt bosing — bit yozib olinadi va saqlanadi."
+	blok={2}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda D flip-flop bor: D kirishdagi qiymat faqat takt zarbi kelganda
+			Q chiqishga yoziladi. Takt orasida D ni o'zgartirsangiz ham Q joyida turadi —
+			sxema bitni eslab qoladi.
+		</p>
+		<p>
+			JavaScript'siz sinash: daftarga jadval chizing — ustunlar: takt raqami, D, Q.
+			D ni har qatorda o'zgartirib, Q faqat takt qatorlarida yangilanishini kuzating.
+		</p>
+	</Fragment>
+
+	<div class="ff not-content">
+		<div class="kirishlar">
+			<button type="button" class="bit d-tugma" aria-pressed="false">D = 0</button>
+			<button type="button" class="sim-tugma takt">Takt</button>
+		</div>
+
+		<svg viewBox="0 0 360 150" class="sxema" role="img" aria-label="D flip-flop sxemasi">
+			<path class="sim" data-sim="d" d="M40,60 H130"></path>
+			<path class="sim sim-takt" data-sim="takt" d="M60,130 H160 V105"></path>
+			<path class="sim" data-sim="q" d="M230,60 H290"></path>
+			<text x="14" y="65" class="belgi">D</text>
+			<text x="14" y="135" class="belgi">takt</text>
+			<rect x="130" y="35" width="100" height="70" rx="6" class="quti"></rect>
+			<text x="180" y="66" class="quti-nom">D flip-flop</text>
+			{/* Takt kirishining an'anaviy uchburchak belgisi */}
+			<path d="M172,105 L180,93 L188,105" class="takt-belgi"></path>
+			<circle cx="308" cy="60" r="13" class="lampa"></circle>
+			<text x="330" y="65" class="belgi q-matn">Q=?</text>
+		</svg>
+
+		<div class="tarix" aria-label="Q qiymatining tarixi">
+			<span class="tarix-yorliq">Q tarixi</span>
+			<div class="tarix-lenta">
+				{TARIX.map(() => <span class="tarix-katak"></span>)}
+			</div>
+		</div>
+
+		<ul class="topshiriqlar" aria-label="Topshiriqlar">
+			<li data-topshiriq="0">Bit yozing: D = 1 qilib, Takt bosing — Q = 1 bo'lsin</li>
+			<li data-topshiriq="1">Xotirani sinang: D ni 0 ga qaytaring — Q hali ham 1 turibdi</li>
+			<li data-topshiriq="2">Qayta yozing: endi Takt bosing — Q = 0 bo'ladi</li>
+		</ul>
+
+		<p class="hukm" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.ff');
+		if (!qutu) return;
+
+		const dTugma = qutu.querySelector<HTMLButtonElement>('.d-tugma')!;
+		const taktTugma = qutu.querySelector<HTMLButtonElement>('.takt')!;
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+		const qMatn = qutu.querySelector<SVGTextElement>('.q-matn')!;
+		const lampa = qutu.querySelector<SVGCircleElement>('.lampa')!;
+		const kataklar = [...qutu.querySelectorAll<HTMLElement>('.tarix-katak')];
+
+		let d = 0;
+		/* Haqiqiy flip-flop yoqilganda holati noma'lum — shuni ko'rsatamiz */
+		let q: number | null = null;
+		const bajarildi = new Set<number>();
+		let taktSayoq: ReturnType<typeof setTimeout> | undefined;
+
+		function topshiriqYangila() {
+			qutu.querySelectorAll<HTMLElement>('[data-topshiriq]').forEach((li, i) => {
+				li.dataset.bajarildi = bajarildi.has(i) ? 'ha' : 'yoq';
+			});
+			if (bajarildi.size === 3) {
+				amalBelgila('flip-flop');
+				hukmEl.textContent =
+					"Uchala topshiriq bajarildi! Siz hozir bir bitlik xotirani boshqardingiz — RAM shu kataklarning millionlaridan iborat.";
+			}
+		}
+
+		function yangila() {
+			dTugma.textContent = `D = ${d}`;
+			dTugma.setAttribute('aria-pressed', String(d === 1));
+			qutu.querySelector<SVGElement>('[data-sim="d"]')!.dataset.signal = d ? '1' : '0';
+			qutu.querySelector<SVGElement>('[data-sim="q"]')!.dataset.signal = q === 1 ? '1' : '0';
+			qMatn.textContent = `Q=${q === null ? '?' : q}`;
+			lampa.dataset.yoniq = q === 1 ? 'ha' : 'yoq';
+			topshiriqYangila();
+		}
+
+		dTugma.addEventListener('click', () => {
+			d = d ? 0 : 1;
+			if (bajarildi.has(0) && !bajarildi.has(1) && d === 0 && q === 1) {
+				bajarildi.add(1);
+				hukmEl.textContent =
+					"Qarang: D = 0, lekin Q = 1 ligicha turibdi. Flip-flop eski qiymatni eslab qoldi!";
+			} else if (q !== null && d !== q) {
+				hukmEl.textContent = "D o'zgardi, lekin Q joyida — yangi qiymat faqat taktda yoziladi.";
+			}
+			yangila();
+		});
+
+		taktTugma.addEventListener('click', () => {
+			q = d;
+			// Takt simini bir lahza yoqib ko'rsatamiz
+			const taktSim = qutu.querySelector<SVGElement>('[data-sim="takt"]')!;
+			taktSim.dataset.signal = '1';
+			clearTimeout(taktSayoq);
+			taktSayoq = setTimeout(() => {
+				taktSim.dataset.signal = '0';
+			}, 350);
+
+			// Tarix lentasi chapga suriladi, yangi qiymat o'ngdan kiradi
+			for (let i = 0; i < kataklar.length - 1; i++) {
+				kataklar[i]!.textContent = kataklar[i + 1]!.textContent;
+				kataklar[i]!.dataset.qiymat = kataklar[i + 1]!.dataset.qiymat ?? '';
+			}
+			const oxirgi = kataklar[kataklar.length - 1]!;
+			oxirgi.textContent = String(q);
+			oxirgi.dataset.qiymat = String(q);
+
+			if (!bajarildi.has(0) && q === 1) {
+				bajarildi.add(0);
+				hukmEl.textContent = 'Bit yozildi: Q = 1. Endi D ni 0 ga qaytarib, Q ni kuzating.';
+			} else if (bajarildi.has(1) && !bajarildi.has(2) && q === 0) {
+				bajarildi.add(2);
+			} else if (bajarildi.size < 3) {
+				hukmEl.textContent = `Takt zarbi: Q endi ${q}.`;
+			}
+			yangila();
+		});
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			d = 0;
+			q = null;
+			bajarildi.clear();
+			for (const k of kataklar) {
+				k.textContent = '';
+				delete k.dataset.qiymat;
+			}
+			hukmEl.textContent = '';
+			yangila();
+		});
+
+		yangila();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.kirishlar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.6rem;
+	}
+
+	.bit {
+		margin: 0;
+		padding: 0.4rem 0.7rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-2);
+		font-family: var(--sl-font-mono);
+		font-size: 0.9rem;
+		cursor: pointer;
+	}
+
+	.bit:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.bit[aria-pressed='true'] {
+		border-color: var(--blok-2);
+		background: var(--blok-2-fon);
+		color: var(--blok-2);
+		font-weight: 700;
+	}
+
+	.sxema {
+		display: block;
+		width: 100%;
+		max-width: 26rem;
+		height: auto;
+		margin: 0.6rem 0 0 0;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+	}
+
+	.sxema .belgi {
+		fill: var(--sl-color-gray-2);
+		font-family: var(--sl-font-mono);
+		font-size: 13px;
+		font-weight: 700;
+	}
+
+	.sxema .sim {
+		fill: none;
+		stroke: var(--sl-color-gray-4);
+		stroke-width: 1.5;
+		transition: stroke 0.15s ease;
+	}
+
+	.sxema .sim[data-signal='1'] {
+		stroke: var(--blok-2);
+		stroke-width: 2.5;
+	}
+
+	.sxema .quti {
+		fill: var(--sl-color-gray-7);
+		stroke: var(--sl-color-gray-5);
+	}
+
+	.sxema .quti-nom {
+		fill: var(--sl-color-gray-3);
+		font-family: var(--sl-font-mono);
+		font-size: 12px;
+		font-weight: 700;
+		text-anchor: middle;
+	}
+
+	.sxema .takt-belgi {
+		fill: none;
+		stroke: var(--sl-color-gray-4);
+		stroke-width: 1.5;
+	}
+
+	.sxema .lampa {
+		fill: var(--sl-color-gray-6);
+		stroke: var(--sl-color-gray-5);
+		stroke-width: 1.5;
+		transition: fill 0.15s ease;
+	}
+
+	.sxema .lampa[data-yoniq='ha'] {
+		fill: var(--blok-2);
+		stroke: var(--blok-2);
+	}
+
+	.tarix {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem;
+		margin-top: 1rem;
+	}
+
+	.tarix-yorliq {
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.tarix-lenta {
+		display: flex;
+		gap: 0.2rem;
+	}
+
+	.tarix-katak {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.3rem;
+		height: 1.3rem;
+		border: 1px solid var(--sl-color-gray-6);
+		border-radius: 3px;
+		font-family: var(--sl-font-mono);
+		font-size: 0.75rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.tarix-katak[data-qiymat='1'] {
+		border-color: var(--blok-2);
+		background: var(--blok-2-fon);
+		color: var(--blok-2);
+		font-weight: 700;
+	}
+
+	.topshiriqlar {
+		margin: 1rem 0 0 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.topshiriqlar li {
+		position: relative;
+		padding-left: 1.5rem;
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.topshiriqlar li::before {
+		content: '○';
+		position: absolute;
+		left: 0.2rem;
+		color: var(--sl-color-gray-4);
+	}
+
+	.topshiriqlar li[data-bajarildi='ha'] {
+		color: var(--blok-1);
+	}
+
+	.topshiriqlar li[data-bajarildi='ha']::before {
+		content: '✓';
+		color: var(--blok-1);
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.sxema .sim,
+		.sxema .lampa {
+			transition: none;
+		}
+	}
+</style>

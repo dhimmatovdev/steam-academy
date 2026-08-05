@@ -1,0 +1,613 @@
+---
+/**
+ * NANDQurilma — 6-dars simulyatori. Modulning eng muhim qurilmasi.
+ *
+ * O'quvchi FAQAT NAND darvozalaridan NOT, AND, OR va XOR ni quradi.
+ * Har darvozaning ikki kirishi mavjud signallardan tanlanadi: A, B yoki
+ * oldingi darvozalarning chiqishi. Haqiqat jadvali real vaqtda tekshiriladi.
+ *
+ * ULASH USULI: sim tortish emas, kirishni ro'yxatdan tanlash.
+ * Sabab — loyiha qoidasi "mobil birinchi" va "klaviatura bilan
+ * boshqarilishi shart". SVG'da sim tortish telefonda deyarli imkonsiz va
+ * klaviatura bilan umuman ishlamaydi. Tanlash esa <select> — u telefonda
+ * ham, klaviaturada ham, ekran o'quvchisida ham mukammal ishlaydi.
+ * Sxema esa tanlovga qarab avtomatik chiziladi, ya'ni o'quvchi natijani
+ * ko'radi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+const MAQSADLAR = [
+	{ id: 'NOT', nom: 'NOT', kerak: 1 },
+	{ id: 'AND', nom: 'AND', kerak: 2 },
+	{ id: 'OR', nom: 'OR', kerak: 3 },
+	{ id: 'XOR', nom: 'XOR', kerak: 4 },
+];
+
+/* Darvozalar soni 4 ta: XOR uchun aynan shuncha kerak. Ko'proq berish
+   jumboqni yo'qotadi, kamroq berish XOR ni imkonsiz qiladi. */
+const DARVOZALAR = [1, 2, 3, 4];
+/** SVG'dagi qat'iy joylashuv — avtomatik joylashtirish algoritmi kerak emas. */
+const Y = [26, 74, 122, 170];
+---
+
+<Simulyator
+	sarlavha="NAND qurilma"
+	korsatma="Faqat NAND darvozalaridan tanlangan amalni quring. Har darvozaning kirishlarini ro'yxatdan tanlang."
+	blok={2}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda faqat NAND darvozalaridan NOT, AND, OR va XOR quriladi. Har
+			darvozaning kirishlari A, B yoki oldingi darvozalarning chiqishi bo'lishi mumkin.
+		</p>
+		<p>
+			JavaScript'siz sinash: daftarga NAND'lar sxemasini chizing va har kirish
+			kombinatsiyasi uchun signallarni qo'lda hisoblab chiqing. NOT uchun bitta NAND
+			yetadi — ikki kirishiga bir xil signal bering.
+		</p>
+	</Fragment>
+
+	<div class="nq not-content">
+		<div class="maqsadlar" role="group" aria-label="Qurilishi kerak bo'lgan amal">
+			{
+				MAQSADLAR.map((m, i) => (
+					<button
+						type="button"
+						class:list={['maqsad', { tanlangan: i === 0 }]}
+						data-maqsad={m.id}
+						data-kerak={m.kerak}
+						aria-pressed={i === 0 ? 'true' : 'false'}
+					>
+						{m.nom}
+					</button>
+				))
+			}
+		</div>
+
+		<p class="vazifa"></p>
+
+		{/* Sxema: barcha element SHABLONDA yasaladi. JS faqat `d` va matnni
+		    yangilaydi -- JS yasagan element scoped CSS klassini olmaydi. */}
+		<svg viewBox="0 0 360 208" class="sxema" role="img" aria-label="NAND darvozalari sxemasi">
+			<g class="simlar">
+				{
+					DARVOZALAR.flatMap((n) => [
+						<path class="sim" data-sim={`${n}-1`} d="" />,
+						<path class="sim" data-sim={`${n}-2`} d="" />,
+					])
+				}
+				<path class="sim sim-chiqish" data-sim="chiqish" d="" />
+			</g>
+
+			<text x="8" y="44" class="belgi">A</text>
+			<text x="8" y="78" class="belgi">B</text>
+			<circle cx="30" cy="40" r="3" class="tugun" />
+			<circle cx="30" cy="74" r="3" class="tugun" />
+
+			{
+				DARVOZALAR.map((n, i) => (
+					<g class="darvoza" data-darvoza={n}>
+						<rect x="150" y={Y[i]} width="76" height="30" rx="5" />
+						<text x="188" y={Y[i]! + 19} class="darvoza-nom">
+							N{n}
+						</text>
+					</g>
+				))
+			}
+
+			<text x="300" y="112" class="belgi chiqish-belgi">Y</text>
+		</svg>
+
+		<div class="darvoza-royxat">
+			{
+				DARVOZALAR.map((n) => (
+					<div class="qator" data-darvoza={n}>
+						<span class="nomi">N{n}</span>
+						<span class="teng">= NAND(</span>
+						<label>
+							<span class="sr">N{n} birinchi kirishi</span>
+							<select class="kirish" data-kirish="1" data-darvoza={n} />
+						</label>
+						<span class="vergul">,</span>
+						<label>
+							<span class="sr">N{n} ikkinchi kirishi</span>
+							<select class="kirish" data-kirish="2" data-darvoza={n} />
+						</label>
+						<span class="teng">)</span>
+					</div>
+				))
+			}
+
+			<div class="qator qator-chiqish">
+				<span class="nomi">Y</span>
+				<span class="teng">=</span>
+				<label>
+					<span class="sr">Chiqish signali</span>
+					<select class="chiqish-tanlov" />
+				</label>
+			</div>
+		</div>
+
+		<table class="jadval">
+			<thead>
+				<tr>
+					<th>A</th>
+					<th>B</th>
+					<th>Sizning Y</th>
+					<th class="kerak-ustun">Kerak</th>
+				</tr>
+			</thead>
+			<tbody>
+				{
+					[0, 1, 2, 3].map((q) => (
+						<tr data-qator={q}>
+							<td class="qq a" />
+							<td class="qq b" />
+							<td class="qq siz" />
+							<td class="qq kutilgan" />
+						</tr>
+					))
+				}
+			</tbody>
+		</table>
+
+		<p class="hukm" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="maslahat">Maslahat</button>
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	type Maqsad = 'NOT' | 'AND' | 'OR' | 'XOR';
+
+	const KUTILGAN: Record<Maqsad, (a: number, b: number) => number> = {
+		NOT: (a) => (a ? 0 : 1),
+		AND: (a, b) => (a && b ? 1 : 0),
+		OR: (a, b) => (a || b ? 1 : 0),
+		XOR: (a, b) => (a !== b ? 1 : 0),
+	};
+
+	const VAZIFA: Record<Maqsad, string> = {
+		NOT: 'NOT ni quring. Bitta NAND yetadi — B ustuni ahamiyatsiz.',
+		AND: 'AND ni quring. NAND chiqishini teskarisiga aylantirish kerak.',
+		OR: 'OR ni quring. Avval ikki kirishning har birini teskarisiga aylantirib ko‘ring.',
+		XOR: 'XOR ni quring. To‘rt NAND kerak — eng qiyini shu.',
+	};
+
+	const MASLAHAT: Record<Maqsad, string> = {
+		NOT: 'NAND ning ikki kirishiga BIR XIL signal bering: N1 = NAND(A, A).',
+		AND: 'N1 = NAND(A, B) — bu AND ning teskarisi. Endi N1 ni NOT qiling: N2 = NAND(N1, N1).',
+		OR: 'De Morgan: A OR B = NOT((NOT A) AND (NOT B)). N1 = NAND(A,A), N2 = NAND(B,B), N3 = NAND(N1,N2).',
+		XOR: 'N1 = NAND(A,B). Keyin N2 = NAND(A,N1), N3 = NAND(B,N1), va N4 = NAND(N2,N3).',
+	};
+
+	const QATORLAR: [number, number][] = [
+		[0, 0],
+		[0, 1],
+		[1, 0],
+		[1, 1],
+	];
+
+	/** SVG joylashuvi — shablon bilan bir xil bo'lishi shart. */
+	const Y = [26, 74, 122, 170];
+	const DARVOZA_X = 150;
+	const DARVOZA_W = 76;
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.nq');
+		if (!qutu) return;
+
+		const vazifaEl = qutu.querySelector<HTMLElement>('.vazifa')!;
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+		const kerakUstun = qutu.querySelector<HTMLElement>('.kerak-ustun')!;
+		const chiqishTanlov = qutu.querySelector<HTMLSelectElement>('.chiqish-tanlov')!;
+		const kirishlar = [...qutu.querySelectorAll<HTMLSelectElement>('.kirish')];
+		const jadvalQatorlar = [...qutu.querySelectorAll<HTMLTableRowElement>('.jadval tbody tr')];
+
+		let maqsad: Maqsad = 'NOT';
+		const yechilgan = new Set<Maqsad>();
+
+		/** Har select uchun mumkin bo'lgan signallar: A, B va OLDINGI darvozalar.
+		 *  Faqat oldingilar — shu sababli halqa (cycle) hosil bo'lishi mumkin emas. */
+		function variantlarniToldir() {
+			for (const s of kirishlar) {
+				const n = Number(s.dataset.darvoza);
+				const eski = s.value;
+				s.innerHTML = '';
+
+				const bosh = document.createElement('option');
+				bosh.value = '';
+				bosh.textContent = '—';
+				s.append(bosh);
+
+				for (const nom of ['A', 'B', ...Array.from({ length: n - 1 }, (_, i) => `N${i + 1}`)]) {
+					const o = document.createElement('option');
+					o.value = nom;
+					o.textContent = nom;
+					s.append(o);
+				}
+				// Eski tanlov hamon mumkin bo'lsa — saqlaymiz
+				s.value = [...s.options].some((o) => o.value === eski) ? eski : '';
+			}
+
+			const eski = chiqishTanlov.value;
+			chiqishTanlov.innerHTML = '';
+			const bosh = document.createElement('option');
+			bosh.value = '';
+			bosh.textContent = '—';
+			chiqishTanlov.append(bosh);
+			for (const nom of ['N1', 'N2', 'N3', 'N4']) {
+				const o = document.createElement('option');
+				o.value = nom;
+				o.textContent = nom;
+				chiqishTanlov.append(o);
+			}
+			chiqishTanlov.value = [...chiqishTanlov.options].some((o) => o.value === eski) ? eski : '';
+		}
+
+		/** Berilgan A va B uchun barcha signallarni hisoblaydi.
+		 *  Ulanmagan darvoza `null` qaytaradi — u hisobga kirmaydi. */
+		function hisobla(a: number, b: number): Record<string, number | null> {
+			const s: Record<string, number | null> = { A: a, B: b };
+			for (let n = 1; n <= 4; n++) {
+				const k1 = kirishlar.find((x) => +x.dataset.darvoza! === n && x.dataset.kirish === '1')!.value;
+				const k2 = kirishlar.find((x) => +x.dataset.darvoza! === n && x.dataset.kirish === '2')!.value;
+				if (!k1 || !k2 || s[k1] == null || s[k2] == null) {
+					s[`N${n}`] = null;
+					continue;
+				}
+				// NAND: ikkisi ham 1 bo'lsa 0, aks holda 1
+				s[`N${n}`] = s[k1] === 1 && s[k2] === 1 ? 0 : 1;
+			}
+			return s;
+		}
+
+		/** Sxemadagi simlarni tanlovlarga qarab chizadi. */
+		function sxemaniChiz() {
+			function manba(nom: string): [number, number] | null {
+				if (nom === 'A') return [30, 40];
+				if (nom === 'B') return [30, 74];
+				const m = /^N(\d)$/.exec(nom);
+				if (!m) return null;
+				const i = Number(m[1]) - 1;
+				return [DARVOZA_X + DARVOZA_W, Y[i]! + 15];
+			}
+
+			for (let n = 1; n <= 4; n++) {
+				const guruh = qutu.querySelector<SVGGElement>(`.darvoza[data-darvoza="${n}"]`)!;
+				let ishlatilgan = false;
+
+				for (const k of ['1', '2']) {
+					const yol = qutu.querySelector<SVGPathElement>(`.sim[data-sim="${n}-${k}"]`)!;
+					const tanlov = kirishlar.find(
+						(x) => +x.dataset.darvoza! === n && x.dataset.kirish === k
+					)!.value;
+					const m = tanlov ? manba(tanlov) : null;
+					if (!m) {
+						yol.setAttribute('d', '');
+						continue;
+					}
+					ishlatilgan = true;
+					const ty = Y[n - 1]! + (k === '1' ? 9 : 21);
+					// Har darvoza uchun boshqa "yo'lak" — simlar ustma-ust tushmasin
+					const oraliq = 40 + n * 18 + (k === '1' ? 0 : 6);
+					yol.setAttribute('d', `M${m[0]},${m[1]} H${oraliq} V${ty} H${DARVOZA_X}`);
+				}
+				guruh.dataset.ishlatilgan = ishlatilgan ? 'ha' : 'yoq';
+			}
+
+			const chiqishYol = qutu.querySelector<SVGPathElement>('.sim[data-sim="chiqish"]')!;
+			const m = chiqishTanlov.value ? manba(chiqishTanlov.value) : null;
+			chiqishYol.setAttribute('d', m ? `M${m[0]},${m[1]} H272 V108 H292` : '');
+		}
+
+		function yangila() {
+			const bittaKirish = maqsad === 'NOT';
+			vazifaEl.textContent = VAZIFA[maqsad];
+			kerakUstun.textContent = `${maqsad} kerak`;
+
+			sxemaniChiz();
+
+			let hammasiTogri = true;
+			let toliqmi = chiqishTanlov.value !== '';
+
+			jadvalQatorlar.forEach((tr, i) => {
+				const [a, b] = QATORLAR[i]!;
+				// NOT bitta kirish bilan ishlaydi -> B farq qiladigan qatorlar takrorlanadi
+				tr.hidden = bittaKirish && i % 2 === 1;
+
+				const signallar = hisobla(a, b);
+				const siz = chiqishTanlov.value ? signallar[chiqishTanlov.value] : null;
+				const kutilgan = KUTILGAN[maqsad](a, b);
+
+				tr.querySelector('.a')!.textContent = String(a);
+				tr.querySelector('.b')!.textContent = bittaKirish ? '–' : String(b);
+				const sizEl = tr.querySelector<HTMLElement>('.siz')!;
+				sizEl.textContent = siz === null ? '·' : String(siz);
+				tr.querySelector('.kutilgan')!.textContent = String(kutilgan);
+
+				if (tr.hidden) return;
+				if (siz === null) {
+					toliqmi = false;
+					delete sizEl.dataset.holat;
+					hammasiTogri = false;
+					return;
+				}
+				const shuTogri = siz === kutilgan;
+				sizEl.dataset.holat = shuTogri ? 'togri' : 'xato';
+				if (!shuTogri) hammasiTogri = false;
+			});
+
+			if (!toliqmi) {
+				delete qutu.dataset.holat;
+				hukmEl.textContent = 'Sxema hali to‘liq emas — kirishlarni va chiqishni tanlang.';
+				return;
+			}
+
+			if (hammasiTogri) {
+				qutu.dataset.holat = 'togri';
+				yechilgan.add(maqsad);
+				const ishlatilgan = [1, 2, 3, 4].filter((n) =>
+					kirishlar.some((x) => +x.dataset.darvoza! === n && x.value !== '')
+				).length;
+				hukmEl.textContent =
+					yechilgan.size >= 4
+						? `${maqsad} qurildi (${ishlatilgan} NAND). To‘rttasini ham qurdingiz — NAND haqiqatan universal!`
+						: `${maqsad} qurildi (${ishlatilgan} NAND). Qurilgan amallar: ${yechilgan.size}/4.`;
+				if (yechilgan.size >= 4) amalBelgila('nand-qurilma');
+			} else {
+				qutu.dataset.holat = 'xato';
+				hukmEl.textContent = 'Jadval hali to‘g‘ri kelmadi. Qizil qatorlarga qarab sxemani o‘zgartiring.';
+			}
+		}
+
+		function tozala() {
+			for (const s of kirishlar) s.value = '';
+			chiqishTanlov.value = '';
+			yangila();
+		}
+
+		for (const s of [...kirishlar, chiqishTanlov]) s.addEventListener('change', yangila);
+
+		for (const t of qutu.querySelectorAll<HTMLButtonElement>('.maqsad')) {
+			t.addEventListener('click', () => {
+				maqsad = t.dataset.maqsad as Maqsad;
+				for (const b of qutu.querySelectorAll<HTMLButtonElement>('.maqsad')) {
+					const bu = b === t;
+					b.classList.toggle('tanlangan', bu);
+					b.setAttribute('aria-pressed', String(bu));
+				}
+				tozala();
+			});
+		}
+
+		qobiq.querySelector<HTMLButtonElement>('.maslahat')!.addEventListener('click', () => {
+			hukmEl.textContent = MASLAHAT[maqsad];
+			delete qutu.dataset.holat;
+		});
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', tozala);
+
+		variantlarniToldir();
+		yangila();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.sr {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	.maqsadlar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+
+	.maqsad {
+		margin: 0;
+		padding: 0.35rem 0.8rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-3);
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		font-weight: 700;
+		cursor: pointer;
+	}
+
+	.maqsad:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.maqsad.tanlangan {
+		border-color: var(--blok-2);
+		background: var(--blok-2-fon);
+		color: var(--blok-2);
+	}
+
+	.vazifa {
+		margin: 0.9rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	.sxema {
+		display: block;
+		width: 100%;
+		max-width: 26rem;
+		height: auto;
+		margin: 0.5rem 0 0 0;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+	}
+
+	.sxema .belgi {
+		fill: var(--sl-color-gray-2);
+		font-family: var(--sl-font-mono);
+		font-size: 13px;
+		font-weight: 700;
+	}
+
+	.sxema .tugun {
+		fill: var(--sl-color-gray-3);
+	}
+
+	.sxema .sim {
+		fill: none;
+		stroke: var(--sl-color-gray-4);
+		stroke-width: 1.5;
+	}
+
+	.sxema .sim-chiqish {
+		stroke: var(--blok-2);
+		stroke-width: 2;
+	}
+
+	.sxema .darvoza rect {
+		fill: var(--sl-color-gray-7);
+		stroke: var(--sl-color-gray-5);
+		stroke-width: 1;
+	}
+
+	.sxema .darvoza[data-ishlatilgan='ha'] rect {
+		fill: var(--blok-2-fon);
+		stroke: var(--blok-2);
+	}
+
+	.sxema .darvoza-nom {
+		fill: var(--sl-color-gray-4);
+		font-family: var(--sl-font-mono);
+		font-size: 12px;
+		font-weight: 700;
+		text-anchor: middle;
+	}
+
+	.sxema .darvoza[data-ishlatilgan='ha'] .darvoza-nom {
+		fill: var(--blok-2);
+	}
+
+	.darvoza-royxat {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		margin-top: 1rem;
+	}
+
+	.qator {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.3rem;
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.nomi {
+		min-width: 1.6rem;
+		font-weight: 700;
+		color: var(--sl-color-white);
+	}
+
+	.qator-chiqish {
+		margin-top: 0.3rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid var(--sl-color-gray-6);
+	}
+
+	.qator-chiqish .nomi {
+		color: var(--blok-2);
+	}
+
+	select {
+		padding: 0.25rem 0.4rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 4px;
+		background: var(--sl-color-black);
+		color: var(--sl-color-white);
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		/* Barmoq bilan bosish uchun yetarli baland */
+		min-height: 2rem;
+	}
+
+	select:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 1px;
+	}
+
+	.jadval {
+		width: 100%;
+		max-width: 24rem;
+		margin: 1.2rem 0 0 0;
+		border-collapse: collapse;
+	}
+
+	.jadval th {
+		padding: 0.35rem 0.4rem;
+		border-bottom: 1px solid var(--sl-color-gray-5);
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--sl-color-gray-3);
+		text-align: center;
+	}
+
+	.jadval td {
+		padding: 0.3rem 0.4rem;
+		border-bottom: 1px solid var(--sl-color-gray-6);
+		text-align: center;
+	}
+
+	.qq {
+		font-family: var(--sl-font-mono);
+		font-size: 0.95rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.siz[data-holat='togri'] {
+		color: var(--blok-1);
+		font-weight: 700;
+	}
+
+	.siz[data-holat='xato'] {
+		color: var(--blok-5);
+		font-weight: 700;
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	.nq[data-holat='togri'] .hukm {
+		font-weight: 600;
+		color: var(--blok-1);
+	}
+
+	.nq[data-holat='xato'] .hukm {
+		color: var(--blok-5);
+	}
+</style>

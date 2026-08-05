@@ -1,0 +1,865 @@
+---
+/**
+ * SummatorQuruvchi — 7-dars simulyatori.
+ *
+ * Uch bosqich, har biri oldingisining ustiga quriladi:
+ *   1. Yarim summator — A va B ni almashtirib, XOR/AND chiqishlarini kuzatish.
+ *      Barcha 4 kombinatsiya sinalganda bosqich tugaydi.
+ *   2. To'liq summator — uchinchi kirish (Cin) qo'shiladi, 8 kombinatsiya.
+ *   3. 4-bitli qo'shuvchi — ikkita sonni bit-bit terib, `Qadam` bilan
+ *      ustunma-ustun qo'shish. Ko'chirish biti ko'z oldida oqadi.
+ *
+ * Barcha elementlar SHABLONDA yasalgan (soni qat'iy: 4 qator, 8 qator,
+ * 4 ustun) — JS faqat matn va data-atributlarni yangilaydi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+const BOSQICHLAR = [
+	{ id: '1', nom: '1. Yarim' },
+	{ id: '2', nom: "2. To'liq" },
+	{ id: '3', nom: '3. 4-bitli' },
+];
+
+/* Haqiqat jadvallari statik — qiymatlar oldindan yozib qo'yiladi,
+   JS faqat "sinaldi" belgisini qo'yadi. */
+const YARIM = [0, 1, 2, 3].map((n) => {
+	const a = n >> 1;
+	const b = n & 1;
+	return { a, b, s: a ^ b, c: a & b };
+});
+const TOLIQ = [0, 1, 2, 3, 4, 5, 6, 7].map((n) => {
+	const a = n >> 2;
+	const b = (n >> 1) & 1;
+	const cin = n & 1;
+	const yig = a + b + cin;
+	return { a, b, cin, s: yig % 2, cout: yig > 1 ? 1 : 0 };
+});
+
+/** 4-bit ustunlar chapdan o'ngga: eng katta razryad birinchi. */
+const USTUNLAR = [3, 2, 1, 0];
+---
+
+<Simulyator
+	sarlavha="Summator quruvchi"
+	korsatma="Uch bosqichni ketma-ket o'ting: yarim summatordan 4-bitli qo'shuvchigacha."
+	blok={2}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda qo'shuvchi sxema uch bosqichda yig'iladi: yarim summator (XOR va
+			AND), to'liq summator (uch kirish) va 4-bitli qo'shuvchi (ko'chirish biti
+			ustundan ustunga oqadi).
+		</p>
+		<p>
+			JavaScript'siz sinash: daftarga 1011 + 0110 ni ustun qilib yozing va maktab
+			qo'shuvidagidek o'ngdan chapga, ko'chirishlarni yuqoriga yozib hisoblang.
+		</p>
+	</Fragment>
+
+	<div class="sq not-content">
+		<div class="bosqichlar" role="group" aria-label="Bosqich tanlash">
+			{
+				BOSQICHLAR.map((b, i) => (
+					<button
+						type="button"
+						class:list={['bosqich', { tanlangan: i === 0 }]}
+						data-bosqich={b.id}
+						aria-pressed={i === 0 ? 'true' : 'false'}
+					>
+						{b.nom}
+						<span class="belgi-tugadi" hidden>
+							✓
+						</span>
+					</button>
+				))
+			}
+		</div>
+
+		<p class="vazifa"></p>
+
+		{/* ==================== 1-BOSQICH: yarim summator ==================== */}
+		<div class="qism" data-qism="1">
+			<div class="kirishlar" role="group" aria-label="Kirish bitlari">
+				<button type="button" class="bit" data-kirish="a" aria-pressed="false">A = 0</button>
+				<button type="button" class="bit" data-kirish="b" aria-pressed="false">B = 0</button>
+			</div>
+
+			<svg viewBox="0 0 360 130" class="sxema" role="img" aria-label="Yarim summator sxemasi">
+				<path class="sim" data-sim="a-xor" d="M40,35 H110 V45 H150"></path>
+				<path class="sim" data-sim="a-and" d="M75,35 V90 H150"></path>
+				<path class="sim" data-sim="b-xor" d="M40,65 H130 V55 H150"></path>
+				<path class="sim" data-sim="b-and" d="M95,65 V100 H150"></path>
+				<path class="sim" data-sim="s" d="M226,50 H310"></path>
+				<path class="sim" data-sim="c" d="M226,95 H310"></path>
+				<text x="14" y="40" class="belgi">A</text>
+				<text x="14" y="70" class="belgi">B</text>
+				<rect x="150" y="35" width="76" height="30" rx="5" class="quti"></rect>
+				<text x="188" y="54" class="quti-nom">XOR</text>
+				<rect x="150" y="80" width="76" height="30" rx="5" class="quti"></rect>
+				<text x="188" y="99" class="quti-nom">AND</text>
+				<text x="318" y="55" class="belgi" data-chiqish="s">S=0</text>
+				<text x="318" y="100" class="belgi" data-chiqish="c">C=0</text>
+			</svg>
+
+			<table class="jadval">
+				<thead>
+					<tr><th>A</th><th>B</th><th>S</th><th>C</th><th>Sinaldi</th></tr>
+				</thead>
+				<tbody>
+					{
+						YARIM.map((q, i) => (
+							<tr data-qator={i}>
+								<td>{q.a}</td>
+								<td>{q.b}</td>
+								<td>{q.s}</td>
+								<td>{q.c}</td>
+								<td class="sinaldi" />
+							</tr>
+						))
+					}
+				</tbody>
+			</table>
+		</div>
+
+		{/* ==================== 2-BOSQICH: to'liq summator ==================== */}
+		<div class="qism" data-qism="2" hidden>
+			<div class="kirishlar" role="group" aria-label="Kirish bitlari">
+				<button type="button" class="bit" data-kirish="a" aria-pressed="false">A = 0</button>
+				<button type="button" class="bit" data-kirish="b" aria-pressed="false">B = 0</button>
+				<button type="button" class="bit" data-kirish="cin" aria-pressed="false">Cin = 0</button>
+			</div>
+
+			<svg viewBox="0 0 360 170" class="sxema" role="img" aria-label="To'liq summator sxemasi">
+				<path class="sim" data-sim="a-y1" d="M30,25 H80"></path>
+				<path class="sim" data-sim="b-y1" d="M30,45 H80"></path>
+				<path class="sim" data-sim="y1s-y2" d="M156,30 H180 V25 H204"></path>
+				<path class="sim" data-sim="cin-y2" d="M30,65 H180 V45 H204"></path>
+				<path class="sim" data-sim="s" d="M280,35 H322"></path>
+				<path class="sim" data-sim="y1c-or" d="M156,48 H168 V128 H204"></path>
+				<path class="sim" data-sim="y2c-or" d="M280,48 H292 V80 H192 V108 H204"></path>
+				<path class="sim" data-sim="cout" d="M280,118 H322"></path>
+				<text x="6" y="30" class="belgi">A</text>
+				<text x="6" y="50" class="belgi">B</text>
+				<text x="6" y="70" class="belgi">Cin</text>
+				<rect x="80" y="18" width="76" height="38" rx="5" class="quti"></rect>
+				<text x="118" y="35" class="quti-nom">Yarim 1</text>
+				<text x="118" y="50" class="quti-izoh">S, C</text>
+				<rect x="204" y="18" width="76" height="38" rx="5" class="quti"></rect>
+				<text x="242" y="35" class="quti-nom">Yarim 2</text>
+				<text x="242" y="50" class="quti-izoh">S, C</text>
+				<rect x="204" y="103" width="76" height="30" rx="5" class="quti"></rect>
+				<text x="242" y="122" class="quti-nom">OR</text>
+				<text x="326" y="40" class="belgi" data-chiqish="s">S=0</text>
+				<text x="326" y="123" class="belgi" data-chiqish="cout">C=0</text>
+			</svg>
+
+			<table class="jadval">
+				<thead>
+					<tr><th>A</th><th>B</th><th>Cin</th><th>S</th><th>Cout</th><th>Sinaldi</th></tr>
+				</thead>
+				<tbody>
+					{
+						TOLIQ.map((q, i) => (
+							<tr data-qator={i}>
+								<td>{q.a}</td>
+								<td>{q.b}</td>
+								<td>{q.cin}</td>
+								<td>{q.s}</td>
+								<td>{q.cout}</td>
+								<td class="sinaldi" />
+							</tr>
+						))
+					}
+				</tbody>
+			</table>
+		</div>
+
+		{/* ==================== 3-BOSQICH: 4-bitli qo'shuvchi ==================== */}
+		<div class="qism" data-qism="3" hidden>
+			<div class="ustun-jadval" role="group" aria-label="Ustunli qo'shish">
+				<div class="u-qator u-kochirish">
+					<span class="u-yorliq">ko'chirish</span>
+					<span class="u-katak kochirish" data-kochirish="4"></span>
+					{USTUNLAR.map((i) => <span class="u-katak kochirish" data-kochirish={i}></span>)}
+				</div>
+				<div class="u-qator">
+					<span class="u-yorliq">A</span>
+					<span class="u-katak bosh"></span>
+					{
+						USTUNLAR.map((i) => (
+							<button type="button" class="u-katak son-bit" data-son="a" data-bit={i} aria-label={`A ning ${i}-biti`}>
+								0
+							</button>
+						))
+					}
+					<span class="u-onlik" data-onlik="a">= 0</span>
+				</div>
+				<div class="u-qator">
+					<span class="u-yorliq">B</span>
+					<span class="u-katak bosh">+</span>
+					{
+						USTUNLAR.map((i) => (
+							<button type="button" class="u-katak son-bit" data-son="b" data-bit={i} aria-label={`B ning ${i}-biti`}>
+								0
+							</button>
+						))
+					}
+					<span class="u-onlik" data-onlik="b">= 0</span>
+				</div>
+				<div class="u-qator u-natija">
+					<span class="u-yorliq">yig'indi</span>
+					<span class="u-katak toshish" data-toshish></span>
+					{USTUNLAR.map((i) => <span class="u-katak natija-bit" data-natija={i}>·</span>)}
+					<span class="u-onlik" data-onlik="natija"></span>
+				</div>
+			</div>
+
+			<div class="qadam-qator">
+				<button type="button" class="sim-tugma qadam">Qadam</button>
+				<span class="qadam-izoh" data-qadam-izoh></span>
+			</div>
+
+			<ul class="topshiriqlar" aria-label="Topshiriqlar">
+				<li data-topshiriq="0">3 + 5 ni hisoblang — ko'chirish uch ustundan oqib o'tadi</li>
+				<li data-topshiriq="1">9 + 7 ni hisoblang — natija 4 bitga sig'maydi</li>
+			</ul>
+		</div>
+
+		<p class="hukm" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.sq');
+		if (!qutu) return;
+
+		const vazifaEl = qutu.querySelector<HTMLElement>('.vazifa')!;
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+
+		const VAZIFA = [
+			'A va B tugmalarini bosib, 4 kombinatsiyaning hammasini sinab chiqing.',
+			"Endi uchinchi kirish bor — pastdan kelgan ko'chirish (Cin). 8 kombinatsiyani sinang.",
+			"A va B bitlarini terib, Qadam tugmasi bilan o'ngdan chapga ustunma-ustun qo'shing.",
+		];
+
+		let bosqich = 0;
+		const tugagan = [false, false, false];
+
+		/* -------------------- umumiy -------------------- */
+
+		function bosqichTugadi(i: number) {
+			if (tugagan[i]) return;
+			tugagan[i] = true;
+			qutu
+				.querySelectorAll<HTMLElement>('.bosqich')
+				[i]!.querySelector<HTMLElement>('.belgi-tugadi')!.hidden = false;
+			if (tugagan.every(Boolean)) {
+				amalBelgila('summator-quruvchi');
+				hukmEl.textContent =
+					"Uchala bosqich tugadi! Yarim summatordan 4-bitli qo'shuvchigacha — hammasini o'zingiz yig'dingiz.";
+			}
+		}
+
+		function simRang(el: SVGElement | null, qiymat: number) {
+			if (el) el.dataset.signal = qiymat ? '1' : '0';
+		}
+
+		/* -------------------- 1-bosqich -------------------- */
+
+		const q1 = qutu.querySelector<HTMLElement>('[data-qism="1"]')!;
+		const s1 = { a: 0, b: 0, korilgan: new Set<number>() };
+
+		function q1Yangila() {
+			const { a, b } = s1;
+			const s = a ^ b;
+			const c = a & b;
+			s1.korilgan.add(a * 2 + b);
+
+			for (const t of q1.querySelectorAll<HTMLButtonElement>('.bit')) {
+				const qiymat = t.dataset.kirish === 'a' ? a : b;
+				t.textContent = `${t.dataset.kirish!.toUpperCase()} = ${qiymat}`;
+				t.setAttribute('aria-pressed', String(qiymat === 1));
+			}
+			simRang(q1.querySelector('[data-sim="a-xor"]'), a);
+			simRang(q1.querySelector('[data-sim="a-and"]'), a);
+			simRang(q1.querySelector('[data-sim="b-xor"]'), b);
+			simRang(q1.querySelector('[data-sim="b-and"]'), b);
+			simRang(q1.querySelector('[data-sim="s"]'), s);
+			simRang(q1.querySelector('[data-sim="c"]'), c);
+			q1.querySelector('[data-chiqish="s"]')!.textContent = `S=${s}`;
+			q1.querySelector('[data-chiqish="c"]')!.textContent = `C=${c}`;
+
+			q1.querySelectorAll<HTMLTableRowElement>('tbody tr').forEach((tr, i) => {
+				tr.dataset.joriy = i === a * 2 + b ? 'ha' : 'yoq';
+				tr.querySelector('.sinaldi')!.textContent = s1.korilgan.has(i) ? '✓' : '';
+			});
+
+			if (s1.korilgan.size === 4) {
+				bosqichTugadi(0);
+				if (!tugagan.every(Boolean))
+					hukmEl.textContent =
+						"1-bosqich tayyor: S — bu XOR, C — bu AND. Endi 2-bosqichga o'ting.";
+			} else {
+				hukmEl.textContent = `Sinaldi: ${s1.korilgan.size}/4 kombinatsiya.`;
+			}
+		}
+
+		/* -------------------- 2-bosqich -------------------- */
+
+		const q2 = qutu.querySelector<HTMLElement>('[data-qism="2"]')!;
+		const s2 = { a: 0, b: 0, cin: 0, korilgan: new Set<number>() };
+
+		function q2Yangila() {
+			const { a, b, cin } = s2;
+			const y1s = a ^ b;
+			const y1c = a & b;
+			const s = y1s ^ cin;
+			const y2c = y1s & cin;
+			const cout = y1c | y2c;
+			s2.korilgan.add(a * 4 + b * 2 + cin);
+
+			for (const t of q2.querySelectorAll<HTMLButtonElement>('.bit')) {
+				const k = t.dataset.kirish as 'a' | 'b' | 'cin';
+				const qiymat = s2[k];
+				t.textContent = `${k === 'cin' ? 'Cin' : k.toUpperCase()} = ${qiymat}`;
+				t.setAttribute('aria-pressed', String(qiymat === 1));
+			}
+			simRang(q2.querySelector('[data-sim="a-y1"]'), a);
+			simRang(q2.querySelector('[data-sim="b-y1"]'), b);
+			simRang(q2.querySelector('[data-sim="y1s-y2"]'), y1s);
+			simRang(q2.querySelector('[data-sim="cin-y2"]'), cin);
+			simRang(q2.querySelector('[data-sim="s"]'), s);
+			simRang(q2.querySelector('[data-sim="y1c-or"]'), y1c);
+			simRang(q2.querySelector('[data-sim="y2c-or"]'), y2c);
+			simRang(q2.querySelector('[data-sim="cout"]'), cout);
+			q2.querySelector('[data-chiqish="s"]')!.textContent = `S=${s}`;
+			q2.querySelector('[data-chiqish="cout"]')!.textContent = `C=${cout}`;
+
+			q2.querySelectorAll<HTMLTableRowElement>('tbody tr').forEach((tr, i) => {
+				tr.dataset.joriy = i === a * 4 + b * 2 + cin ? 'ha' : 'yoq';
+				tr.querySelector('.sinaldi')!.textContent = s2.korilgan.has(i) ? '✓' : '';
+			});
+
+			if (s2.korilgan.size === 8) {
+				bosqichTugadi(1);
+				if (!tugagan.every(Boolean))
+					hukmEl.textContent =
+						"2-bosqich tayyor: ikki yarim summator + OR = to'liq summator. 3-bosqichga o'ting.";
+			} else {
+				hukmEl.textContent = `Sinaldi: ${s2.korilgan.size}/8 kombinatsiya.`;
+			}
+		}
+
+		/* -------------------- 3-bosqich -------------------- */
+
+		const q3 = qutu.querySelector<HTMLElement>('[data-qism="3"]')!;
+		const s3 = {
+			a: [0, 0, 0, 0],
+			b: [0, 0, 0, 0],
+			qadam: 0,
+			kochirish: [0, 0, 0, 0, 0],
+			natija: [0, 0, 0, 0],
+			topshiriqlar: new Set<number>(),
+		};
+		const TOPSHIRIQLAR: [number, number][] = [
+			[3, 5],
+			[9, 7],
+		];
+
+		const onlik = (bitlar: number[]) => bitlar.reduce((y, bit, i) => y + bit * 2 ** i, 0);
+
+		function q3Yangila() {
+			const aSon = onlik(s3.a);
+			const bSon = onlik(s3.b);
+
+			for (const t of q3.querySelectorAll<HTMLButtonElement>('.son-bit')) {
+				const bit = s3[t.dataset.son as 'a' | 'b'][Number(t.dataset.bit)]!;
+				t.textContent = String(bit);
+				t.dataset.yoniq = bit ? 'ha' : 'yoq';
+			}
+			q3.querySelector('[data-onlik="a"]')!.textContent = `= ${aSon}`;
+			q3.querySelector('[data-onlik="b"]')!.textContent = `= ${bSon}`;
+
+			for (let i = 0; i <= 4; i++) {
+				const el = q3.querySelector<HTMLElement>(`[data-kochirish="${i}"]`)!;
+				// Ko'chirish faqat hisoblangan ustunlarda ko'rinadi; 0 ko'rsatilmaydi
+				el.textContent = i > 0 && i <= s3.qadam && s3.kochirish[i] ? '1' : '';
+				el.dataset.joriy = s3.qadam < 4 && i === s3.qadam && i > 0 && s3.kochirish[i] ? 'ha' : 'yoq';
+			}
+
+			for (let i = 0; i < 4; i++) {
+				const el = q3.querySelector<HTMLElement>(`[data-natija="${i}"]`)!;
+				el.textContent = i < s3.qadam ? String(s3.natija[i]) : '·';
+				el.dataset.joriy = i === s3.qadam - 1 ? 'ha' : 'yoq';
+			}
+
+			const toshishEl = q3.querySelector<HTMLElement>('[data-toshish]')!;
+			toshishEl.textContent = s3.qadam === 4 && s3.kochirish[4] ? '1' : '';
+
+			const izoh = q3.querySelector<HTMLElement>('[data-qadam-izoh]')!;
+			const natijaOnlik = q3.querySelector<HTMLElement>('[data-onlik="natija"]')!;
+			if (s3.qadam === 0) {
+				izoh.textContent = "Bitlarni terib bo'lgach, Qadam tugmasini bosing.";
+				natijaOnlik.textContent = '';
+			} else if (s3.qadam < 4) {
+				const i = s3.qadam - 1;
+				izoh.textContent = `${i}-ustun: ${s3.a[i]} + ${s3.b[i]}${s3.kochirish[i] ? ' + 1' : ''} → ${s3.natija[i]}, ko'chirish ${s3.kochirish[i + 1]}.`;
+				natijaOnlik.textContent = '';
+			} else {
+				const yig = onlik(s3.natija) + s3.kochirish[4]! * 16;
+				natijaOnlik.textContent = `= ${onlik(s3.natija)}`;
+				izoh.textContent = s3.kochirish[4]
+					? `Aslida ${aSon} + ${bSon} = ${yig}, lekin 5-bit uchun joy yo'q — toshib ketish! Qolgani: ${onlik(s3.natija)}.`
+					: `Tayyor: ${aSon} + ${bSon} = ${onlik(s3.natija)}.`;
+			}
+
+			q3.querySelectorAll<HTMLElement>('[data-topshiriq]').forEach((li, i) => {
+				li.dataset.bajarildi = s3.topshiriqlar.has(i) ? 'ha' : 'yoq';
+			});
+		}
+
+		function q3Qadam() {
+			if (s3.qadam >= 4) return;
+			const i = s3.qadam;
+			const yig = s3.a[i]! + s3.b[i]! + s3.kochirish[i]!;
+			s3.natija[i] = yig % 2;
+			s3.kochirish[i + 1] = yig > 1 ? 1 : 0;
+			s3.qadam++;
+
+			if (s3.qadam === 4) {
+				const aSon = onlik(s3.a);
+				const bSon = onlik(s3.b);
+				TOPSHIRIQLAR.forEach(([x, y], t) => {
+					if ((aSon === x && bSon === y) || (aSon === y && bSon === x)) s3.topshiriqlar.add(t);
+				});
+				if (s3.topshiriqlar.size === TOPSHIRIQLAR.length) bosqichTugadi(2);
+			}
+			q3Yangila();
+		}
+
+		function q3Tozala(bitlarHam: boolean) {
+			s3.qadam = 0;
+			s3.kochirish = [0, 0, 0, 0, 0];
+			s3.natija = [0, 0, 0, 0];
+			if (bitlarHam) {
+				s3.a = [0, 0, 0, 0];
+				s3.b = [0, 0, 0, 0];
+			}
+			q3Yangila();
+		}
+
+		/* -------------------- ulanishlar -------------------- */
+
+		for (const t of q1.querySelectorAll<HTMLButtonElement>('.bit')) {
+			t.addEventListener('click', () => {
+				const k = t.dataset.kirish as 'a' | 'b';
+				s1[k] = s1[k] ? 0 : 1;
+				q1Yangila();
+			});
+		}
+
+		for (const t of q2.querySelectorAll<HTMLButtonElement>('.bit')) {
+			t.addEventListener('click', () => {
+				const k = t.dataset.kirish as 'a' | 'b' | 'cin';
+				s2[k] = s2[k] ? 0 : 1;
+				q2Yangila();
+			});
+		}
+
+		for (const t of q3.querySelectorAll<HTMLButtonElement>('.son-bit')) {
+			t.addEventListener('click', () => {
+				const son = s3[t.dataset.son as 'a' | 'b'];
+				const bit = Number(t.dataset.bit);
+				son[bit] = son[bit] ? 0 : 1;
+				// Son o'zgardi — eski hisob endi yaroqsiz
+				q3Tozala(false);
+			});
+		}
+
+		q3.querySelector<HTMLButtonElement>('.qadam')!.addEventListener('click', q3Qadam);
+
+		for (const t of qutu.querySelectorAll<HTMLButtonElement>('.bosqich')) {
+			t.addEventListener('click', () => {
+				bosqich = Number(t.dataset.bosqich) - 1;
+				for (const b of qutu.querySelectorAll<HTMLButtonElement>('.bosqich')) {
+					const bu = b === t;
+					b.classList.toggle('tanlangan', bu);
+					b.setAttribute('aria-pressed', String(bu));
+				}
+				qutu.querySelectorAll<HTMLElement>('.qism').forEach((q) => {
+					q.hidden = q.dataset.qism !== t.dataset.bosqich;
+				});
+				vazifaEl.textContent = VAZIFA[bosqich]!;
+				hukmEl.textContent = '';
+			});
+		}
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			s1.a = 0;
+			s1.b = 0;
+			s1.korilgan.clear();
+			s2.a = 0;
+			s2.b = 0;
+			s2.cin = 0;
+			s2.korilgan.clear();
+			s3.topshiriqlar.clear();
+			q3Tozala(true);
+			q1Yangila();
+			q2Yangila();
+			hukmEl.textContent = '';
+		});
+
+		vazifaEl.textContent = VAZIFA[0]!;
+		q1Yangila();
+		q2Yangila();
+		q3Yangila();
+		hukmEl.textContent = '';
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.bosqichlar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+
+	.bosqich {
+		margin: 0;
+		padding: 0.35rem 0.8rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-3);
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		font-weight: 700;
+		cursor: pointer;
+	}
+
+	.bosqich:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.bosqich.tanlangan {
+		border-color: var(--blok-2);
+		background: var(--blok-2-fon);
+		color: var(--blok-2);
+	}
+
+	.belgi-tugadi {
+		color: var(--blok-1);
+	}
+
+	.vazifa {
+		margin: 0.9rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	.kirishlar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+
+	.bit {
+		margin: 0;
+		padding: 0.4rem 0.7rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-2);
+		font-family: var(--sl-font-mono);
+		font-size: 0.9rem;
+		cursor: pointer;
+	}
+
+	.bit:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.bit[aria-pressed='true'] {
+		border-color: var(--blok-2);
+		background: var(--blok-2-fon);
+		color: var(--blok-2);
+		font-weight: 700;
+	}
+
+	.sxema {
+		display: block;
+		width: 100%;
+		max-width: 26rem;
+		height: auto;
+		margin: 0.6rem 0 0 0;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+	}
+
+	.sxema .belgi {
+		fill: var(--sl-color-gray-2);
+		font-family: var(--sl-font-mono);
+		font-size: 13px;
+		font-weight: 700;
+	}
+
+	.sxema .sim {
+		fill: none;
+		stroke: var(--sl-color-gray-4);
+		stroke-width: 1.5;
+		transition: stroke 0.15s ease;
+	}
+
+	.sxema .sim[data-signal='1'] {
+		stroke: var(--blok-2);
+		stroke-width: 2.5;
+	}
+
+	.sxema .quti {
+		fill: var(--sl-color-gray-7);
+		stroke: var(--sl-color-gray-5);
+	}
+
+	.sxema .quti-nom {
+		fill: var(--sl-color-gray-3);
+		font-family: var(--sl-font-mono);
+		font-size: 12px;
+		font-weight: 700;
+		text-anchor: middle;
+	}
+
+	.sxema .quti-izoh {
+		fill: var(--sl-color-gray-4);
+		font-family: var(--sl-font-mono);
+		font-size: 9px;
+		text-anchor: middle;
+	}
+
+	.jadval {
+		width: 100%;
+		max-width: 24rem;
+		margin: 1rem 0 0 0;
+		border-collapse: collapse;
+	}
+
+	.jadval th {
+		padding: 0.3rem 0.4rem;
+		border-bottom: 1px solid var(--sl-color-gray-5);
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--sl-color-gray-3);
+		text-align: center;
+	}
+
+	.jadval td {
+		padding: 0.25rem 0.4rem;
+		border-bottom: 1px solid var(--sl-color-gray-6);
+		font-family: var(--sl-font-mono);
+		font-size: 0.9rem;
+		color: var(--sl-color-gray-2);
+		text-align: center;
+	}
+
+	.jadval tr[data-joriy='ha'] td {
+		background: var(--blok-2-fon);
+		color: var(--blok-2);
+	}
+
+	.sinaldi {
+		color: var(--blok-1);
+		font-weight: 700;
+	}
+
+	/* ---------- 3-bosqich: ustunli qo'shish ---------- */
+
+	.ustun-jadval {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		font-family: var(--sl-font-mono);
+	}
+
+	.u-qator {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+	}
+
+	.u-yorliq {
+		width: 4.6rem;
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.u-katak {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.2rem;
+		height: 2.2rem;
+		font-size: 1.05rem;
+	}
+
+	.u-kochirish .u-katak {
+		height: 1.4rem;
+		font-size: 0.8rem;
+		color: var(--blok-2);
+		font-weight: 700;
+	}
+
+	.kochirish[data-joriy='ha'] {
+		background: var(--blok-2-fon);
+		border-radius: var(--sa-radius-kichik);
+	}
+
+	.son-bit {
+		margin: 0;
+		padding: 0;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-3);
+		font-family: var(--sl-font-mono);
+		font-size: 1.05rem;
+		cursor: pointer;
+	}
+
+	.son-bit:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.son-bit[data-yoniq='ha'] {
+		border-color: var(--blok-2);
+		background: var(--blok-2-fon);
+		color: var(--blok-2);
+		font-weight: 700;
+	}
+
+	.bosh {
+		color: var(--sl-color-gray-3);
+	}
+
+	.u-natija {
+		border-top: 2px solid var(--sl-color-gray-4);
+		padding-top: 0.3rem;
+	}
+
+	.natija-bit {
+		color: var(--sl-color-white);
+		font-weight: 700;
+	}
+
+	.natija-bit[data-joriy='ha'] {
+		background: var(--blok-2-fon);
+		color: var(--blok-2);
+		border-radius: var(--sa-radius-kichik);
+	}
+
+	.toshish {
+		color: var(--blok-5);
+		font-weight: 700;
+	}
+
+	.u-onlik {
+		margin-left: 0.4rem;
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-3);
+		white-space: nowrap;
+	}
+
+	/* Tor ekranda kataklarni biroz siqamiz — qator bitta chiziqda qolsin */
+	@media (max-width: 480px) {
+		.u-yorliq {
+			width: 3.4rem;
+			font-size: 0.62rem;
+		}
+
+		.u-katak {
+			width: 1.9rem;
+			height: 2rem;
+			font-size: 0.95rem;
+		}
+
+		.u-qator {
+			gap: 0.2rem;
+		}
+	}
+
+	.qadam-qator {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.7rem;
+		margin-top: 1rem;
+	}
+
+	.qadam-izoh {
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.topshiriqlar {
+		margin: 1rem 0 0 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.topshiriqlar li {
+		position: relative;
+		padding-left: 1.5rem;
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.topshiriqlar li::before {
+		content: '○';
+		position: absolute;
+		left: 0.2rem;
+		color: var(--sl-color-gray-4);
+	}
+
+	.topshiriqlar li[data-bajarildi='ha'] {
+		color: var(--blok-1);
+	}
+
+	.topshiriqlar li[data-bajarildi='ha']::before {
+		content: '✓';
+		color: var(--blok-1);
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 1.4em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.sxema .sim {
+			transition: none;
+		}
+	}
+</style>

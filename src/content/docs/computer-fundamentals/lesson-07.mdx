@@ -1,0 +1,137 @@
+---
+title: '7-dars: Arifmetikani qurish'
+description: "Darvozalardan qo'shuvchi yasaymiz: yarim summator, to'liq summator va 4-bitli zanjir."
+sidebar:
+  label: '7-dars'
+  order: 7
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import SummatorQuruvchi from '../../../components/sim/SummatorQuruvchi.astro';
+
+<Bloknoma blok={2} />
+
+## Nega bu muhim
+
+Kompyuter so'zining o'zagi — *compute*, ya'ni hisoblash. Lekin qo'limizda hozircha faqat darvozalar bor: AND, OR, XOR. Ular taqqoslaydi, teskarilaydi — ammo hech biri **qo'sha olmaydi**.
+
+Bu darsda modulning eng chiroyli sakrashlaridan biri sodir bo'ladi: mantiq darvozalaridan **arifmetika** chiqadi. Dars oxirida siz haqiqiy 4-bitli qo'shuvchini yig'ib, protsessor yuragi qanday urishi­ni o'z ko'zingiz bilan ko'rasiz.
+
+<Maqsad>
+- bir bitli qo'shish uchun qaysi ikki darvoza kerakligini bilasiz
+- yarim va to'liq summatorning farqini tushuntira olasiz
+- ko'chirish biti zanjir bo'ylab qanday oqishini ko'rsatib bera olasiz
+- 3-darsdagi toshib ketish qayerdan kelib chiqishini endi sxema darajasida bilasiz
+</Maqsad>
+
+## Nazariya
+
+### Bir ustunlik qo'shish: tanish ikki darvoza
+
+Ikki bitni qo'shganda to'rt holat bor: 0+0=0, 0+1=1, 1+0=1, 1+1=**10**. Oxirgisida natija bir xonaga sig'may qoldi — xuddi maktabdagi 7+5 kabi: 2 ni yozamiz, 1 ni **keyingi ustunga ko'chiramiz**.
+
+Endi natijaning ikki xonasiga alohida qarang. Oxirgi xona: 0, 1, 1, 0 — bu **XOR** jadvali (5-darsdagi "sir"ni eslang). Ko'chirilgan xona: 0, 0, 0, 1 — bu **AND**.
+
+Ya'ni qo'shish uchun yangi hech narsa kerak emas. Bitta XOR yig'indini beradi, bitta AND ko'chirishni. Shu juftlik **yarim summator** deb ataladi.
+
+<Atama soz="summator" eng="adder">
+	Bitlarni qo'shuvchi mantiqiy sxema. Yarim summator ikki bitni qo'shadi,
+	to'liq summator esa pastdan kelgan ko'chirishni ham hisobga oladi.
+</Atama>
+
+### Nega "yarim"? Ko'chirish muammosi
+
+Yarim summator ikki kirishni qo'shadi — lekin ikkinchi ustundan boshlab kirish **uchta** bo'ladi: A ning biti, B ning biti va o'ngdan kelgan ko'chirish.
+
+Yechim: ikki yarim summatorni ulaymiz. Birinchisi A va B ni qo'shadi, ikkinchisi natijaga ko'chirishni qo'shadi. Ikkalasidan chiqqan ko'chirishlarni OR birlashtiradi — ikkisi baravar 1 bo'la olmaydi, shuning uchun OR yetarli.
+
+Hosil bo'lgan sxema — **to'liq summator**: uch bit kiradi, yig'indi va yangi ko'chirish chiqadi. Endi u har qanday ustunda ishlay oladi.
+
+### Zanjir: to'rt summator — to'rt bit
+
+4-bitli qo'shuvchi shunchaki to'rtta to'liq summatorning qatori. Har birining ko'chirish chiqishi keyingisining ko'chirish kirishiga ulanadi — xuddi chelak uzatayotgan odamlar zanjiri kabi.
+
+Ko'chirish o'ng ustundan chapga **oqib o'tadi**. Shu sababli bu sxema *ripple-carry* — "to'lqin ko'chirishli" qo'shuvchi deyiladi. Kamchiligi ham shunda: chap ustun o'zidan oldingi hamma ko'chirishlarni kutishi kerak.
+
+<Muhim turi="gap">
+	Yana abstraksiya pog'onasi: darvozadan yarim summator, undan to'liq summator,
+	undan 4-bitli zanjir yig'dik. Har pog'onada ichki tuzilishni unutib, faqat
+	"nima kiradi — nima chiqadi"ni eslab qolamiz. Protsessor shu tarzda quriladi.
+</Muhim>
+
+### Eng chap ko'chirishning taqdiri
+
+4-bitli qo'shuvchida eng chap summatorning ko'chirishi boradigan joy yo'q — 5-bit uchun sim ham, joy ham yo'q. U shunchaki tashlab yuboriladi.
+
+3-darsda 255 + 1 = 0 bo'lganini ko'rgan edingiz. Mana o'sha sirning sxemadagi ildizi: **toshib ketish — bu yo'qolgan ko'chirish biti**. Simulyatorda 9 + 7 ni hisoblaganingizda buni jonli ko'rasiz.
+
+Haqiqiy protsessorlarda bu bit butunlay yo'qolmaydi — u alohida bayroqqa yoziladi va dastur "natija toshdi" deb tekshira oladi. Ayirish esa 3-darsdagi to'ldiruvchi kod orqali xuddi shu qo'shuvchida bajariladi.
+
+<Atama soz="ALU" eng="arithmetic logic unit">
+	Protsessorning arifmetik-mantiqiy qurilmasi: qo'shish, ayirish, AND, OR kabi
+	amallarni bitta blokda bajaradi. Qo'shuvchimiz — uning asosiy qismi. ALU bilan
+	9-darsda qayta ko'rishamiz.
+</Atama>
+
+## Sinab ko'r
+
+Uch bosqich — uch pog'ona. Yarim summatorda 4 kombinatsiyani, to'liqda 8 tasini sinang, so'ng 4-bitli qo'shuvchida ikkala topshiriqni bajaring. `Qadam` tugmasi qo'shishni ustunma-ustun bajaradi — ko'chirish qayerda tug'ilib, qayerga oqishiga qarang.
+
+<SummatorQuruvchi />
+
+## Xulosa
+
+- Bir bitli qo'shish = **XOR** (yig'indi) + **AND** (ko'chirish) — bu yarim summator
+- **To'liq summator** uch bitni qo'shadi: ikki yarim summator + OR
+- 4-bitli qo'shuvchi — to'rt to'liq summator zanjiri, ko'chirish **to'lqin bo'lib oqadi**
+- Eng chap ko'chirishga joy yo'q — u yo'qolsa **toshib ketish** yuz beradi
+- Qo'shish, ayirish va mantiqni bitta blokka jamlagani — **ALU**, protsessorning yuragi
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Yarim summatorda nega aynan XOR va AND ishlatiladi?">
+	Ikki bitni qo'shganda natijaning oxirgi xonasi 0,1,1,0 chiqadi — bu aynan XOR
+	jadvali. Ko'chirish esa faqat 1+1 da paydo bo'ladi — bu AND jadvali. Ya'ni qo'shish
+	allaqachon bilgan ikki amalimizning kombinatsiyasi ekan.
+</Sinov>
+
+<Sinov raqam={2} savol="Yarim summator bilan to'liq summatorning farqi nimada va nega ikkinchisi kerak?">
+	Yarim summator ikki kirishni oladi, to'liq summator uchtani: A, B va o'ngdan kelgan
+	ko'chirish. Birinchi ustundan boshqa hamma ustunga ko'chirish kelishi mumkin, shuning
+	uchun zanjirda faqat to'liq summator ishlay oladi.
+</Sinov>
+
+<Sinov raqam={3} savol="To'liq summatorda ikki yarim summatorning ko'chirishlarini nega OR bilan birlashtirish mumkin? Ikkisi ham 1 bo'lsa-chi?">
+	Ikkisi bir vaqtda 1 bo'la olmaydi. Birinchi yarim summator ko'chirish bersa (A=B=1),
+	uning yig'indisi 0 bo'ladi — demak ikkinchi yarim summatorga 0 kiradi va u ko'chirish
+	bera olmaydi. Shuning uchun oddiy OR xavfsiz ishlaydi.
+</Sinov>
+
+<Sinov raqam={4} savol="1111 + 0001 ni 4-bitli qo'shuvchida hisoblasak nima bo'ladi? Qadam-baqadam tushuntiring.">
+	Har ustunda 1+0+ko'chirish=10 hosil bo'lib, yig'indi biti 0 qoladi va ko'chirish
+	keyingi ustunga o'tadi. To'lqin to'rt ustundan o'tib, oxirgi ko'chirish tashqariga
+	chiqadi va yo'qoladi. Natija: 0000. Bu 15 + 1 = 0 — toshib ketish.
+</Sinov>
+
+<Sinov raqam={5} savol="32-bitli qo'shuvchi qurish uchun nechta to'liq summator kerak va ular qanday ulanadi?">
+	32 ta — har bitga bittadan. Ulanish bir xil: har summatorning ko'chirish chiqishi
+	keyingisining ko'chirish kirishiga. Sxema kattalashdi, g'oya o'zgarmadi — abstraksiya
+	shunday ishlaydi.
+</Sinov>
+
+<Amaliyot daqiqa={25} daraja="o'rta">
+	**Birinchi qism.** Daftarda 7 + 9 ni ikkilikda, ustun usulida hisoblang: 0111 + 1001.
+	Har ustun uchun uchala kirishni (A, B, ko'chirish) va ikkala chiqishni (yig'indi,
+	yangi ko'chirish) jadval qilib yozing. Oxirida natijani o'nlikka qaytarib tekshiring.
+
+	**Ikkinchi qism.** Simulyatorning 3-bosqichida o'zingiz tanlagan uchta misolni
+	hisoblang. Shulardan bittasida toshib ketish bo'lsin va nega bo'lganini bir gap
+	bilan yozing.
+
+	**Qo'shimcha (xohlovchilar uchun).** [nandgame.com](https://nandgame.com) da o'tgan
+	darsda to'xtagan joyingizdan davom etib, Full Adder darajasini tugating.
+
+	Topshiriladigan natija: 7 + 9 jadvali, uchta misol natijasi va toshib ketish izohi.
+</Amaliyot>
+
+<DarsTugadi dars={7} blok={2} />
