@@ -1,0 +1,377 @@
+---
+/**
+ * BinaryBlitz — 2-dars o'yini.
+ *
+ * 60 soniya. Ekranda o'nlik son chiqadi, o'quvchi bitlarni bosib shu sonni
+ * yasaydi. To'g'ri bo'lsa ball qo'shiladi va yangi son chiqadi.
+ *
+ * Nima uchun o'yin: ikkilik sanoqni tez o'qish -- mashq bilan keladigan
+ * ko'nikma. Quruq mashq daftarda zerikarli, taymer bilan esa o'quvchi
+ * o'zi qayta-qayta o'ynaydi. Rekord saqlanadi -- keyingi darsda ham
+ * qaytib kelish uchun sabab bo'ladi.
+ *
+ * 10 balldan oshsa kichik nishon ochiladi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+const BITLAR = [128, 64, 32, 16, 8, 4, 2, 1];
+---
+
+<Simulyator
+	sarlavha="Binary Blitz"
+	korsatma="60 soniya ichida ko'rsatilgan sonni bitlar bilan yasang."
+	blok={1}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu 60 soniyalik o'yin: ekranda o'nlik son chiqadi, siz uni 8 bit bilan yasashingiz
+			kerak.
+		</p>
+		<p>
+			JavaScript'siz sinash: sinfdoshingiz sizga tasodifiy son aytadi, siz uni daftarga
+			ikkilik ko'rinishda yozasiz. Kim bir daqiqada ko'proq yozsa — o'sha yutadi.
+		</p>
+	</Fragment>
+
+	<div class="bb not-content" data-holat="kutilmoqda">
+		<div class="panel">
+			<p class="panel-band">
+				<span class="yorliq">Vaqt</span>
+				<span class="qiymat vaqt">60</span>
+			</p>
+			<p class="panel-band">
+				<span class="yorliq">Ball</span>
+				<span class="qiymat ball">0</span>
+			</p>
+			<p class="panel-band">
+				<span class="yorliq">Rekord</span>
+				<span class="qiymat rekord">0</span>
+			</p>
+		</div>
+
+		<div class="maqsad">
+			<p class="maqsad-yorliq">Shu sonni yasang</p>
+			<p class="maqsad-son">—</p>
+		</div>
+
+		<div class="lampalar">
+			{
+				BITLAR.map((ogirlik) => (
+					<button
+						type="button"
+						class="bit"
+						data-ogirlik={ogirlik}
+						aria-pressed="false"
+						aria-label={`${ogirlik} og'irlikdagi bit`}
+						disabled
+					>
+						<span class="raqam" aria-hidden="true">0</span>
+						<span class="ogirlik">{ogirlik}</span>
+					</button>
+				))
+			}
+		</div>
+
+		<p class="hozir">
+			Hozirgi qiymat: <strong class="hozir-son">0</strong>
+		</p>
+
+		<p class="xabar" role="status" aria-live="polite">
+			Boshlash uchun "O'yinni boshlash" tugmasini bosing.
+		</p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="boshla">O'yinni boshlash</button>
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	const REKORD_KALIT = 'steam:binaryblitz:rekord';
+	const DAVOMIYLIK = 60;
+
+	function rekordOqish(): number {
+		try {
+			return Number(localStorage.getItem(REKORD_KALIT) ?? 0) || 0;
+		} catch {
+			return 0;
+		}
+	}
+
+	function rekordYozish(ball: number): void {
+		try {
+			localStorage.setItem(REKORD_KALIT, String(ball));
+		} catch {
+			/* private rejim — rekord saqlanmaydi, o'yin ishlashda davom etadi */
+		}
+	}
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.bb');
+		if (!qutu) return;
+
+		const bitlar = [...qutu.querySelectorAll<HTMLButtonElement>('.bit')];
+		const vaqtEl = qutu.querySelector<HTMLElement>('.vaqt')!;
+		const ballEl = qutu.querySelector<HTMLElement>('.ball')!;
+		const rekordEl = qutu.querySelector<HTMLElement>('.rekord')!;
+		const maqsadEl = qutu.querySelector<HTMLElement>('.maqsad-son')!;
+		const hozirEl = qutu.querySelector<HTMLElement>('.hozir-son')!;
+		const xabarEl = qutu.querySelector<HTMLElement>('.xabar')!;
+		const boshlaTugma = qobiq.querySelector<HTMLButtonElement>('.boshla')!;
+
+		let maqsad = 0;
+		let ball = 0;
+		let qolgan = DAVOMIYLIK;
+		let taymer: number | undefined;
+
+		rekordEl.textContent = String(rekordOqish());
+
+		function hozirgiQiymat(): number {
+			return bitlar.reduce(
+				(j, b) =>
+					j + (b.getAttribute('aria-pressed') === 'true' ? Number(b.dataset.ogirlik) : 0),
+				0
+			);
+		}
+
+		function bitlarniTozala() {
+			for (const b of bitlar) {
+				b.setAttribute('aria-pressed', 'false');
+				b.querySelector('.raqam')!.textContent = '0';
+			}
+			hozirEl.textContent = '0';
+		}
+
+		function yangiMaqsad() {
+			// 1..255: 0 juda oson va o'quvchini chalg'itadi
+			maqsad = 1 + Math.floor(Math.random() * 255);
+			maqsadEl.textContent = String(maqsad);
+			bitlarniTozala();
+		}
+
+		function tekshir() {
+			const hozir = hozirgiQiymat();
+			hozirEl.textContent = String(hozir);
+			if (hozir !== maqsad) return;
+
+			ball += 1;
+			ballEl.textContent = String(ball);
+			xabarEl.textContent = `${maqsad} to'g'ri! Keyingisi.`;
+			yangiMaqsad();
+		}
+
+		function tugat() {
+			clearInterval(taymer);
+			taymer = undefined;
+			qutu.dataset.holat = 'tugadi';
+			bitlar.forEach((b) => (b.disabled = true));
+			boshlaTugma.disabled = false;
+			boshlaTugma.textContent = "Yana o'ynash";
+
+			const eskiRekord = rekordOqish();
+			if (ball > eskiRekord) {
+				rekordYozish(ball);
+				rekordEl.textContent = String(ball);
+				xabarEl.textContent = `Vaqt tugadi. ${ball} ball — yangi rekord!`;
+			} else {
+				xabarEl.textContent = `Vaqt tugadi. ${ball} ball. Rekord: ${eskiRekord}.`;
+			}
+
+			// Kichik nishon: 10 ball ikkilik sanoqni haqiqatan o'zlashtirgan belgisi
+			if (ball >= 10) amalBelgila('binary-blitz');
+		}
+
+		function boshla() {
+			ball = 0;
+			qolgan = DAVOMIYLIK;
+			ballEl.textContent = '0';
+			vaqtEl.textContent = String(DAVOMIYLIK);
+			qutu.dataset.holat = 'oynalmoqda';
+			bitlar.forEach((b) => (b.disabled = false));
+			boshlaTugma.disabled = true;
+			xabarEl.textContent = 'Ketdik!';
+			yangiMaqsad();
+
+			taymer = window.setInterval(() => {
+				qolgan -= 1;
+				vaqtEl.textContent = String(qolgan);
+				if (qolgan <= 0) tugat();
+			}, 1000);
+		}
+
+		for (const b of bitlar) {
+			b.addEventListener('click', () => {
+				const yoqilgan = b.getAttribute('aria-pressed') === 'true';
+				b.setAttribute('aria-pressed', String(!yoqilgan));
+				b.querySelector('.raqam')!.textContent = yoqilgan ? '0' : '1';
+				tekshir();
+			});
+		}
+
+		boshlaTugma.addEventListener('click', boshla);
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			clearInterval(taymer);
+			taymer = undefined;
+			ball = 0;
+			qolgan = DAVOMIYLIK;
+			qutu.dataset.holat = 'kutilmoqda';
+			ballEl.textContent = '0';
+			vaqtEl.textContent = String(DAVOMIYLIK);
+			maqsadEl.textContent = '—';
+			bitlarniTozala();
+			bitlar.forEach((b) => (b.disabled = true));
+			boshlaTugma.disabled = false;
+			boshlaTugma.textContent = "O'yinni boshlash";
+			xabarEl.textContent = 'Boshlash uchun "O’yinni boshlash" tugmasini bosing.';
+		});
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.panel {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.5rem;
+		margin: 0 0 1rem 0;
+	}
+
+	.panel-band {
+		display: flex;
+		align-items: baseline;
+		gap: 0.4rem;
+		margin: 0;
+	}
+
+	.yorliq {
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.panel .qiymat {
+		font-family: var(--sl-font-mono);
+		font-size: 1.15rem;
+		font-weight: 700;
+		color: var(--sl-color-white);
+	}
+
+	.vaqt {
+		color: var(--blok-1);
+	}
+
+	/* Oxirgi 10 soniya — vaqt qizil bo'ladi */
+	.bb[data-holat='oynalmoqda'] .vaqt {
+		color: var(--blok-1);
+	}
+
+	.maqsad {
+		text-align: center;
+		padding: 0.85rem;
+		border: 1px solid var(--blok-1-chegara);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--blok-1-fon);
+	}
+
+	.maqsad-yorliq {
+		margin: 0;
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.maqsad-son {
+		margin: 0.15rem 0 0 0;
+		font-family: var(--sl-font-mono);
+		font-size: 2.25rem;
+		font-weight: 700;
+		line-height: 1;
+		color: var(--blok-1);
+	}
+
+	.lampalar {
+		display: flex;
+		gap: 0.3rem;
+		justify-content: center;
+		margin-top: 1rem;
+	}
+
+	.bit {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.15rem;
+		flex: 1 1 0;
+		min-width: 0;
+		margin: 0;
+		padding: 0.5rem 0.15rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		cursor: pointer;
+	}
+
+	.bit:disabled {
+		opacity: 0.45;
+		cursor: default;
+	}
+
+	.bit:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.raqam {
+		font-family: var(--sl-font-mono);
+		font-size: 1.1rem;
+		font-weight: 700;
+		line-height: 1;
+		color: var(--sl-color-gray-4);
+	}
+
+	.bit .ogirlik {
+		font-family: var(--sl-font-mono);
+		font-size: 0.65rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.bit[aria-pressed='true'] {
+		border-color: var(--blok-2);
+		background: var(--blok-2-fon);
+	}
+
+	.bit[aria-pressed='true'] .raqam {
+		color: var(--blok-2);
+	}
+
+	.hozir {
+		margin: 0.9rem 0 0 0;
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.hozir strong {
+		font-family: var(--sl-font-mono);
+		color: var(--sl-color-white);
+	}
+
+	.xabar {
+		margin: 0.5rem 0 0 0;
+		min-height: 1.4em;
+		font-size: 0.85rem;
+		line-height: 1.45;
+		color: var(--sl-color-gray-3);
+	}
+
+	.bb[data-holat='tugadi'] .xabar {
+		font-weight: 600;
+		color: var(--blok-2);
+	}
+</style>
