@@ -1,0 +1,289 @@
+---
+/**
+ * OverflowSimulyator — 3-dars simulyatori.
+ *
+ * Ikki narsani ko'rsatadi:
+ *   1. 8-bitli hisoblagich 255 dan keyin 0 ga tushishi (overflow)
+ *   2. AYNAN SHU bitlar ishorali sanoqda butunlay boshqa sonni berishi
+ *      (to'ldiruvchi kod)
+ *
+ * Pedagogik maqsad: "bitlarning o'zi hech nima anglatmaydi" degan g'oyani
+ * ko'rsatish. Ma'noni bitlar emas, ularni QANDAY O'QISH qarori beradi.
+ * Shu sababli ishorali/ishorasiz almashtirgich bir xil bitlar ustida ishlaydi.
+ */
+import Simulyator from '../Simulyator.astro';
+---
+
+<Simulyator
+	sarlavha="Overflow va to'ldiruvchi kod"
+	korsatma="Sonni +1 bilan 255 gacha ko'taring va keyin nima bo'lishini ko'ring."
+	blok={1}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda 8-bitli hisoblagich bor. 255 ga yetgandan keyin +1 qilsangiz, son
+			256 emas, 0 bo'lib qoladi — bitlar tugab qoladi.
+		</p>
+		<p>
+			JavaScript'siz sinash: daftarga `11111111` yozing va unga 1 qo'shib ko'ring. Har
+			ustunda 1 + 1 = 10 bo'ladi, ko'chirma chapga o'tadi va oxirida sakkiz bitdan
+			chiqib ketadi.
+		</p>
+	</Fragment>
+
+	<div class="ov not-content" data-oqish="ishorasiz">
+		<div class="bitlar" aria-hidden="true"></div>
+
+		<dl class="oqish">
+			<div>
+				<dt>Bitlar</dt>
+				<dd class="qiymat satr">00000000</dd>
+			</div>
+			<div>
+				<dt class="oqish-nom">Ishorasiz (0…255)</dt>
+				<dd class="qiymat son">0</dd>
+			</div>
+		</dl>
+
+		<div class="tanlov" role="group" aria-label="Bitlarni qanday o'qish">
+			<button type="button" class="rejim tanlangan" data-rejim="ishorasiz" aria-pressed="true">
+				Ishorasiz
+			</button>
+			<button type="button" class="rejim" data-rejim="ishorali" aria-pressed="false">
+				Ishorali (to'ldiruvchi kod)
+			</button>
+		</div>
+
+		<p class="izoh" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="kamayt">−1</button>
+		<button type="button" class="koart">+1</button>
+		<button type="button" class="yugur">Avtomatik sanash</button>
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.ov');
+		if (!qutu) return;
+
+		const bitlarEl = qutu.querySelector<HTMLElement>('.bitlar')!;
+		const satrEl = qutu.querySelector<HTMLElement>('.satr')!;
+		const sonEl = qutu.querySelector<HTMLElement>('.son')!;
+		const nomEl = qutu.querySelector<HTMLElement>('.oqish-nom')!;
+		const izohEl = qutu.querySelector<HTMLElement>('.izoh')!;
+		const yugurTugma = qobiq.querySelector<HTMLButtonElement>('.yugur')!;
+
+		/** Xotirada saqlanadigan narsa — faqat 8 bit. Ma'no o'qishga bog'liq. */
+		let xom = 0;
+		let rejim: 'ishorasiz' | 'ishorali' = 'ishorasiz';
+		let yugurish: number | undefined;
+
+		// 8 ta bit katakchasini bir marta yasab qo'yamiz
+		for (let i = 0; i < 8; i++) {
+			const s = document.createElement('span');
+			s.className = 'katak';
+			bitlarEl.append(s);
+		}
+		const kataklar = [...bitlarEl.children] as HTMLElement[];
+
+		/** To'ldiruvchi kod: yuqori bit 1 bo'lsa son manfiy. */
+		function ishoraliQiymat(b: number): number {
+			return b >= 128 ? b - 256 : b;
+		}
+
+		function yangila(oldingi?: number) {
+			const satr = xom.toString(2).padStart(8, '0');
+			satrEl.textContent = satr;
+
+			kataklar.forEach((k, i) => {
+				k.textContent = satr[i]!;
+				k.dataset.yoqilgan = satr[i] === '1' ? 'ha' : 'yoq';
+			});
+
+			if (rejim === 'ishorasiz') {
+				nomEl.textContent = 'Ishorasiz (0…255)';
+				sonEl.textContent = String(xom);
+			} else {
+				nomEl.textContent = 'Ishorali (−128…127)';
+				sonEl.textContent = String(ishoraliQiymat(xom));
+			}
+
+			// Overflow sodir bo'lgan aniq daqiqani nomlab beramiz
+			if (oldingi === 255 && xom === 0) {
+				qutu.dataset.hodisa = 'toldi';
+				izohEl.textContent =
+					'255 + 1 = 0. Sakkizinchi bitdan chiqqan ko’chirmani saqlaydigan joy yo’q — u yo’qoldi.';
+			} else if (oldingi === 0 && xom === 255) {
+				qutu.dataset.hodisa = 'toldi';
+				izohEl.textContent = '0 − 1 = 255. Hisoblagich orqa tomondan aylanib chiqdi.';
+			} else if (rejim === 'ishorali' && xom >= 128) {
+				delete qutu.dataset.hodisa;
+				izohEl.textContent =
+					'Yuqori bit 1 — ishorali o’qishda bu manfiy sonni bildiradi. Bitlar esa o’zgarmadi.';
+			} else {
+				delete qutu.dataset.hodisa;
+				izohEl.textContent = '';
+			}
+		}
+
+		function ozgart(qadam: number) {
+			const oldingi = xom;
+			// 8 bitga sig'dirish: aynan apparat qiladigan ish
+			xom = (xom + qadam + 256) % 256;
+			yangila(oldingi);
+		}
+
+		function yugurishniToxtat() {
+			clearInterval(yugurish);
+			yugurish = undefined;
+			yugurTugma.textContent = 'Avtomatik sanash';
+		}
+
+		qobiq.querySelector<HTMLButtonElement>('.koart')!.addEventListener('click', () => ozgart(1));
+		qobiq
+			.querySelector<HTMLButtonElement>('.kamayt')!
+			.addEventListener('click', () => ozgart(-1));
+
+		yugurTugma.addEventListener('click', () => {
+			if (yugurish !== undefined) {
+				yugurishniToxtat();
+				return;
+			}
+			yugurTugma.textContent = "To'xtatish";
+			yugurish = window.setInterval(() => ozgart(1), 90);
+		});
+
+		for (const t of qutu.querySelectorAll<HTMLButtonElement>('.rejim')) {
+			t.addEventListener('click', () => {
+				rejim = t.dataset.rejim as 'ishorasiz' | 'ishorali';
+				for (const b of qutu.querySelectorAll<HTMLButtonElement>('.rejim')) {
+					const tanlangan = b === t;
+					b.classList.toggle('tanlangan', tanlangan);
+					b.setAttribute('aria-pressed', String(tanlangan));
+				}
+				yangila();
+			});
+		}
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			yugurishniToxtat();
+			xom = 0;
+			yangila();
+		});
+
+		yangila();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.bitlar {
+		display: flex;
+		gap: 0.25rem;
+		justify-content: center;
+	}
+
+	.katak {
+		flex: 1 1 0;
+		min-width: 0;
+		padding: 0.55rem 0;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		font-family: var(--sl-font-mono);
+		font-size: 1.1rem;
+		font-weight: 700;
+		text-align: center;
+		color: var(--sl-color-gray-4);
+	}
+
+	.katak[data-yoqilgan='ha'] {
+		border-color: var(--blok-1);
+		background: var(--blok-1-fon);
+		color: var(--blok-1);
+	}
+
+	/* Overflow sodir bo'lganda butun qator bir marta "chaqnaydi" */
+	.ov[data-hodisa='toldi'] .katak {
+		border-color: var(--blok-2-chegara);
+	}
+
+	.oqish {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem 2rem;
+		margin: 1.1rem 0 0 0;
+	}
+
+	.oqish dt {
+		margin: 0;
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.oqish dd {
+		margin: 0.15rem 0 0 0;
+	}
+
+	.qiymat {
+		font-family: var(--sl-font-mono);
+		font-size: 1.15rem;
+		font-weight: 700;
+		color: var(--sl-color-white);
+		overflow-wrap: anywhere;
+	}
+
+	.son {
+		color: var(--blok-1);
+	}
+
+	.tanlov {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin-top: 1.1rem;
+	}
+
+	.rejim {
+		margin: 0;
+		padding: 0.35rem 0.7rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-3);
+		font: inherit;
+		font-size: 0.8rem;
+		cursor: pointer;
+	}
+
+	.rejim:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.rejim.tanlangan {
+		border-color: var(--blok-1);
+		background: var(--blok-1-fon);
+		color: var(--blok-1);
+	}
+
+	.izoh {
+		margin: 0.9rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	.ov[data-hodisa='toldi'] .izoh {
+		font-weight: 600;
+		color: var(--blok-2);
+	}
+</style>

@@ -1,0 +1,169 @@
+---
+title: "3-dars: Sonlarning chegarasi"
+description: "8 bitda 255 dan keyin nima bo'ladi. Overflow, to'ldiruvchi kod va kasr sonlarning aniqligi."
+sidebar:
+  label: '3-dars'
+  order: 3
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import OverflowSimulyator from '../../../components/sim/OverflowSimulyator.astro';
+import KasrSonlar from '../../../components/sim/KasrSonlar.astro';
+
+<Bloknoma blok={1} />
+
+## Nega bu muhim
+
+1985-yilda "Pac-Man" o'yinining 256-darajasi butunlay buzilib ketdi — ekranning yarmi tushunarsiz belgilarga aylandi. 2014-yilda esa YouTube "Gangnam Style" videosining ko'rishlar sonini qayta hisoblashga majbur bo'ldi.
+
+Ikkisining sababi bir xil va u shu darsda. Sonlarning chegarasi bor, va chegaradan o'tganda kompyuter xato bermaydi — u jimgina noto'g'ri javob beradi.
+
+<Maqsad>
+- overflow nima ekanligini va u qanday paydo bo'lishini tushuntira olasiz
+- manfiy sonlar bitlarda qanday saqlanishini bilasiz
+- nega `0.1 + 0.2` aniq `0.3` bermasligini asoslab bera olasiz
+- programmada "buzuq hisob" belgilarini taniy olasiz
+</Maqsad>
+
+## Nazariya
+
+### 255 dan keyin nima bo'ladi?
+
+O'tgan darsda bilib oldik: 8 bit bilan 0 dan 255 gacha sanash mumkin. Savol — 255 ga 1 qo'shsak nima bo'ladi?
+
+Qo'lda hisoblaymiz. `11111111` ga 1 qo'shamiz. Eng o'ngdagi ustunda 1 + 1 = `10` bo'ladi, ya'ni 0 yozib 1 ni chapga ko'chiramiz. Bu har ustunda takrorlanadi va oxirida ko'chirma sakkizinchi bitdan **chiqib ketadi**.
+
+Lekin uni saqlaydigan joy yo'q. Shu sababli natija `00000000` — ya'ni **0**.
+
+<Atama soz="to'lib ketish" eng="overflow">
+	Hisob natijasi ajratilgan bitlar soniga sig'may qolgan holat. Ortib qolgan qism
+	shunchaki yo'qoladi va son aylanib boshidan boshlanadi.
+</Atama>
+
+<Muhim turi="ogoh">
+	Overflow'da kompyuter **xato bermaydi**. Programma ishlashda davom etadi, faqat javob
+	noto'g'ri bo'ladi. Aynan shuning uchun bu xatolarni topish qiyin.
+</Muhim>
+
+### Manfiy sonlar qanday saqlanadi?
+
+Bitlarda minus belgisi yo'q — faqat 0 va 1 bor. Unda −5 ni qanday yozamiz?
+
+Yechim: bitlarning bir qismini emas, **o'qish qoidasini** o'zgartiramiz. Eng chapdagi bit "ishora biti" deb e'lon qilinadi: agar u 1 bo'lsa, son manfiy hisoblanadi.
+
+Eng keng tarqalgan usul **to'ldiruvchi kod** deb ataladi.
+
+<Atama soz="to'ldiruvchi kod" eng="two's complement">
+	Manfiy sonlarni saqlash usuli: qiymatni topish uchun yuqori bit og'irligi manfiy deb
+	olinadi. 8 bitda diapazon −128 dan +127 gacha.
+</Atama>
+
+Masalan `11111011` bitlari:
+
+- **ishorasiz** o'qilsa: 251
+- **ishorali** o'qilsa: 251 − 256 = **−5**
+
+Bitlar bir xil. Faqat o'qish qoidasi boshqa.
+
+<Muhim turi="gap">
+	Bitlarning o'zi hech narsani anglatmaydi. Ma'noni **ularni qanday o'qish qarori**
+	beradi. Bir xil 8 bit — 251 ham, −5 ham, harf ham, rang ham bo'lishi mumkin.
+</Muhim>
+
+### Nega bu usul qulay?
+
+To'ldiruvchi kodning katta afzalligi bor: **ayirish uchun alohida sxema kerak emas**.
+
+`7 − 5` amalini bajarish uchun protsessor `7 + (−5)` ni hisoblaydi va oddiy qo'shuvchidan foydalanadi. Natijadagi ortiqcha ko'chirma esa tashlab yuboriladi — va javob to'g'ri chiqadi.
+
+Bu 7-darsda arifmetik qurilma yasaganda juda muhim bo'ladi: bitta qo'shuvchi bilan ham qo'shish, ham ayirishni bajaramiz.
+
+### Kasr sonlar: eng yashirin muammo
+
+Butun sonlar bilan hammasi tushunarli. Kasr sonlarda esa boshqa turdagi muammo bor.
+
+O'nlik sanoqda 1/3 ni aniq yozib bo'lmaydi — 0.333... cheksiz davom etadi. Qaerda bo'lsa ham kesib olishga majbursiz, va natija taxminiy bo'lib qoladi.
+
+Ikkilik sanoqda aynan shu holat **0.1** bilan sodir bo'ladi. `0.1` ikkilikda `0.0001100110011...` — cheksiz takrorlanadi.
+
+Kompyuter uni kesib oladi. Shu sababli xotirada saqlangan son 0.1 dan **juda oz** farq qiladi. Bu farqlar qo'shilganda ko'zga ko'rinadi:
+
+`0.1 + 0.2 = 0.30000000000000004`
+
+<Muhim turi="sir">
+	Bu xato Python'da ham, JavaScript'da ham, C++ da ham bir xil. Sabab tilda emas —
+	barcha tillar bir xil apparat standartidan (IEEE 754) foydalanadi.
+</Muhim>
+
+Shu sababli pul hisob-kitobida kasr sonlar **ishlatilmaydi**. Bank programmalari summani so'mda emas, tiyinda — ya'ni butun sonda — saqlaydi.
+
+## Sinab ko'r
+
+Hisoblagichni 255 gacha ko'taring. Keyin "Ishorali" tugmasini bosib, aynan shu bitlar boshqa sonni berishini ko'ring.
+
+<OverflowSimulyator />
+
+Endi kasr sonlarga o'tamiz. `0.1 + 0.2` ni bosing va "Nega shunday?" bo'limini ochib ko'ring.
+
+<KasrSonlar />
+
+`0.5 + 0.25` ni ham sinab ko'ring — nega bu juftlik aniq natija berayotganini o'zingizga tushuntirib bering.
+
+## Xulosa
+
+- 8 bitda 255 dan keyin son **0 ga aylanadi** — ortiqcha ko'chirmani saqlash joyi yo'q
+- Overflow'da kompyuter ogohlantirmaydi, jimgina noto'g'ri javob beradi
+- **To'ldiruvchi kod**: yuqori bit 1 bo'lsa son manfiy. 8 bitda −128…+127
+- Bitlar o'zi ma'nosiz — ma'noni **o'qish qoidasi** beradi
+- Kasr sonlar taxminiy saqlanadi, shuning uchun pul hisobida butun son ishlatiladi
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="8-bitli hisoblagichda 250 soniga 10 qo'shsak, natija nima bo'ladi?">
+	260 emas. 8 bitda faqat 0…255 bor, shuning uchun son aylanadi: 260 − 256 = **4**.
+	Programma xato bermaydi, shunchaki 4 ni qaytaradi.
+</Sinov>
+
+<Sinov raqam={2} savol="`10000000` bitlari ishorasiz va ishorali o'qilganda qanday qiymat beradi?">
+	Ishorasiz: 128. Ishorali (to'ldiruvchi kod): 128 − 256 = **−128**. Bu 8 bitda
+	yozib bo'ladigan eng kichik manfiy son.
+</Sinov>
+
+<Sinov raqam={3} savol="Nega to'ldiruvchi kod usuli apparat uchun qulay?">
+	Ayirish uchun alohida sxema kerak bo'lmaydi. `a − b` amali `a + (−b)` ga aylantiriladi
+	va oddiy qo'shuvchi bilan bajariladi. Bitta qurilma ikki amalni bajaradi — bu
+	tranzistorlarni tejaydi.
+</Sinov>
+
+<Sinov raqam={4} savol="Nega `0.5 + 0.25` aniq natija beradi, `0.1 + 0.2` esa yo'q?">
+	0.5 va 0.25 — bu 2⁻¹ va 2⁻². Ular ikkilikda aniq yoziladi: `0.1` va `0.01`. 0.1 (o'nlik)
+	esa ikkilikda cheksiz takrorlanuvchi kasr bo'lib, kesib olinadi va aniqlik yo'qoladi.
+</Sinov>
+
+<Sinov raqam={5} savol="Do'koningizni programmalashtirasiz. Narxlarni qanday saqlaysiz va nega?">
+	Kasr sonda emas, **butun sonda tiyinda** saqlash kerak. 19.99 so'm o'rniga 1999 tiyin
+	yoziladi. Aks holda minglab operatsiyadan keyin taxminiy xatolar yig'ilib, hisobot
+	haqiqiy summadan farq qila boshlaydi.
+</Sinov>
+
+<Amaliyot daqiqa={30} daraja="qiyin">
+	Brauzerda konsolni oching (`F12` → Console). Quyidagilarni birma-bir yozib, natijani
+	yozib oling:
+
+	```js
+	0.1 + 0.2
+	0.1 + 0.2 === 0.3
+	0.3 - 0.1
+	255 + 1        // bu oddiy son, overflow bo'lmaydi -- nega?
+	(255 + 1) % 256 // apparat aynan shuni qiladi
+	```
+
+	Keyin **o'zingiz 5 ta "buzuq hisob" topishga harakat qiling** — natijasi kutilganidan
+	farq qiladigan amallar.
+
+	Har biri uchun yozing: nima kutgansiz, nima chiqdi, va **nega** shunday bo'ldi.
+
+	Topshiriladigan natija: 5 ta misol, har biri uchun uch qatorli izoh.
+</Amaliyot>
+
+<DarsTugadi dars={3} blok={1} />
