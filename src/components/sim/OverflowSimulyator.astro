@@ -32,7 +32,15 @@ import Simulyator from '../Simulyator.astro';
 	</Fragment>
 
 	<div class="ov not-content" data-oqish="ishorasiz">
-		<div class="bitlar" aria-hidden="true"></div>
+		{/*
+			Kataklar SHU YERDA, shablonda yasaladi — JS bilan emas.
+			Sabab: Astro scoped CSS klassini faqat shablondagi elementlarga qo'shadi.
+			JS bilan yaratilgan element bu klassni olmaydi va uslublari QO'LLANMAYDI.
+			Soni qat'iy (8) bo'lgani uchun shablonda yasash eng to'g'ri yechim.
+		*/}
+		<div class="bitlar" aria-hidden="true">
+			{Array.from({ length: 8 }, () => <span class="katak" data-yoqilgan="yoq">0</span>)}
+		</div>
 
 		<dl class="oqish">
 			<div>
@@ -82,12 +90,6 @@ import Simulyator from '../Simulyator.astro';
 		let rejim: 'ishorasiz' | 'ishorali' = 'ishorasiz';
 		let yugurish: number | undefined;
 
-		// 8 ta bit katakchasini bir marta yasab qo'yamiz
-		for (let i = 0; i < 8; i++) {
-			const s = document.createElement('span');
-			s.className = 'katak';
-			bitlarEl.append(s);
-		}
 		const kataklar = [...bitlarEl.children] as HTMLElement[];
 
 		/** To'ldiruvchi kod: yuqori bit 1 bo'lsa son manfiy. */

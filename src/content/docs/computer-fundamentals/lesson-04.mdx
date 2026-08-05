@@ -48,11 +48,25 @@ Unicode har belgiga raqam beradi, lekin bu raqamni xotiraga qanday yozish — al
 UTF-8 aqlli ishlaydi: keng tarqalgan belgilarga kam joy, kam uchraydiganlarga ko'p joy ajratadi.
 
 - oddiy lotin harflari (`a`, `S`, `7`) — **1 bayt**
-- kirill, arab, tutuq belgisi (`ʻ`) — **2 bayt**
+- kirill, arab, o'zbekcha tutuq belgisi — **2 bayt**
 - xitoy, yapon belgilari — **3 bayt**
 - emoji — **4 bayt**
 
-Shu sababli `o'zbek` so'zi 6 harfdan iborat, lekin xotirada 7 bayt egallaydi — tutuq belgisi qo'shimcha bayt oladi.
+Shu sababli `oʻzbek` so'zi 6 belgidan iborat, lekin xotirada **7 bayt** egallaydi — tutuq belgisi qo'shimcha bayt oladi.
+
+### Ikki xil apostrof — va nega bu muhim
+
+Klaviaturadagi oddiy apostrof (`'`) va o'zbek tilining tutuq belgisi (`ʻ`) — bu **butunlay boshqa belgilar**.
+
+| Belgi | Unicode | Bayt | Nima uchun ishlatiladi |
+|-------|---------|------|------------------------|
+| `'` | U+0027 | 1 | Ingliz tilidagi apostrof |
+| `ʻ` | U+02BB | 2 | O'zbekcha `oʻ`, `gʻ` uchun to'g'ri belgi |
+| `ʼ` | U+02BC | 2 | Tutuq belgisi: `maʼno`, `sanʼat` |
+
+Ko'rinishi deyarli bir xil, lekin kompyuter uchun bular umuman boshqa sonlar. Shu sababli `o'zbek` deb yozilgan so'z bilan `oʻzbek` deb yozilgan so'z **qidiruvda bir-birini topmaydi**.
+
+Bu haqiqiy muammo: bir xil ismni ikki xil apostrof bilan yozgan ikki o'quvchi ma'lumotlar bazasida ikki xil odam bo'lib qoladi.
 
 <Muhim turi="ogoh">
 	"Bitta harf = bitta bayt" degan tushuncha xato va u haqiqiy xatolarga olib keladi.
@@ -96,7 +110,7 @@ CD sifatida sekundiga **44 100 marta** o'lchov olinadi. Telefon qo'ng'irog'ida e
 
 ## Sinab ko'r
 
-Birinchi navbatda matn. O'z ismingizni yozib ko'ring — `o'` yoki `g'` harflari bo'lsa, ular sariq bilan belgilanadi.
+Birinchi navbatda matn. O'z ismingizni yozib ko'ring — `oʻ` yoki `gʻ` harflari bo'lsa, ular sariq bilan belgilanadi.
 
 <BaytKuzatuvchi />
 
@@ -124,8 +138,8 @@ Oxirida ovoz. Slayderni chapga surib, saqlangan shakl asl to'lqindan qanday uzoq
 	mingdan ortiq belgi. Shu sababli Unicode yaratildi.
 </Sinov>
 
-<Sinov raqam={2} savol="`o'g'il` so'zi nechta belgidan iborat va xotirada necha bayt egallaydi?">
-	6 ta belgi: `o`, `'`, `g`, `'`, `i`, `l`. Lotin harflari 1 bayt, ikkita tutuq belgisi
+<Sinov raqam={2} savol="`oʻgʻil` so'zi nechta belgidan iborat va xotirada necha bayt egallaydi?">
+	6 ta belgi: `o`, `ʻ`, `g`, `ʻ`, `i`, `l`. Lotin harflari 1 bayt, ikkita tutuq belgisi
 	esa 2 bayt oladi. Jami: 4 × 1 + 2 × 2 = **8 bayt**.
 </Sinov>
 

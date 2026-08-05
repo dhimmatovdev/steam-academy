@@ -33,7 +33,7 @@ import Simulyator from '../Simulyator.astro';
 	<div class="bk not-content">
 		<label>
 			<span>Matn</span>
-			<input type="text" class="kirish" value="Salom, o'zbek tili!" maxlength="40" />
+			<input type="text" class="kirish" value="Salom, oʻzbek tili!" maxlength="40" />
 		</label>
 
 		<dl class="hisob">
@@ -64,7 +64,7 @@ import Simulyator from '../Simulyator.astro';
 </Simulyator>
 
 <script>
-	const BOSHLANGICH = "Salom, o'zbek tili!";
+	const BOSHLANGICH = "Salom, oʻzbek tili!";
 
 	function ulash(qobiq: HTMLElement) {
 		const qutu = qobiq.querySelector<HTMLElement>('.bk');
@@ -142,7 +142,7 @@ import Simulyator from '../Simulyator.astro';
 
 		qobiq
 			.querySelector<HTMLButtonElement>('.namuna-uz')!
-			.addEventListener('click', () => ornat("O'zbekiston, g'alaba, ma'no"));
+			.addEventListener('click', () => ornat("Oʻzbekiston, gʻalaba, maʼno"));
 		qobiq
 			.querySelector<HTMLButtonElement>('.namuna-lotin')!
 			.addEventListener('click', () => ornat('Salom dunyo'));
@@ -224,7 +224,12 @@ import Simulyator from '../Simulyator.astro';
 		list-style: none;
 	}
 
-	.belgi {
+	/* MUHIM: quyidagi kartochkalar JS bilan yasaladi. Astro scoped CSS
+	   klassini faqat SHABLONDAGI elementlarga qo'shadi, shu sababli
+	   JS yasagan elementga oddiy selektor TEGMAYDI. Ular uchun
+	   :global() ishlatiladi, `.belgi-royxat` esa shablonda bor —
+	   u chegara sifatida xizmat qiladi va uslub boshqa joyga tarqalmaydi. */
+	.belgi-royxat :global(.belgi) {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -238,20 +243,20 @@ import Simulyator from '../Simulyator.astro';
 
 	/* Bir baytdan ko'p joy egallagan belgilar ajralib turadi — darsning
 	   asosiy kashfiyoti aynan shu */
-	.belgi[data-kop='ha'] {
+	.belgi-royxat :global(.belgi[data-kop='ha']) {
 		border-color: var(--blok-2);
 		background: var(--blok-2-fon);
 	}
 
-	.belgi-bosh {
+	.belgi-royxat :global(.belgi-bosh) {
 		font-size: 1.15rem;
 		line-height: 1.1;
 		color: var(--sl-color-white);
 	}
 
-	.belgi-kod,
-	.belgi-bayt,
-	.belgi-soni {
+	.belgi-royxat :global(.belgi-kod),
+	.belgi-royxat :global(.belgi-bayt),
+	.belgi-royxat :global(.belgi-soni) {
 		font-family: var(--sl-font-mono);
 		font-size: 0.6rem;
 		line-height: 1.3;
@@ -259,11 +264,11 @@ import Simulyator from '../Simulyator.astro';
 		text-align: center;
 	}
 
-	.belgi-bayt {
+	.belgi-royxat :global(.belgi-bayt) {
 		color: var(--sl-color-gray-2);
 	}
 
-	.belgi[data-kop='ha'] .belgi-soni {
+	.belgi-royxat :global(.belgi[data-kop='ha'] .belgi-soni) {
 		color: var(--blok-2);
 	}
 

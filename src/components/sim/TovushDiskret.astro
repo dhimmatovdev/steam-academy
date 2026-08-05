@@ -187,7 +187,9 @@ import Simulyator from '../Simulyator.astro';
 		stroke-linejoin: round;
 	}
 
-	.nuqta {
+	/* Nuqtalar JS bilan yasaladi -> Astro scoped klassini olmaydi.
+	   Shu sababli :global() shart, aks holda uslub qo'llanmaydi. */
+	.grafik :global(.nuqta) {
 		fill: var(--blok-2);
 	}
 

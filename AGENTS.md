@@ -46,7 +46,7 @@ Har o'zgarishdan keyin `npm run build` xatosiz o'tishi shart.
 6. Klaviatura: har interaktiv element `:focus-visible` da ko'rinadigan halqaga ega
 7. **CDN yo'q** — barcha JS/CSS loyiha ichida. Internet sekin bo'lsa ham ishlasin
 
-### Ikki tuzoq — ularga har safar tushiladi
+### Uch tuzoq — ularga har safar tushiladi
 
 **1. `not-content` klassi.** Starlight `.sl-markdown-content` ichidagi **har qanday**
 qo'shni element juftiga `margin-top: 1rem` qo'shadi. Proza uchun to'g'ri, UI uchun
@@ -75,6 +75,26 @@ document.querySelectorAll('.simulyator').forEach((qobiq) => {
 
 // XATO: .qayta topilmaydi -> TypeError -> butun simulyator ishlamaydi
 document.querySelectorAll('.sim-nomi').forEach(...)
+```
+
+**3. JS bilan yasalgan element uslub olmaydi.** Astro scoped CSS klassini
+**faqat shablondagi** elementlarga qo'shadi. `document.createElement` bilan
+yasagan element bu klassni olmaydi — demak `.katak { ... }` kabi oddiy
+selektor unga **tegmaydi** va element butunlay stilsiz chiqadi.
+
+Ikki yechim, tanlash qoidasi:
+
+| Holat | Yechim |
+|-------|--------|
+| Element soni qat'iy (8 bit, 64 piksel) | **Shablonda yasang**, JS faqat matnini yangilasin |
+| Ro'yxat haqiqatan dinamik (matn belgilari) | `:global()` ishlating, shablondagi ota elementni chegara qilib oling |
+
+```css
+/* XATO: JS yasagan .belgi ga tegmaydi */
+.belgi { border: 1px solid; }
+
+/* TO'G'RI: .belgi-royxat shablonda bor, chegara bo'lib xizmat qiladi */
+.belgi-royxat :global(.belgi) { border: 1px solid; }
 ```
 
 ### Interaktiv komponentlar

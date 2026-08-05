@@ -368,7 +368,8 @@ const aralash = BOSHLANGICH.map((id) => QADAMLAR.find((q) => q.id === id)!);
 		line-height: 1.5;
 	}
 
-	.natija-royxat li {
+	/* <li> lar JS bilan qo'shiladi -> :global() shart */
+	.natija-royxat :global(li) {
 		margin: 0.15rem 0;
 	}
 </style>
