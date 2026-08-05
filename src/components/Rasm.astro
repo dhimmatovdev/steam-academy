@@ -42,12 +42,12 @@ const rasm = yuklovchi ? (await yuklovchi()).default : null;
 
 {
 	rasm ? (
-		<figure class="rasm">
+		<figure class="rasm not-content">
 			<Image src={rasm} alt={alt} width={kenglik} loading="lazy" decoding="async" />
 			{izoh && <figcaption>{izoh}</figcaption>}
 		</figure>
 	) : (
-		<figure class="rasm rasm--kerak">
+		<figure class="rasm rasm--kerak not-content">
 			<div class="joy">
 				<p class="belgi">Rasm kerak</p>
 				<code>src/assets/{src}</code>

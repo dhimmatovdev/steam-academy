@@ -29,7 +29,9 @@ const d = DARAJALAR[daraja];
 ---
 
 <section class="amaliyot">
-	<header>
+	{/* `not-content`: sarlavha va meta bir qatorda turishi kerak, Starlight'ning
+	    avtomatik margin-top'i ularni siljitib qo'yadi */}
+	<header class="not-content">
 		<h3>{sarlavha}</h3>
 		<div class="meta">
 			<span class="vaqt">~{daqiqa} daqiqa</span>
@@ -104,6 +106,9 @@ const d = DARAJALAR[daraja];
 	}
 
 	.ichi {
+		/* header dan keyin keladi — Starlight'ning avtomatik oraliq'i kerak emas,
+		   oraliq padding orqali beriladi */
+		margin-top: 0;
 		padding: 1rem 1.1rem;
 		line-height: 1.6;
 	}

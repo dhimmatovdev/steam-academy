@@ -42,6 +42,14 @@ const { sarlavha = 'Bu darsdan keyin siz' } = Astro.props;
 		color: var(--sl-color-white);
 	}
 
+	/* Starlight `.sl-markdown-content` ichida qo'shni elementlarga avtomatik
+	   `margin-top` beradi. Bu yerda `not-content` ishlatilmaydi — slot ichida
+	   proza bor va uning oraliqlari kerak. Shu sababli faqat strukturaviy
+	   elementning marginini aniq nolga tushiramiz. */
+	.ichi {
+		margin-top: 0;
+	}
+
 	/* Ro'yxat belgilarini teal nuqtaga almashtiramiz — bir qarashda
 	   "maqsad" bloki boshqa ro'yxatlardan ajralib turadi. */
 	.ichi :global(ul) {

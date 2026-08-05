@@ -60,6 +60,13 @@ const { savol, raqam } = Astro.props;
 		color: var(--sl-color-accent);
 	}
 
+	/* Starlight qo'shni elementlarga avtomatik margin-top qo'shadi — savol va
+	   javob bloklarining oraliqlarini o'zimiz boshqaramiz */
+	details,
+	.javob {
+		margin-top: 0;
+	}
+
 	summary {
 		display: inline-block;
 		padding: 0.3rem 0.7rem;

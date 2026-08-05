@@ -23,7 +23,13 @@ interface Props {
 const { dars, blok = 1, modul = 'computer-fundamentals' } = Astro.props;
 ---
 
-<div class="dars-tugadi" data-blok={blok} data-modul={modul} data-dars={dars} data-holat="statik">
+<div
+	class="dars-tugadi not-content"
+	data-blok={blok}
+	data-modul={modul}
+	data-dars={dars}
+	data-holat="statik"
+>
 	<p class="statik-izoh">
 		Darsni belgilash uchun JavaScript kerak. Bu progressni saqlash uchun ishlatiladi —
 		darslikning o'zi JavaScript'siz ham to'liq o'qiladi.

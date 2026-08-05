@@ -31,7 +31,13 @@ const boshqaruvBormi = Astro.slots.has('boshqaruv');
 const fallbackBormi = Astro.slots.has('fallback');
 ---
 
-<div class="simulyator" data-blok={blok} data-holat="statik">
+{/*
+	`not-content` — Starlight qoidasi: u `.sl-markdown-content` ichidagi HAR QANDAY
+	qo'shni element juftiga `margin-top: 1rem` qo'shadi (proza uchun to'g'ri, UI
+	uchun halokatli — tugmalar zinapoyasimon siljib ketadi). `not-content` shu
+	avtomatik oraliqni butun daraxt bo'ylab o'chiradi.
+*/}
+<div class="simulyator not-content" data-blok={blok} data-holat="statik">
 	<header>
 		<h3>{sarlavha}</h3>
 		<p class="korsatma">{korsatma}</p>
@@ -123,6 +129,12 @@ const fallbackBormi = Astro.slots.has('fallback');
 
 	.fallback :global(p:last-child) {
 		margin-bottom: 0;
+	}
+
+	/* `not-content` Starlight'ning proza oraliqlarini ham o'chirdi — fallback
+	   ichidagi paragraflar uchun o'zimiz qaytaramiz */
+	.fallback :global(p + p) {
+		margin-top: 0.75rem;
 	}
 
 	/* JS yo'q: fallback ko'rinadi, interaktiv qism yashiringan */

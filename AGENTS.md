@@ -46,9 +46,42 @@ Har o'zgarishdan keyin `npm run build` xatosiz o'tishi shart.
 6. Klaviatura: har interaktiv element `:focus-visible` da ko'rinadigan halqaga ega
 7. **CDN yo'q** — barcha JS/CSS loyiha ichida. Internet sekin bo'lsa ham ishlasin
 
+### Ikki tuzoq — ularga har safar tushiladi
+
+**1. `not-content` klassi.** Starlight `.sl-markdown-content` ichidagi **har qanday**
+qo'shni element juftiga `margin-top: 1rem` qo'shadi. Proza uchun to'g'ri, UI uchun
+halokatli: yonma-yon turishi kerak tugmalar zinapoyasimon siljib ketadi.
+
+Shuning uchun **strukturaviy** o'ram elementiga `not-content` qo'yiladi
+(`Simulyator`, `DarsTugadi`, `ModulProgress`, `Rasm`, `Amaliyot > header`).
+Proza bo'lgan joyga QO'YILMAYDI — u yerda oraliqlar kerak; o'sha joyda
+faqat kerakli elementga aniq `margin-top: 0` yoziladi.
+
+Starlight qoidalari `@layer starlight.content` ichida, komponent stillari esa
+layer'siz — ya'ni siz e'lon qilgan `margin` har doim g'olib. Muammo faqat
+e'lon **qilmaganda** chiqadi.
+
+**2. Simulyator skriptining ildizi.** `boshqaruv` slotidagi tugmalar sizning
+`.sim-nomi` div'ingiz **ichida emas** — ular Simulyator qobig'ining footer'ida,
+boshqa shoxda. Shu sababli:
+
+```js
+// TO'G'RI: ildiz .simulyator
+document.querySelectorAll('.simulyator').forEach((qobiq) => {
+  const qutu = qobiq.querySelector('.sim-nomi');
+  if (!qutu) return;                       // bu boshqa simulyator
+  const qayta = qobiq.querySelector('.qayta');   // footer'dagi tugma
+});
+
+// XATO: .qayta topilmaydi -> TypeError -> butun simulyator ishlamaydi
+document.querySelectorAll('.sim-nomi').forEach(...)
+```
+
 ### Interaktiv komponentlar
 
 - Har simulyator `<Simulyator>` qobig'i ichida: sarlavha, bir qatorli ko'rsatma, `boshqaruv` slotida `Qayta boshlash`
+- Fayl joyi: `src/components/sim/NomI.astro`. Dars faqat `<NomI />` yozadi
+- `↑` `↓` kabi belgilar ba'zi tizimlarda emoji shriftiga tushib rangi buziladi — **SVG ishlating**
 - Vanilla JS + SVG. **React, D3 yoki boshqa kutubxona qo'shilmaydi**
 - Har komponent mustaqil: bir dars ochilganda faqat o'sha JS yuklanadi
 - JS o'chirilgan bo'lsa `fallback` sloti ko'rinadi (progressive enhancement)
