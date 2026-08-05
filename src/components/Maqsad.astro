@@ -1,0 +1,74 @@
+---
+/**
+ * Maqsad — dars boshidagi "shu darsdan keyin siz ..." bloki.
+ *
+ * Ichiga oddiy markdown ro'yxati yoziladi:
+ *   <Maqsad>
+ *   - bitni o'nlik songa aylantira olasiz
+ *   - ...
+ *   </Maqsad>
+ *
+ * Nima uchun kerak: o'quvchi darsni boshlashdan oldin "men nimani
+ * o'rganaman" degan savolga javob oladi. Bu diqqatni ushlab turadi.
+ */
+interface Props {
+	/** Sarlavhani o'zgartirish kerak bo'lsa */
+	sarlavha?: string;
+}
+
+const { sarlavha = 'Bu darsdan keyin siz' } = Astro.props;
+---
+
+<div class="maqsad">
+	<p class="sarlavha">{sarlavha}</p>
+	<div class="ichi">
+		<slot />
+	</div>
+</div>
+
+<style>
+	.maqsad {
+		margin: 1.5rem 0;
+		padding: 1rem 1.15rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius);
+		background: var(--sl-color-gray-7);
+	}
+
+	.sarlavha {
+		margin: 0 0 0.5rem 0;
+		font-weight: 600;
+		font-size: 0.95rem;
+		color: var(--sl-color-white);
+	}
+
+	/* Ro'yxat belgilarini teal nuqtaga almashtiramiz — bir qarashda
+	   "maqsad" bloki boshqa ro'yxatlardan ajralib turadi. */
+	.ichi :global(ul) {
+		margin: 0;
+		padding-left: 1.1rem;
+		list-style: none;
+	}
+
+	.ichi :global(li) {
+		position: relative;
+		margin: 0.3rem 0;
+		font-size: 0.95rem;
+		line-height: 1.5;
+	}
+
+	.ichi :global(li)::before {
+		content: '';
+		position: absolute;
+		left: -1.1rem;
+		top: 0.55em;
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--sl-color-accent);
+	}
+
+	.ichi :global(p:last-child) {
+		margin-bottom: 0;
+	}
+</style>

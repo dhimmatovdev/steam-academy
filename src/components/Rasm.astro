@@ -1,0 +1,120 @@
+---
+/**
+ * Rasm — barcha darslardagi rasmlar uchun yagona komponent.
+ *
+ *   <Rasm src="computer-fundamentals/02-abacus.png"
+ *         alt="Yog'och ramkadagi abacus"
+ *         izoh="2.1-rasm. Abacus — eng qadimgi hisoblash qurilmasi." />
+ *
+ * `src` — `src/assets/` ichidagi yo'l. Astro rasmni avtomatik siqadi,
+ * webp'ga o'giradi va to'g'ri o'lchamlarni qo'yadi.
+ *
+ * MUHIM: rasm hali tayyor bo'lmasa, build TO'XTAMAYDI — o'rniga
+ * o'qituvchi uchun ko'rinadigan "rasm kerak" joyi chiqadi. Bu ataylab:
+ * dars matni rasmlardan oldin yozilishi normal holat.
+ */
+import { Image } from 'astro:assets';
+
+interface Props {
+	/** `src/assets/` dan boshlab yo'l, masalan: computer-fundamentals/02-abacus.png */
+	src: string;
+	/** Majburiy. Rasmni ko'rmayotgan o'quvchi uchun tavsif. */
+	alt: string;
+	/** Rasm ostidagi izoh (caption) */
+	izoh?: string;
+	/** Kenglikni cheklash kerak bo'lsa, masalan sxemalar uchun */
+	kenglik?: number;
+}
+
+const { src, alt, izoh, kenglik } = Astro.props;
+
+/* Barcha mumkin bo'lgan rasmlarni ro'yxatga olamiz. import.meta.glob
+   build vaqtida ishlaydi, shu sababli `src` ni o'zgaruvchi sifatida
+   berish mumkin bo'ladi (oddiy `import` bunga yo'l bermaydi). */
+const rasmlar = import.meta.glob<{ default: ImageMetadata }>(
+	'/src/assets/**/*.{png,jpg,jpeg,webp,avif,svg}'
+);
+
+const yol = `/src/assets/${src}`;
+const yuklovchi = rasmlar[yol];
+const rasm = yuklovchi ? (await yuklovchi()).default : null;
+---
+
+{
+	rasm ? (
+		<figure class="rasm">
+			<Image src={rasm} alt={alt} width={kenglik} loading="lazy" decoding="async" />
+			{izoh && <figcaption>{izoh}</figcaption>}
+		</figure>
+	) : (
+		<figure class="rasm rasm--kerak">
+			<div class="joy">
+				<p class="belgi">Rasm kerak</p>
+				<code>src/assets/{src}</code>
+				<p class="tavsif">{alt}</p>
+			</div>
+			{izoh && <figcaption>{izoh}</figcaption>}
+		</figure>
+	)
+}
+
+<style>
+	.rasm {
+		margin: 1.75rem 0;
+	}
+
+	.rasm :global(img) {
+		display: block;
+		max-width: 100%;
+		height: auto;
+		margin-inline: auto;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius);
+		background: var(--sl-color-gray-7);
+	}
+
+	figcaption {
+		margin-top: 0.6rem;
+		font-size: 0.85rem;
+		line-height: 1.45;
+		color: var(--sl-color-gray-3);
+		text-align: center;
+	}
+
+	/* --- Rasm hali yo'q holati --- */
+	.joy {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 2rem 1rem;
+		border: 2px dashed var(--blok-2-chegara);
+		border-radius: var(--sa-radius);
+		background: var(--blok-2-fon);
+		text-align: center;
+	}
+
+	.belgi {
+		margin: 0;
+		font-family: var(--sl-font-mono);
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--blok-2);
+	}
+
+	.joy code {
+		font-size: 0.8rem;
+		/* Uzun yo'l 360px ekranda gorizontal scroll yaratmasin */
+		overflow-wrap: anywhere;
+	}
+
+	.tavsif {
+		margin: 0;
+		max-width: 40ch;
+		font-size: 0.85rem;
+		line-height: 1.45;
+		color: var(--sl-color-gray-2);
+	}
+</style>

@@ -1,0 +1,99 @@
+---
+/**
+ * Bloknoma — dars boshida turadigan blok belgisi.
+ *
+ * Vazifasi: o'quvchi 20 darslik yo'lning qaysi qismida turganini bir
+ * qarashda bilishi. Har blokning o'z rangi bor va shu rang butun dars
+ * bo'ylab (Muhim, Amaliyot, DarsTugadi) takrorlanadi.
+ */
+interface Props {
+	/** 1..5 */
+	blok: 1 | 2 | 3 | 4 | 5;
+}
+
+const { blok } = Astro.props;
+
+const BLOKLAR: Record<number, { nom: string; darslar: string }> = {
+	1: { nom: 'Hamma narsa bit', darslar: '1–4 darslar' },
+	2: { nom: 'Mantiqdan apparatga', darslar: '5–8 darslar' },
+	3: { nom: 'Protsessor', darslar: '9–12 darslar' },
+	4: { nom: "Xotira, OS va fayl", darslar: '13–16 darslar' },
+	5: { nom: 'Tarmoq, xavfsizlik, chegaralar', darslar: '17–20 darslar' },
+};
+
+const ma = BLOKLAR[blok]!;
+---
+
+<p class="bloknoma" data-blok={blok}>
+	<span class="raqam">{blok}-blok</span>
+	<span class="nom">{ma.nom}</span>
+	<span class="darslar">{ma.darslar}</span>
+</p>
+
+<style>
+	.bloknoma {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.5rem 0.75rem;
+		margin: 0 0 1.75rem 0;
+		padding: 0.55rem 0.85rem;
+		border-left: 3px solid var(--blok-rang);
+		border-radius: 0 var(--sa-radius-kichik) var(--sa-radius-kichik) 0;
+		background: var(--blok-fon);
+		font-size: 0.875rem;
+		line-height: 1.4;
+	}
+
+	.raqam {
+		font-family: var(--sl-font-mono);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		font-size: 0.75rem;
+		color: var(--blok-rang);
+	}
+
+	.nom {
+		font-weight: 600;
+		color: var(--sl-color-white);
+	}
+
+	.darslar {
+		margin-left: auto;
+		font-family: var(--sl-font-mono);
+		font-size: 0.75rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	/* 360px ekranda "darslar" o'ngga tortilmasin — pastga tushsin */
+	@media (max-width: 26rem) {
+		.darslar {
+			margin-left: 0;
+			flex-basis: 100%;
+		}
+	}
+
+	/* Blok rangini bitta joyda xaritalash — qolgan barcha qoidalar
+	   --blok-rang / --blok-fon orqali ishlaydi. */
+	.bloknoma[data-blok='1'] {
+		--blok-rang: var(--blok-1);
+		--blok-fon: var(--blok-1-fon);
+	}
+	.bloknoma[data-blok='2'] {
+		--blok-rang: var(--blok-2);
+		--blok-fon: var(--blok-2-fon);
+	}
+	.bloknoma[data-blok='3'] {
+		--blok-rang: var(--blok-3);
+		--blok-fon: var(--blok-3-fon);
+	}
+	.bloknoma[data-blok='4'] {
+		--blok-rang: var(--blok-4);
+		--blok-fon: var(--blok-4-fon);
+	}
+	.bloknoma[data-blok='5'] {
+		--blok-rang: var(--blok-5);
+		--blok-fon: var(--blok-5-fon);
+	}
+</style>

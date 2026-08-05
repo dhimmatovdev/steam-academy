@@ -1,0 +1,118 @@
+---
+/**
+ * Sinov — o'z-o'zini tekshirish savoli. Javob <details> ichida yashiringan.
+ *
+ *   <Sinov savol="255 soni 8 bitda qanday yoziladi?">
+ *   `11111111` — sakkiz bitning hammasi 1.
+ *   </Sinov>
+ *
+ * Nima uchun JavaScript yo'q: <details> brauzerning o'z elementi. U
+ * klaviatura bilan ishlaydi, ekran o'quvchisi tushunadi, JS o'chirilganda
+ * ham ochiladi va sahifaga bitta ham kilobayt qo'shmaydi.
+ *
+ * Pedagogik qoida: o'quvchi javobni ochishdan oldin o'ylashi kerak.
+ * Shu sababli javob yopiq holatda turadi va "Javobni ko'rish" deb
+ * ataladi -- "Javob" emas.
+ */
+interface Props {
+	savol: string;
+	/** Savol raqami (avtomatik emas — muallif qo'yadi, kerak bo'lsa) */
+	raqam?: number;
+}
+
+const { savol, raqam } = Astro.props;
+---
+
+<div class="sinov">
+	<p class="savol">
+		{raqam !== undefined && <span class="raqam">{raqam}</span>}
+		{savol}
+	</p>
+	<details>
+		<summary>Javobni ko'rish</summary>
+		<div class="javob">
+			<slot />
+		</div>
+	</details>
+</div>
+
+<style>
+	.sinov {
+		margin: 1rem 0;
+		padding: 0.85rem 1rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-gray-7);
+	}
+
+	.savol {
+		display: flex;
+		gap: 0.5rem;
+		margin: 0 0 0.6rem 0;
+		font-weight: 600;
+		line-height: 1.5;
+		color: var(--sl-color-white);
+	}
+
+	.raqam {
+		flex: 0 0 auto;
+		font-family: var(--sl-font-mono);
+		color: var(--sl-color-accent);
+	}
+
+	summary {
+		display: inline-block;
+		padding: 0.3rem 0.7rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-2);
+		cursor: pointer;
+		/* Standart uchburchak belgisini o'chirib, o'z ko'rinishimizni beramiz */
+		list-style: none;
+		user-select: none;
+	}
+
+	summary::-webkit-details-marker {
+		display: none;
+	}
+
+	summary::before {
+		content: '→ ';
+		color: var(--sl-color-accent);
+	}
+
+	summary:hover {
+		border-color: var(--sl-color-accent);
+		color: var(--sl-color-white);
+	}
+
+	summary:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	details[open] summary {
+		margin-bottom: 0.6rem;
+		border-color: var(--sl-color-accent);
+	}
+
+	details[open] summary::before {
+		content: '↓ ';
+	}
+
+	.javob {
+		padding-left: 0.85rem;
+		border-left: 2px solid var(--sl-color-accent);
+		font-size: 0.95rem;
+		line-height: 1.6;
+	}
+
+	.javob :global(p:first-child) {
+		margin-top: 0;
+	}
+
+	.javob :global(p:last-child) {
+		margin-bottom: 0;
+	}
+</style>

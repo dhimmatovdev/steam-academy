@@ -1,0 +1,128 @@
+---
+/**
+ * Amaliyot — dars oxiridagi uy vazifasi bloki.
+ *
+ *   <Amaliyot daqiqa={20} daraja="o'rta">
+ *   10 ta sonni qo'lda ikkilik sanoqqa o'giring.
+ *   </Amaliyot>
+ *
+ * Vaqt va daraja ataylab ko'rsatiladi: o'quvchi "bu menga qancha vaqt
+ * oladi" degan savolga javob olsa, boshlash ehtimoli ancha yuqori bo'ladi.
+ */
+interface Props {
+	/** Taxminiy vaqt, daqiqada */
+	daqiqa: number;
+	daraja?: 'oson' | "o'rta" | 'qiyin';
+	/** Sarlavhani almashtirish (masalan "Loyiha") */
+	sarlavha?: string;
+}
+
+const { daqiqa, daraja = "o'rta", sarlavha = 'Amaliy topshiriq' } = Astro.props;
+
+const DARAJALAR = {
+	oson: { nom: 'oson', nuqta: 1 },
+	"o'rta": { nom: "o'rta", nuqta: 2 },
+	qiyin: { nom: 'qiyin', nuqta: 3 },
+} as const;
+
+const d = DARAJALAR[daraja];
+---
+
+<section class="amaliyot">
+	<header>
+		<h3>{sarlavha}</h3>
+		<div class="meta">
+			<span class="vaqt">~{daqiqa} daqiqa</span>
+			<span class="daraja" title={`Daraja: ${d.nom}`}>
+				<span class="nuqtalar" aria-hidden="true">
+					{[1, 2, 3].map((n) => <span class:list={['nuqta', { toliq: n <= d.nuqta }]} />)}
+				</span>
+				<span class="daraja-nom">{d.nom}</span>
+			</span>
+		</div>
+	</header>
+	<div class="ichi">
+		<slot />
+	</div>
+</section>
+
+<style>
+	.amaliyot {
+		margin: 2rem 0;
+		border: 1px solid var(--blok-1-chegara);
+		border-radius: var(--sa-radius);
+		overflow: hidden;
+	}
+
+	header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem 1rem;
+		padding: 0.7rem 1.1rem;
+		background: var(--blok-1-fon);
+		border-bottom: 1px solid var(--blok-1-chegara);
+	}
+
+	h3 {
+		margin: 0;
+		font-size: 1rem;
+		color: var(--blok-1);
+	}
+
+	.meta {
+		display: flex;
+		align-items: center;
+		gap: 0.9rem;
+		font-family: var(--sl-font-mono);
+		font-size: 0.75rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.daraja {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+
+	.nuqtalar {
+		display: flex;
+		gap: 3px;
+	}
+
+	.nuqta {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		border: 1px solid var(--sl-color-gray-4);
+	}
+
+	.nuqta.toliq {
+		background: var(--blok-1);
+		border-color: var(--blok-1);
+	}
+
+	.ichi {
+		padding: 1rem 1.1rem;
+		line-height: 1.6;
+	}
+
+	.ichi :global(p:first-child) {
+		margin-top: 0;
+	}
+
+	.ichi :global(p:last-child),
+	.ichi :global(ul:last-child),
+	.ichi :global(ol:last-child) {
+		margin-bottom: 0;
+	}
+
+	/* Kichik ekranda sarlavha va meta bir qatorga sig'masa — meta pastga */
+	@media (max-width: 26rem) {
+		header {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+	}
+</style>

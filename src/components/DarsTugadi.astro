@@ -1,0 +1,191 @@
+---
+/**
+ * DarsTugadi — dars oxiridagi "Darsni tugatdim" tugmasi.
+ *
+ *   <DarsTugadi dars={2} blok={1} />
+ *
+ * Progress `localStorage` da saqlanadi (server yo'q). Tugma ikki tomonlama:
+ * bosilgan darsni qayta bosib bekor qilish mumkin — o'quvchi xato bosgan
+ * bo'lsa tuzatishi kerak.
+ *
+ * JS o'chirilgan bo'lsa tugma umuman ko'rsatilmaydi, o'rniga qisqa izoh
+ * chiqadi. Sabab: ishlamaydigan tugma ishlamaydigan tugmadan yomonroq.
+ */
+interface Props {
+	/** Dars raqami, 1..20 */
+	dars: number;
+	/** Rang uchun — dars qaysi blokda */
+	blok?: 1 | 2 | 3 | 4 | 5;
+	/** Modul id (papka nomi) */
+	modul?: string;
+}
+
+const { dars, blok = 1, modul = 'computer-fundamentals' } = Astro.props;
+---
+
+<div class="dars-tugadi" data-blok={blok} data-modul={modul} data-dars={dars} data-holat="statik">
+	<p class="statik-izoh">
+		Darsni belgilash uchun JavaScript kerak. Bu progressni saqlash uchun ishlatiladi —
+		darslikning o'zi JavaScript'siz ham to'liq o'qiladi.
+	</p>
+
+	<div class="widget">
+		<button type="button" class="tugma" aria-pressed="false">
+			<span class="belgi" aria-hidden="true"></span>
+			<span class="matn">Darsni tugatdim</span>
+		</button>
+		<p class="xabar" role="status" aria-live="polite"></p>
+	</div>
+</div>
+
+<script>
+	import { darsBelgila, darsTugadimi, HODISA } from '../scripts/progress';
+
+	function ulash(qutu: HTMLElement) {
+		const modul = qutu.dataset.modul!;
+		const dars = Number(qutu.dataset.dars);
+		const tugma = qutu.querySelector<HTMLButtonElement>('.tugma')!;
+		const matn = tugma.querySelector<HTMLElement>('.matn')!;
+		const xabar = qutu.querySelector<HTMLElement>('.xabar')!;
+
+		function korinishniYangila() {
+			const tugadi = darsTugadimi(modul, dars);
+			tugma.setAttribute('aria-pressed', String(tugadi));
+			matn.textContent = tugadi ? 'Tugatildi' : 'Darsni tugatdim';
+		}
+
+		tugma.addEventListener('click', () => {
+			const hozir = darsTugadimi(modul, dars);
+			const yangiNishonlar = darsBelgila(modul, dars, !hozir);
+
+			if (yangiNishonlar.length > 0) {
+				// Blok tugadi — bu eslab qolinadigan daqiqa bo'lishi kerak
+				xabar.textContent = `Yangi nishon: ${yangiNishonlar.map((n) => n.nom).join(', ')}`;
+				qutu.dataset.nishon = 'yangi';
+			} else {
+				xabar.textContent = hozir ? '' : 'Saqlandi';
+				delete qutu.dataset.nishon;
+			}
+		});
+
+		// Boshqa komponent progressni o'zgartirsa (masalan "Tozalash") — yangilanamiz
+		document.addEventListener(HODISA, korinishniYangila);
+
+		korinishniYangila();
+		qutu.dataset.holat = 'tayyor';
+	}
+
+	document.querySelectorAll<HTMLElement>('.dars-tugadi').forEach(ulash);
+</script>
+
+<style>
+	.dars-tugadi {
+		margin: 2.5rem 0 1rem;
+		padding-top: 1.25rem;
+		border-top: 1px solid var(--sl-color-gray-5);
+	}
+
+	/* JavaScript ishlamaguncha widget yashiringan, izoh ko'rinadi.
+	   Skript yuklangach data-holat="tayyor" bo'ladi va almashadi. */
+	.dars-tugadi[data-holat='statik'] .widget {
+		display: none;
+	}
+
+	.dars-tugadi[data-holat='tayyor'] .statik-izoh {
+		display: none;
+	}
+
+	.statik-izoh {
+		margin: 0;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-3);
+	}
+
+	.widget {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.75rem 1rem;
+	}
+
+	.tugma {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55rem;
+		padding: 0.6rem 1.1rem;
+		border: 1px solid var(--blok-rang);
+		border-radius: var(--sa-radius-kichik);
+		background: transparent;
+		color: var(--blok-rang);
+		font: inherit;
+		font-size: 0.95rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition:
+			background-color 0.15s ease,
+			color 0.15s ease;
+	}
+
+	.tugma:hover {
+		background: var(--blok-fon);
+	}
+
+	.tugma:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	/* Bo'sh kvadrat -> belgilangan kvadrat */
+	.belgi {
+		display: inline-block;
+		width: 1rem;
+		height: 1rem;
+		border: 2px solid currentColor;
+		border-radius: 3px;
+	}
+
+	.tugma[aria-pressed='true'] {
+		background: var(--blok-rang);
+		color: var(--sl-color-black);
+	}
+
+	.tugma[aria-pressed='true'] .belgi {
+		background: currentColor;
+		/* Ichida "belgilangan" hissi uchun kichik ichki bo'shliq */
+		box-shadow: inset 0 0 0 2px var(--blok-rang);
+	}
+
+	.xabar {
+		margin: 0;
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	/* Yangi nishon ochilganda xabar ajralib turadi */
+	.dars-tugadi[data-nishon='yangi'] .xabar {
+		font-weight: 600;
+		color: var(--blok-2);
+	}
+
+	.dars-tugadi[data-blok='1'] {
+		--blok-rang: var(--blok-1);
+		--blok-fon: var(--blok-1-fon);
+	}
+	.dars-tugadi[data-blok='2'] {
+		--blok-rang: var(--blok-2);
+		--blok-fon: var(--blok-2-fon);
+	}
+	.dars-tugadi[data-blok='3'] {
+		--blok-rang: var(--blok-3);
+		--blok-fon: var(--blok-3-fon);
+	}
+	.dars-tugadi[data-blok='4'] {
+		--blok-rang: var(--blok-4);
+		--blok-fon: var(--blok-4-fon);
+	}
+	.dars-tugadi[data-blok='5'] {
+		--blok-rang: var(--blok-5);
+		--blok-fon: var(--blok-5-fon);
+	}
+</style>
