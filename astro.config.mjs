@@ -4,12 +4,21 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
+	site: 'https://steam-academy-xi.vercel.app',
 	integrations: [
 		starlight({
 			title: 'STEAM Academy',
 			customCss: ['./src/styles/custom.css'],
+			defaultLocale: 'root',
+			locales: {
+				root: { label: "O'zbekcha", lang: 'uz' },
+			},
 			social: [
-				{ icon: 'github', label: 'GitHub', href: 'https://github.com/' },
+				{
+					icon: 'github',
+					label: 'GitHub',
+					href: 'https://github.com/dhimmatovdev/steam-academy',
+				},
 			],
 			sidebar: [
 				{
@@ -47,14 +56,6 @@ export default defineConfig({
 				{
 					label: 'AI Fundamentals',
 					items: [{ autogenerate: { directory: 'ai-fundamentals' } }],
-				},
-				{
-					label: 'Guides',
-					items: [{ autogenerate: { directory: 'guides' } }],
-				},
-				{
-					label: 'Reference',
-					items: [{ autogenerate: { directory: 'reference' } }],
 				},
 			],
 		}),
