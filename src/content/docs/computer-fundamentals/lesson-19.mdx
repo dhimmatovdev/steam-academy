@@ -1,0 +1,134 @@
+---
+title: '19-dars: Xavfsizlik va shifrlash'
+description: "Hash nima uchun 'barmoq izi'? Parol qanday saqlanadi va nega uzunlik hal qiladi."
+sidebar:
+  label: '19-dars'
+  order: 19
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import HashMaydoni from '../../../components/sim/HashMaydoni.astro';
+import ParolBuzishVaqti from '../../../components/sim/ParolBuzishVaqti.astro';
+
+<Bloknoma blok={5} />
+
+## Nega bu muhim
+
+Parolingizni saytga yuborasiz — u yo'lda o'nlab routerlardan o'tadi (17-dars). Saytning bazasi buzilsa-chi? Millionlab parol oshkor bo'ladimi?
+
+Yaxshi saytlarda — yo'q. Chunki ular parolingizni **umuman saqlamaydi**. Qanday qilib parolni saqlamasdan tekshirish mumkin? Bu darsning birinchi siri. Ikkinchisi: nega 8 belgilik parol bir kunda buziladi-yu, 14 belgiligi — asrlarda ham yo'q.
+
+<Maqsad>
+- hash-funksiya nima va uning uch xossasini bilasiz
+- saytlar parolni saqlamasdan qanday tekshirishini tushuntira olasiz
+- parol kuchi qayerdan kelishini hisob bilan ko'rsata olasiz
+- shifrlash va hash farqini ayta olasiz
+</Maqsad>
+
+## Nazariya
+
+### Hash: ma'lumotning barmoq izi
+
+**Hash-funksiya** istalgan matndan qat'iy uzunlikdagi "barmoq izi" yasaydi. SHA-256 misolida: bitta harf ham, butun kitob ham — natija doim 64 ta hex belgi.
+
+<Atama soz="hash-funksiya" eng="hash function">
+	Istalgan ma'lumotdan qat'iy uzunlikdagi qisqa iz yasovchi funksiya. Yaxshi hash:
+	bir tomonlama (izdan asl matnni tiklab bo'lmaydi), sezgir (bitta bit — butunlay
+	boshqa iz) va to'qnashuvga chidamli.
+</Atama>
+
+Uch xossa muhim. **Bir tomonlama**: hash'dan matnga qaytish yo'li yo'q — bu qiymadan mol tiklashday gap. **Ko'chki effekti**: bitta belgi o'zgarsa, iz butunlay o'zgaradi. **Determinizm**: bir xil matn — har doim bir xil iz.
+
+### Parolni saqlamasdan tekshirish
+
+Endi sir ochiladi: sayt bazasida parolingiz emas, uning **hash'i** yotadi. Kirishda yozgan parolingiz hash'lanadi va bazadagi iz bilan solishtiriladi. Mos keldi — demak parol to'g'ri. Baza o'g'irlansa ham, o'g'ri qo'lida faqat izlar — ulardan parolga qaytib bo'lmaydi.
+
+<Muhim turi="ogoh">
+	Shuning uchun "parolni unutdim" bosganingizda sayt eski parolingizni AYTIB BERA
+	OLMAYDI — o'zi ham bilmaydi! Yangi parol o'rnatishni taklif qiladi. Eski parolini
+	emailda yuboradigan sayt — parolni ochiq saqlayapti, undan qoching.
+</Muhim>
+
+### Parol kuchi: daraja sehri
+
+O'g'ri hash'dan qaytolmaydi, lekin **taxmin qilib ko'rishi** mumkin: millionlab parolni hash'lab, izlarni solishtiradi. Zamonaviy uskuna sekundiga ~10 milliard urinish qiladi.
+
+Himoya — kombinatsiyalar soni: alifbo^uzunlik. E'tibor bering: alifbo **asosda**, uzunlik esa **darajada** turadi. Shuning uchun parolga bitta belgi qo'shish uni alifboni kengaytirishdan ko'ra keskinroq kuchaytiradi — 2-darsdagi 2ⁿ portlashi endi sizni himoya qiladi.
+
+### Shifrlash: qaytariladigan sir
+
+Hash bir tomonlama; **shifrlash** esa ikki tomonlama: kalit bilan qulflanadi, kalit bilan ochiladi. HTTPS'dagi S aynan shu — brauzer va server ma'lumotni yo'lda shifrlab yuboradi, routerlar faqat "qiyqim" ko'radi.
+
+<Atama soz="ochiq kalitli shifrlash" eng="public-key cryptography">
+	Ikki kalitli tizim: ochiq kalit hammaga beriladi va faqat qulflaydi, yopiq kalit
+	egasida qoladi va faqat ochadi. Oldindan sir kelishmasdan xavfsiz aloqa shundan.
+</Atama>
+
+Eng chiroyli g'oya — **ochiq kalit**: qulflaydigan kalitni hammaga tarqatasiz, ochadigani faqat o'zingizda. Endi istalgan notanish sizga sir yubora oladi — oldindan uchrashmasdan. HTTPS suhbati ham shu bilan boshlanadi.
+
+## Sinab ko'r
+
+Avval hash'ni his qiling: matn yozing, keyin bitta harfini o'zgartirib, 64 belgidan nechtasi o'zgarganini sanang.
+
+<HashMaydoni />
+
+Endi parol kuchi. **Haqiqiy parolingizni yozmang** — o'ylab topilgan sinovlar bilan o'ynang: raqamlargagina qurilgan parol, harf qo'shilgani, uzunroq varianti...
+
+<ParolBuzishVaqti />
+
+## Xulosa
+
+- **Hash** — bir tomonlama barmoq izi: qaytib bo'lmaydi, bitta bit — boshqa iz
+- Saytlar parolni emas, **hash'ini** saqlaydi — shu sababli eski parolni ayta olmaydi
+- Parol kuchi = alifbo^**uzunlik** — daraja asosdan kuchli, uzunlik hal qiladi
+- **Shifrlash** qaytariladi (kalit bilan), hash — yo'q; HTTPS = shifrlangan HTTP
+- **Ochiq kalit** qulflaydi, yopiq kalit ochadi — notanishlar ham sir almasha oladi
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Hash bilan shifrlashning tub farqi nimada?">
+	Shifrlash qaytariladigan: kaliti bor odam asl matnni tiklaydi. Hash qaytarilmaydigan:
+	hech qanday kalit yo'q, izdan matnga yo'l yo'q. Shifrlash — sir saqlash uchun,
+	hash — tekshirish va barmoq izi uchun.
+</Sinov>
+
+<Sinov raqam={2} savol="Sayt bazasi o'g'irlandi, lekin parollar hash'langan edi. Foydalanuvchilar xavfsizmi?">
+	Nisbatan: o'g'ri parollarni to'g'ridan-to'g'ri o'qiy olmaydi, lekin mashhur parollarni
+	hash'lab solishtirib ko'ra oladi. "12345678" ishlatganlar bir zumda topiladi, kuchli
+	parollilar esa amalda xavfsiz. Shuning uchun parol kuchi baza buzilganda ham himoya.
+</Sinov>
+
+<Sinov raqam={3} savol="Nega 10 belgilik faqat raqamli parol 8 belgilik aralash paroldan zaif? Hisoblab ko'rsating.">
+	Raqamli: 10¹⁰ = 10 milliard — sekundiga 10 milliard urinishda ~1 soniya. Aralash
+	(katta-kichik harf + raqam, 62 belgi): 62⁸ ≈ 2×10¹⁴ — bir necha soat. Alifbo asosni
+	oshiradi, va 62⁸ ≫ 10¹⁰. Ikkisini birlashtirsangiz — 62¹⁰ allaqachon yillar.
+</Sinov>
+
+<Sinov raqam={4} savol="'Parolni unutdim' bosilganda yaxshi sayt nega eski parolni emas, yangi o'rnatish havolasini yuboradi?">
+	Chunki yaxshi sayt parolni bilmaydi — bazada faqat hash yotadi, u esa bir tomonlama.
+	Eski parolni yubora oladigan sayt uni ochiq (yoki qaytariladigan ko'rinishda)
+	saqlayapti — bazasi buzilsa hamma parol oshkor bo'ladi.
+</Sinov>
+
+<Sinov raqam={5} savol="Ochiq kalit hammaga ma'lum bo'lsa, tizim qanday xavfsiz qoladi?">
+	Ochiq kalit faqat QULFLAY oladi — ochish uchun yopiq kalit kerak, u esa hech qachon
+	uzatilmaydi. Pochta qutisiga o'xshaydi: xat tashlash teshigi hammaga ochiq, qutini
+	ochadigan kalit faqat egasida.
+</Sinov>
+
+<Amaliyot daqiqa={30} daraja="o'rta">
+	**Birinchi qism.** Uchta SINOV parol tuzing (haqiqiylarini emas!): (a) faqat
+	raqamlardan 8 belgili, (b) harf-raqamli 8 belgili, (c) to'rt so'zdan iborat uzun
+	ibora (masalan: "olma daraxt osmon velosiped"). Har birini simulyatorda tekshirib,
+	buzish vaqtlarini jadvalga yozing.
+
+	**Ikkinchi qism.** Natijaga qarab javob bering: nega (c) eng kuchli, vaholanki
+	unda "murakkab belgilar" yo'q? Javobda daraja hisobidan foydalaning.
+
+	**Uchinchi qism.** O'z akkauntlaringiz uchun xulosa yozing (parollarning o'zini
+	YOZMASDAN): qaysi tamoyillar bo'yicha parol tuzish kerak — uch qoida.
+
+	Topshiriladigan natija: jadval + daraja izohi + uch qoida.
+</Amaliyot>
+
+<DarsTugadi dars={19} blok={5} />

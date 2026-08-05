@@ -1,0 +1,140 @@
+---
+title: '20-dars: Hisoblashning chegaralari'
+description: "Algoritm apparatdan kuchli. Mur qonuni sekinlashdi. Va kompyuter yecha olmaydigan masala bor."
+sidebar:
+  label: '20-dars'
+  order: 20
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import AlgoritmPoygasi from '../../../components/sim/AlgoritmPoygasi.astro';
+import ToxtashMuammosi from '../../../components/sim/ToxtashMuammosi.astro';
+
+<Bloknoma blok={5} />
+
+## Nega bu muhim
+
+Yigirma dars davomida kompyuter qanday **ishlashini** ko'rdingiz. Oxirgi dars boshqa savolga bag'ishlanadi: kompyuter nimani **qila olmaydi**?
+
+Bu savol falsafa emas, aniq fan. Ba'zi ishlar uchun to'g'ri algoritm apparatning kuchidan ming barobar muhim. Ba'zi masalalar esa — matematika isbotlab qo'ygan — **hech qanday** kompyuterda yechilmaydi. Modulni ana shu chegaralarni bilib yakunlaymiz — chunki chegarani bilgan odam kuchni to'g'ri ishlatadi.
+
+<Maqsad>
+- algoritm tanlash apparatdan muhimroq bo'lishi mumkinligini raqamda ko'rasiz
+- Mur qonuni nima bo'lgani va nega sekinlashganini bilasiz
+- to'xtash muammosini o'yin orqali "isbotlaysiz"
+- modul bo'ylab o'tgan katta g'oyalarni bir joyga yig'asiz
+</Maqsad>
+
+## Nazariya
+
+### Algoritm apparatdan kuchli
+
+Million elementli tartiblangan ro'yxatdan bitta sonni topish kerak. Birinchi usul: boshidan birma-bir — o'rtacha 500 000 qadam. Ikkinchi usul: o'rtasidan ochib, yarmini tashlash — xuddi lug'atdan so'z qidirgandek. Har qadam ro'yxatni ikkiga bo'ladi: million → 20 qadam.
+
+Farq — 25 000 barobar. Protsessorni 25 ming barobar tezlatib bo'lmaydi, algoritmni almashtirish esa — bir necha qator kod. Qaysi algoritmlar bor va ularni qanday solishtirish — [algorithms](/algorithms/) modulining ishi; bu yerda faqat asosiy xulosa: **avval algoritm, keyin apparat**.
+
+### Mur qonuni: bepul tezlik davri tugadi
+
+1965-yilda Gordon Mur payqadi: chipdagi tranzistorlar soni har ~2 yilda ikki baravar oshyapti. Ellik yil bu bashorat ishladi — dasturlar hech narsa qilmasa ham yildan-yilga tezlashib borardi.
+
+Endi fizika chegara qo'ydi: tranzistor atom o'lchamiga yaqinlashdi (6-darsni eslang), issiqlik ham to'sqinlik qiladi. Bir yadroni tezlatish o'rniga **ko'p yadro** qo'yiladi — lekin 15-darsdan bilasiz: to'rt yadro to'rt barobar tezlik degani emas, ishni bo'lish ham san'at.
+
+<Muhim turi="gap">
+	Xulosa amaliy: kelajakda dastur tezligi "yangi protsessor chiqadi" hisobiga emas,
+	yaxshi algoritm va ishni to'g'ri taqsimlash hisobiga o'sadi. Ya'ni — dasturchining
+	boshi hisobiga.
+</Muhim>
+
+### Yechib bo'lmaydigan masala
+
+Eng qiziq savol: har qanday masalani yetarlicha kuchli kompyuter yecha oladimi? **Yo'q.** 1936-yilda Alan Tyuring (kompyuterlar qurilishidan oldin!) isbotladi: "berilgan dastur to'xtaydimi yoki abadiy aylanadimi?" degan savolga **umumiy javob beruvchi dastur yozib bo'lmaydi**.
+
+<Atama soz="to'xtash muammosi" eng="halting problem">
+	"Istalgan dastur va kirish uchun: u to'xtaydimi?" savoli. Tyuring isbotlagan:
+	bu savolga hamma holatda to'g'ri javob beruvchi algoritm mavjud emas.
+</Atama>
+
+Isbot go'zal ayyorlikka qurilgan: mukammal bashoratchi bor deb faraz qilamiz — va undan foydalanib, bashoratchini doim yanglishtiradigan dastur yasaymiz. Ziddiyat! Demak faraz noto'g'ri. Quyida buni o'zingiz o'ynab ko'rasiz.
+
+<Muhim turi="sir">
+	Bu apparat ojizligi emas — MANTIQ chegarasi: kvant kompyuter ham, million yil
+	keyingi kompyuter ham to'xtash muammosini yecholmaydi. Shu sababli antivirus hech
+	qachon "har qanday virusni aniq topaman" deya olmaydi — bu to'xtash muammosining
+	qarindoshi.
+</Muhim>
+
+### Minoraga oxirgi qarash
+
+Yo'lni eslang: tok bor/yo'q → bit → darvoza → summator → registr → protsessor → dastur → OS → tarmoq. Har qavat pastkisini yashirdi, va oddiy kalitlardan olam qurildi.
+
+Endi bilasiz: bu olam qudratli, lekin cheksiz emas — fizika tranzistorni, matematika esa hisoblashning o'zini chegaralaydi. Shu ikki chegara orasida butun kompyuter fani yashaydi.
+
+## Sinab ko'r
+
+Avval algoritm kuchini raqamda ko'ring — hajmni oshirib boring, millionda farq hayratlanarli.
+
+<AlgoritmPoygasi />
+
+Endi modulning yakuniy o'yini: siz — mukammal bashoratchi. AYYOR dasturi haqida hukm chiqaring. Ikkala javobni ham sinang — va Tyuring isbotini o'z qo'lingiz bilan "his qiling".
+
+<ToxtashMuammosi />
+
+## Xulosa
+
+- **Algoritm tanlash** apparatni tezlatishdan kuchliroq: millionda 500 000 vs 20 qadam
+- **Mur qonuni** sekinlashdi: endi tezlik ko'p yadro va aqlli koddan keladi
+- **To'xtash muammosi** yechilmaydi — bu mantiq chegarasi, apparat emas
+- Chegarani bilish — zaiflik emas: muhandis nimani qurish mumkinligini aniq biladi
+- Siz endi minoraning HAMMA qavatini ko'rdingiz: tokdan Tyurunggacha
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Nega ikkilik qidiruv faqat TARTIBLANGAN ro'yxatda ishlaydi?">
+	"Yarmini tashlash" qarori taqqoslashga tayanadi: qidirilayotgan son o'rtadagidan
+	katta bo'lsa — chap yarim keraksiz. Bu xulosa faqat ro'yxat tartiblangan bo'lsa
+	to'g'ri. Tartibsiz ro'yxatda hech yarmini ishonch bilan tashlab bo'lmaydi.
+</Sinov>
+
+<Sinov raqam={2} savol="Mur qonuni nega 'qonun' emas edi va nega sekinlashdi?">
+	U tabiat qonuni emas, sanoat kuzatuvi edi — muhandislik va iqtisod shunga
+	intildi. Sekinlashuvi fizikadan: tranzistor atom o'lchamiga yetdi, kvant effektlar
+	va issiqlik to'sqinlik qiladi. Yo'l endi kenglikda: ko'p yadro, maxsus chiplar.
+</Sinov>
+
+<Sinov raqam={3} savol="To'xtash muammosi isbotida AYYOR dasturi nima qiladi va nega bu bashoratchini yiqitadi?">
+	AYYOR bashoratchidan O'ZI haqida hukm so'raydi va teskarisini qiladi: "to'xtaydi"
+	deyilsa abadiy aylanadi, "to'xtamaydi" deyilsa to'xtaydi. Bashoratchi nima demasin —
+	yanglishadi. Mukammal bashoratchi farazi ziddiyatga olib keldi, demak u mavjud emas.
+</Sinov>
+
+<Sinov raqam={4} savol="Antivirus 'har qanday zararli dasturni aniq topaman' deya olmasligi to'xtash muammosiga qanday bog'liq?">
+	"Bu dastur zararli ish qiladimi?" savoli "bu dastur to'xtaydimi?" bilan bir xil
+	tabiatli: dasturning kelajak xatti-harakatini umumiy holda oldindan aytish talab
+	qilinadi. Tyuring isboti shunga o'xshash savollarga ham ko'chadi. Antiviruslar
+	shuning uchun taxmin, imzo va kuzatuv bilan ishlaydi — kafolat bilan emas.
+</Sinov>
+
+<Sinov raqam={5} savol="Modul bo'ylab eng ko'p takrorlangan g'oya qaysi edi? Kamida uch qavatdan misol keltiring.">
+	Abstraksiya: har qavat pastkisining tafsilotini yashiradi. Misollar: tranzistorni
+	unutib darvoza bilan o'yladik (6), darvozani unutib summator quridik (7), buyruqlar
+	ustiga til qurdik (12), jarayonga "yolg'iz kompyuter" illyuziyasini berdik (15),
+	paketlar ustiga sahifalar olamini qurdik (18).
+</Sinov>
+
+<Amaliyot daqiqa={45} daraja="qiyin">
+	**Birinchi qism — o'lchov.** Bir varaq qog'ozga 1 dan 50 gacha sonlarni aralash
+	tartibda yozing. Do'stingizdan bitta sonni o'ylashini so'rang. Avval birma-bir
+	("chiziqli"), keyin varaqni tartiblab yozib, o'rtadan bo'lish usulida ("ikkilik")
+	toping — har usulda nechta savol ketganini yozing.
+
+	**Ikkinchi qism — yakuniy insho.** "Telefonimda 'salom' yozilishidan do'stimga
+	yetib borishigacha" mavzusida bir sahifalik hikoya yozing. Shart: kamida 8 ta
+	dars tushunchasi ishtirok etsin (bit, darvoza, protsessor, OS, paket, hash...) va
+	har biri o'z o'rnida ishlatilsin.
+
+	Bu insho — butun modul bo'yicha yakuniy ishingiz. Uni o'qituvchiga topshirasiz.
+
+	Topshiriladigan natija: ikki usul taqqoslovi + bir sahifalik insho.
+</Amaliyot>
+
+<DarsTugadi dars={20} blok={5} />

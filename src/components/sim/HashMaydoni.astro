@@ -1,0 +1,209 @@
+---
+/**
+ * HashMaydoni — 19-dars, birinchi simulyator.
+ *
+ * Matn yozilishi bilan SHA-256 hash real vaqtda hisoblanadi
+ * (brauzerning o'z crypto.subtle API'si — hech qanday kutubxona yo'q).
+ * Oldingi hash saqlanib turadi: bitta harf o'zgarsa hash'ning nechta
+ * belgisi o'zgargani sanab ko'rsatiladi — "ko'chki effekti" ko'zga
+ * ko'rinadi.
+ *
+ * crypto.subtle faqat xavfsiz kontekstda (https/localhost) ishlaydi —
+ * sayt Vercel'da https, muammo yo'q.
+ */
+import Simulyator from '../Simulyator.astro';
+---
+
+<Simulyator
+	sarlavha="Hash maydoni: SHA-256"
+	korsatma="Matn yozing — hash hisoblanadi. Keyin BITTA harf o'zgartirib, farqni sanang."
+	blok={5}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyator yozilgan matnning SHA-256 hash'ini real vaqtda hisoblaydi.
+			Bitta harf o'zgarsa, 64 belgilik hash'ning deyarli yarmi o'zgaradi — bu
+			"ko'chki effekti" deyiladi.
+		</p>
+		<p>
+			JavaScript'siz mashq: "salom" va "Salom" so'zlari uchun hash nega butunlay
+			boshqa bo'lishi kerakligini darsdagi ta'rifga asoslanib tushuntiring.
+		</p>
+	</Fragment>
+
+	<div class="hm not-content">
+		<label class="kirish-guruh">
+			<span class="yorliq">Matn</span>
+			<input type="text" class="matn-kirish" value="salom" autocomplete="off" spellcheck="false" />
+		</label>
+
+		<div class="panel">
+			<span class="yorliq">SHA-256 (64 ta hex belgi)</span>
+			<code class="hash-qator" data-hash></code>
+		</div>
+
+		<div class="panel oldingi-panel" hidden data-oldingi-panel>
+			<span class="yorliq">Oldingi hash</span>
+			<code class="hash-qator hash-oldingi" data-oldingi></code>
+			<p class="farq" data-farq></p>
+		</div>
+
+		<p class="hukm" role="status" aria-live="polite">
+			Matnni o'zgartirib ko'ring — masalan bitta harfini katta qiling.
+		</p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	async function sha256(matn: string): Promise<string> {
+		const baytlar = new TextEncoder().encode(matn);
+		const hash = await crypto.subtle.digest('SHA-256', baytlar);
+		return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, '0')).join('');
+	}
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.hm');
+		if (!qutu) return;
+
+		const kirish = qutu.querySelector<HTMLInputElement>('.matn-kirish')!;
+		const hashEl = qutu.querySelector<HTMLElement>('[data-hash]')!;
+		const oldingiPanel = qutu.querySelector<HTMLElement>('[data-oldingi-panel]')!;
+		const oldingiEl = qutu.querySelector<HTMLElement>('[data-oldingi]')!;
+		const farqEl = qutu.querySelector<HTMLElement>('[data-farq]')!;
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+
+		let oldingiHash = '';
+		let oldingiMatn = '';
+		let urinishlar = 0;
+		/* Har harf yozilishida emas, yozish TINGANDA hisoblaymiz */
+		let sayoq: ReturnType<typeof setTimeout> | undefined;
+
+		async function yangila() {
+			const matn = kirish.value;
+			const hash = await sha256(matn);
+			if (hash === hashEl.textContent) return;
+
+			if (oldingiHash && matn !== oldingiMatn) {
+				oldingiEl.textContent = oldingiHash;
+				let farq = 0;
+				for (let i = 0; i < 64; i++) if (hash[i] !== oldingiHash[i]) farq++;
+				farqEl.textContent = `64 belgidan ${farq} tasi o'zgardi.`;
+				oldingiPanel.hidden = false;
+
+				urinishlar++;
+				if (urinishlar >= 2) {
+					amalBelgila('hash-maydoni');
+					hukmEl.textContent =
+						"Ko'chki effektini ko'rdingiz: kichik o'zgarish — butunlay boshqa hash. Aynan shu xususiyat hash'ni 'barmoq izi' qiladi.";
+				} else {
+					hukmEl.textContent =
+						"Qarang: o'zgarish qanchalik kichik bo'lmasin, hash butunlay boshqa. Yana o'zgartirib ko'ring.";
+				}
+			}
+
+			oldingiHash = hash;
+			oldingiMatn = matn;
+			hashEl.textContent = hash;
+		}
+
+		kirish.addEventListener('input', () => {
+			clearTimeout(sayoq);
+			sayoq = setTimeout(() => void yangila(), 250);
+		});
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			kirish.value = 'salom';
+			oldingiHash = '';
+			oldingiMatn = '';
+			urinishlar = 0;
+			oldingiPanel.hidden = true;
+			hukmEl.textContent = "Matnni o'zgartirib ko'ring — masalan bitta harfini katta qiling.";
+			void yangila();
+		});
+
+		void yangila();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.kirish-guruh {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+
+	.yorliq {
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.matn-kirish {
+		width: 100%;
+		max-width: 24rem;
+		padding: 0.5rem 0.6rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-white);
+		font-family: var(--sl-font-mono);
+		font-size: 0.95rem;
+	}
+
+	.matn-kirish:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 1px;
+	}
+
+	.panel {
+		margin-top: 0.9rem;
+	}
+
+	.panel .yorliq {
+		display: block;
+		margin-bottom: 0.3rem;
+	}
+
+	.hash-qator {
+		display: block;
+		padding: 0.5rem 0.6rem;
+		border: 1px solid var(--blok-5-chegara);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		font-size: 0.8rem;
+		line-height: 1.6;
+		letter-spacing: 0.04em;
+		color: var(--blok-5);
+		overflow-wrap: anywhere;
+	}
+
+	.hash-oldingi {
+		border-color: var(--sl-color-gray-5);
+		color: var(--sl-color-gray-3);
+	}
+
+	.farq {
+		margin: 0.4rem 0 0 0;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--sl-color-gray-1);
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+</style>

@@ -1,0 +1,247 @@
+---
+/**
+ * ToxtashMuammosi — 20-dars, ikkinchi simulyator. Modulning yakuni.
+ *
+ * Tyuringning to'xtash muammosi isboti — o'yin shaklida. O'quvchi
+ * "mukammal bashoratchi" rolini o'ynaydi: AYYOR dasturi haqida hukm
+ * chiqarishi kerak. Qaysi javobni tanlamasin, AYYOR uni rad qiladi —
+ * ikkala yo'lni ham sinagach, xulosa o'z-o'zidan keladi: bunday
+ * bashoratchi umuman bo'lishi mumkin emas.
+ *
+ * Bu modulning oxirgi "voy!" lahzasi: kompyuter hamma narsani hisoblay
+ * olmaydi — va buni matematika kafolatlaydi.
+ */
+import Simulyator from '../Simulyator.astro';
+---
+
+<Simulyator
+	sarlavha="To'xtash muammosi: siz — bashoratchi"
+	korsatma="AYYOR dasturi haqida hukm chiqaring — ikkala javobni ham sinab ko'ring."
+	blok={5}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu o'yin Tyuring isbotini ko'rsatadi. Faraz: istalgan dastur to'xtashini
+			oldindan aytib beruvchi BASHORATCHI bor. AYYOR dasturi esa bashoratdan
+			teskarisini qiladi: "to'xtaydi" deyilsa — ataylab abadiy aylanadi,
+			"to'xtamaydi" deyilsa — darhol to'xtaydi.
+		</p>
+		<p>
+			Har ikkala bashorat ham noto'g'ri chiqadi — demak mukammal bashoratchi
+			mavjud emas. JavaScript'siz ham shu mulohazani daftarda yozib chiqing.
+		</p>
+	</Fragment>
+
+	<div class="tx not-content">
+		<div class="ayyor-kod">
+			<span class="yorliq">AYYOR dasturining kodi</span>
+			<pre class="kod">AYYOR:
+  javob = BASHORATCHI(AYYOR)   <span class="izoh-kod">// "o'zim to'xtaymanmi?" deb so'raydi</span>
+  agar javob == "to'xtaydi":
+      abadiy_aylan()           <span class="izoh-kod">// ataylab teskarisini qiladi!</span>
+  aks holda:
+      to'xta()</pre>
+		</div>
+
+		<p class="savol">
+			Siz — BASHORATCHI. Hukmingiz: <b>AYYOR to'xtaydimi?</b>
+		</p>
+
+		<div class="javoblar" role="group" aria-label="Bashorat">
+			<button type="button" class="javob" data-javob="toxtaydi">To'xtaydi</button>
+			<button type="button" class="javob" data-javob="toxtamaydi">To'xtamaydi</button>
+		</div>
+
+		<div class="oqibat" hidden data-oqibat-panel>
+			<ol class="zanjir" data-zanjir></ol>
+		</div>
+
+		<p class="hukm" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	const ZANJIRLAR: Record<string, string[]> = {
+		toxtaydi: [
+			'Siz: "AYYOR to\'xtaydi" deb bashorat qildingiz.',
+			'AYYOR sizning javobingizni oldi: "to\'xtaydi".',
+			'AYYOR kodiga qarang: javob "to\'xtaydi" bo\'lsa — abadiy_aylan()!',
+			"AYYOR abadiy aylanmoqda... hech qachon to'xtamaydi.",
+			"Bashoratingiz NOTO'G'RI chiqdi: siz to'xtaydi dedingiz, u to'xtamadi.",
+		],
+		toxtamaydi: [
+			'Siz: "AYYOR to\'xtamaydi" deb bashorat qildingiz.',
+			'AYYOR sizning javobingizni oldi: "to\'xtamaydi".',
+			'AYYOR kodiga qarang: aks holda — to\'xta()!',
+			"AYYOR shu zahoti to'xtadi.",
+			"Bashoratingiz NOTO'G'RI chiqdi: siz to'xtamaydi dedingiz, u to'xtadi.",
+		],
+	};
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.tx');
+		if (!qutu) return;
+
+		const oqibatPanel = qutu.querySelector<HTMLElement>('[data-oqibat-panel]')!;
+		const zanjirEl = qutu.querySelector<HTMLElement>('[data-zanjir]')!;
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+		const sinalgan = new Set<string>();
+
+		function javobBer(javob: string) {
+			sinalgan.add(javob);
+			zanjirEl.innerHTML = '';
+			for (const qadam of ZANJIRLAR[javob]!) {
+				const li = document.createElement('li');
+				li.textContent = qadam;
+				zanjirEl.append(li);
+			}
+			oqibatPanel.hidden = false;
+
+			for (const b of qutu.querySelectorAll<HTMLButtonElement>('.javob')) {
+				b.dataset.sinalgan = sinalgan.has(b.dataset.javob!) ? 'ha' : 'yoq';
+			}
+
+			if (sinalgan.size === 2) {
+				amalBelgila('toxtash-muammosi');
+				qutu.dataset.holat = 'togri';
+				hukmEl.textContent =
+					"Ikkala javob ham noto'g'ri chiqdi. Xato sizda emas — bunday bashoratchining O'ZI mavjud bo'la olmaydi. Buni 1936-yilda Alan Tyuring isbotlagan: kompyuter hamma masalani yecha olmaydi, va bu apparatga bog'liq emas — mantiqning o'zi taqiqlaydi.";
+			} else {
+				hukmEl.textContent =
+					"Hmm, bashorat noto'g'ri chiqdi... Balki boshqa javob to'g'ridir? Ikkinchisini ham sinab ko'ring.";
+			}
+		}
+
+		for (const t of qutu.querySelectorAll<HTMLButtonElement>('.javob')) {
+			t.addEventListener('click', () => javobBer(t.dataset.javob!));
+		}
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			sinalgan.clear();
+			oqibatPanel.hidden = true;
+			delete qutu.dataset.holat;
+			hukmEl.textContent = '';
+			for (const b of qutu.querySelectorAll<HTMLButtonElement>('.javob')) {
+				b.dataset.sinalgan = 'yoq';
+			}
+		});
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.yorliq {
+		display: block;
+		margin-bottom: 0.3rem;
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.kod {
+		margin: 0;
+		padding: 0.7rem 0.8rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		font-family: var(--sl-font-mono);
+		font-size: 0.8rem;
+		line-height: 1.6;
+		color: var(--sl-color-gray-1);
+		white-space: pre;
+		overflow-x: auto;
+	}
+
+	.izoh-kod {
+		color: var(--sl-color-gray-4);
+	}
+
+	.savol {
+		margin: 1rem 0 0 0;
+		font-size: 0.95rem;
+		color: var(--sl-color-gray-1);
+	}
+
+	.savol b {
+		color: var(--blok-5);
+	}
+
+	.javoblar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-top: 0.7rem;
+	}
+
+	.javob {
+		margin: 0;
+		padding: 0.5rem 1.1rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-1);
+		font-size: 0.9rem;
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	.javob:hover {
+		border-color: var(--blok-5);
+	}
+
+	.javob:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.javob[data-sinalgan='ha'] {
+		border-color: var(--blok-5);
+		background: var(--blok-5-fon);
+		color: var(--blok-5);
+	}
+
+	.oqibat {
+		margin-top: 1rem;
+	}
+
+	.zanjir {
+		margin: 0;
+		padding-left: 1.4rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.zanjir :global(li) {
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	.zanjir :global(li:last-child) {
+		font-weight: 700;
+		color: var(--blok-5);
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 3.9em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	.tx[data-holat='togri'] .hukm {
+		font-weight: 600;
+		color: var(--blok-1);
+	}
+</style>

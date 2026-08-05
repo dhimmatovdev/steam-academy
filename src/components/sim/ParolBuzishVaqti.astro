@@ -1,0 +1,297 @@
+---
+/**
+ * ParolBuzishVaqti — 19-dars, ikkinchi simulyator.
+ *
+ * Parol kuchini baholaydi: alifbo hajmi^uzunlik kombinatsiya, sekundiga
+ * 10 milliard urinish (zamonaviy GPU ferma) deb olinadi. Natija odam
+ * tushunadigan vaqtda: soniyadan asrlargacha.
+ *
+ * MUHIM OGOHLANTIRISH interfeysning o'zida: HAQIQIY parolni yozmang!
+ * Hisob to'liq brauzerda, hech nima yuborilmaydi — lekin odat xavfli.
+ */
+import Simulyator from '../Simulyator.astro';
+---
+
+<Simulyator
+	sarlavha="Parol buzish vaqti"
+	korsatma="Sinov parol yozing — buzishga qancha vaqt ketishini hisoblaymiz."
+	blok={5}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyator parol kombinatsiyalari sonini hisoblaydi: alifbo hajmi
+			uzunlik darajasida. Sekundiga 10 milliard urinishda "12345678" bir zumda,
+			12 belgilik aralash parol esa asrlarda buziladi.
+		</p>
+		<p>
+			JavaScript'siz mashq: faqat kichik harfli 6 belgilik parol nechta
+			kombinatsiya berishini hisoblang (26⁶) va 10 milliardga bo'ling.
+		</p>
+	</Fragment>
+
+	<div class="pb not-content">
+		<p class="ogohlantirish">
+			Haqiqiy parolingizni YOZMANG — o'ylab topilgan sinov parol ishlating.
+			(Hisob brauzerda, hech nima yuborilmaydi, lekin odat ham muhim.)
+		</p>
+
+		<label class="kirish-guruh">
+			<span class="yorliq">Sinov parol</span>
+			<input type="text" class="parol-kirish" value="12345678" autocomplete="off" spellcheck="false" />
+		</label>
+
+		<dl class="tahlil">
+			<div class="t-qator">
+				<dt>Uzunlik:</dt>
+				<dd data-uzunlik>8 belgi</dd>
+			</div>
+			<div class="t-qator">
+				<dt>Alifbo:</dt>
+				<dd data-alifbo>faqat raqamlar (10 belgi)</dd>
+			</div>
+			<div class="t-qator">
+				<dt>Kombinatsiyalar:</dt>
+				<dd data-kombinatsiya>10⁸ = 100 million</dd>
+			</div>
+			<div class="t-qator vaqt-qator">
+				<dt>Buzish vaqti:</dt>
+				<dd data-vaqt>bir zumda</dd>
+			</div>
+		</dl>
+
+		<div class="olchov">
+			<span class="olchov-toldirish" data-olchov></span>
+		</div>
+
+		<p class="hukm" role="status" aria-live="polite">
+			Sekundiga 10 milliard urinish deb olamiz (zamonaviy uskuna). Parolga harf,
+			katta harf va belgi qo'shib, vaqt qanday o'sishini kuzating.
+		</p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	const URINISH_SEKUNDIGA = 1e10;
+
+	function alifboHajmi(parol: string): { hajm: number; tavsif: string } {
+		let hajm = 0;
+		const qismlar: string[] = [];
+		if (/[a-z]/.test(parol)) {
+			hajm += 26;
+			qismlar.push('kichik harf');
+		}
+		if (/[A-Z]/.test(parol)) {
+			hajm += 26;
+			qismlar.push('katta harf');
+		}
+		if (/[0-9]/.test(parol)) {
+			hajm += 10;
+			qismlar.push('raqam');
+		}
+		if (/[^a-zA-Z0-9]/.test(parol)) {
+			hajm += 33;
+			qismlar.push('belgi');
+		}
+		return {
+			hajm: hajm || 1,
+			tavsif: qismlar.length ? `${qismlar.join(' + ')} (${hajm} belgi)` : '—',
+		};
+	}
+
+	function vaqtMatn(soniya: number): string {
+		if (soniya < 1) return 'bir zumda';
+		if (soniya < 60) return `${Math.round(soniya)} soniya`;
+		if (soniya < 3600) return `${Math.round(soniya / 60)} daqiqa`;
+		if (soniya < 86400) return `${Math.round(soniya / 3600)} soat`;
+		if (soniya < 31_536_000) return `${Math.round(soniya / 86400)} kun`;
+		const yil = soniya / 31_536_000;
+		if (yil < 1000) return `${Math.round(yil)} yil`;
+		if (yil < 1e6) return `${Math.round(yil / 1000)} ming yil`;
+		if (yil < 1e9) return `${Math.round(yil / 1e6)} million yil`;
+		return 'koinot yoshidan ham uzoq';
+	}
+
+	function sonMatn(daraja: number, hajm: number, uzunlik: number): string {
+		const kombinatsiya = Math.pow(hajm, uzunlik);
+		if (kombinatsiya < 1e6)
+			return kombinatsiya.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+		return `${hajm}^${uzunlik} ≈ 10^${Math.round(daraja)}`;
+	}
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.pb');
+		if (!qutu) return;
+
+		const kirish = qutu.querySelector<HTMLInputElement>('.parol-kirish')!;
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+		const olchov = qutu.querySelector<HTMLElement>('[data-olchov]')!;
+		let kuchliTopildi = false;
+
+		function yangila() {
+			const parol = kirish.value;
+			const uzunlik = parol.length;
+			const { hajm, tavsif } = alifboHajmi(parol);
+			// log orqali hisoblaymiz — 95^20 kabi sonlar Infinity bo'lib ketmasin
+			const daraja = uzunlik * Math.log10(hajm); // kombinatsiyalar = 10^daraja
+			const soniyaDaraja = daraja - 10; // / 10^10 urinish
+			const soniya = Math.pow(10, soniyaDaraja);
+
+			qutu.querySelector('[data-uzunlik]')!.textContent = `${uzunlik} belgi`;
+			qutu.querySelector('[data-alifbo]')!.textContent = tavsif;
+			qutu.querySelector('[data-kombinatsiya]')!.textContent = sonMatn(daraja, hajm, uzunlik);
+			qutu.querySelector('[data-vaqt]')!.textContent = uzunlik ? vaqtMatn(soniya) : '—';
+
+			// O'lchov chizig'i: 0..20 daraja (soniya) oralig'ida log masshtab
+			const foiz = Math.max(2, Math.min(100, ((soniyaDaraja + 1) / 12) * 100));
+			olchov.style.width = uzunlik ? `${foiz}%` : '0%';
+			olchov.dataset.kuch =
+				soniya < 3600 ? 'zaif' : soniya < 31_536_000 * 100 ? 'orta' : 'kuchli';
+
+			if (!kuchliTopildi && soniya > 31_536_000 * 100) {
+				kuchliTopildi = true;
+				amalBelgila('parol-vaqti');
+				hukmEl.textContent =
+					"100 yildan uzoq — mana bu parol! E'tibor bering: uzunlik alifbodan kuchliroq ishlaydi, chunki u DARAJADA turadi.";
+			}
+		}
+
+		kirish.addEventListener('input', yangila);
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			kirish.value = '12345678';
+			kuchliTopildi = false;
+			hukmEl.textContent =
+				'Sekundiga 10 milliard urinish deb olamiz (zamonaviy uskuna). Parolga harf, katta harf va belgi qo\'shib, vaqt qanday o\'sishini kuzating.';
+			yangila();
+		});
+
+		yangila();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.ogohlantirish {
+		margin: 0;
+		padding: 0.5rem 0.7rem;
+		border: 1px solid var(--blok-5-chegara);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--blok-5-fon);
+		font-size: 0.8rem;
+		line-height: 1.5;
+		font-weight: 600;
+		color: var(--blok-5);
+	}
+
+	.kirish-guruh {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		margin-top: 0.9rem;
+	}
+
+	.yorliq {
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.parol-kirish {
+		width: 100%;
+		max-width: 20rem;
+		padding: 0.5rem 0.6rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-white);
+		font-family: var(--sl-font-mono);
+		font-size: 0.95rem;
+	}
+
+	.parol-kirish:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 1px;
+	}
+
+	.tahlil {
+		margin: 0.9rem 0 0 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+
+	.t-qator {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		font-size: 0.85rem;
+	}
+
+	.t-qator dt {
+		min-width: 8.5rem;
+		font-weight: 600;
+		color: var(--sl-color-gray-3);
+	}
+
+	.t-qator dd {
+		margin: 0;
+		font-family: var(--sl-font-mono);
+		color: var(--sl-color-gray-1);
+	}
+
+	.vaqt-qator dd {
+		font-weight: 700;
+		color: var(--blok-5);
+	}
+
+	.olchov {
+		margin-top: 0.7rem;
+		height: 0.7rem;
+		max-width: 24rem;
+		border-radius: 999px;
+		background: var(--sl-color-gray-6);
+		overflow: hidden;
+	}
+
+	.olchov-toldirish {
+		display: block;
+		height: 100%;
+		width: 0;
+		border-radius: 999px;
+		transition: width 0.25s ease;
+	}
+
+	.olchov-toldirish[data-kuch='zaif'] {
+		background: var(--blok-5);
+	}
+
+	.olchov-toldirish[data-kuch='orta'] {
+		background: var(--blok-2);
+	}
+
+	.olchov-toldirish[data-kuch='kuchli'] {
+		background: var(--blok-1);
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.olchov-toldirish {
+			transition: none;
+		}
+	}
+</style>

@@ -1,0 +1,139 @@
+---
+title: '17-dars: Tarmoq asoslari'
+description: "Xabar telefondan serverga qanday yetadi? Paket, IP-manzil, router va DNS."
+sidebar:
+  label: '17-dars'
+  order: 17
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import PaketYoli from '../../../components/sim/PaketYoli.astro';
+
+<Bloknoma blok={5} />
+
+## Nega bu muhim
+
+Do'stingizga "salom" deb yozdingiz — u bir soniyada yetib bordi. Shu bir soniyada xabaringiz ehtimol uch-to'rt davlatdan o'tdi, o'nlab qurilmalar uni qo'lma-qo'l uzatdi va hech kim butun yo'lni oldindan bilmasdi.
+
+Oxirgi blok kompyuterlarni bir-biriga ulaydi. Kompyuterning o'zini bilasiz — endi milliardlab kompyuter qanday qilib **bitta tarmoq** bo'lib ishlashini ko'rasiz.
+
+<Maqsad>
+- xabar nega paketlarga bo'linishini tushuntira olasiz
+- IP-manzil va DNS nima vazifa bajarishini bilasiz
+- router paketni qanday yo'naltirishini o'yinda his qilasiz
+- internetning "portlashga chidamli" tuzilishi sirini bilasiz
+</Maqsad>
+
+## Nazariya
+
+### Xat emas, parchalar: paket
+
+Katta faylni bitta bo'lak qilib yuborish xavfli: yo'lda birorta bit buzilsa, hammasini qaytadan yuborish kerak. Shuning uchun internet ma'lumotni mayda **paketlarga** bo'ladi — har biri o'z manzili yozilgan kichkina konvert.
+
+<Atama soz="paket" eng="packet">
+	Tarmoq orqali yuboriladigan ma'lumotning kichik bo'lagi: ichida ma'lumot parchasi,
+	jo'natuvchi va qabul qiluvchi manzillari, tartib raqami bor.
+</Atama>
+
+Paketlar **turli yo'llardan** borishi va tartibsiz yetishi mumkin — qabul qiluvchi ularni tartib raqami bo'yicha qayta yig'adi. Yo'qolgani qayta so'raladi: butun fayl emas, faqat o'sha parcha.
+
+### IP-manzil va DNS: raqam va ism
+
+Har qurilmaning tarmoqda **IP-manzili** bor — xuddi uy manzili kabi: `192.168.1.42`. Paketlar aynan shu raqamga yo'l oladi.
+
+Lekin odam `142.250.185.78` ni eslab yurmaydi — `google.com` deydi. Ismni raqamga aylantiruvchi xizmat — **DNS**: internetning telefon kitobi.
+
+<Atama soz="DNS" eng="domain name system">
+	Sayt nomlarini IP-manzillarga o'giruvchi taqsimlangan tizim. Har sahifa ochilishi
+	oldidan brauzer avval DNS'dan manzilni so'rab oladi.
+</Atama>
+
+### Router: har chorrahada bitta qaror
+
+Paket manzilga bir sakrashda yetmaydi — u **routerdan routerga** uzatiladi. Har router faqat bitta savolga javob beradi: "bu manzilga eng yaxshi keyingi qadam qaysi qo'shnim?"
+
+<Atama soz="router" eng="router">
+	Paketlarni manziliga qarab keyingi tarmoq tuguniga yo'naltiruvchi qurilma. Butun
+	yo'lni emas, faqat "keyingi qadamni" biladi.
+</Atama>
+
+Hech kim butun xaritani boshqarmaydi — har tugun mahalliy qaror qiladi, paket esa qadam-baqadam manzilga "oqib" boradi. Adashib qolganlar uchun **TTL** bor: har sakrashda kamayadigan hisoblagich; nolga tushsa, paket tashlanadi.
+
+<Muhim turi="sir">
+	Internetning bobosi ARPANET urush davrida ham ishlaydigan tarmoq sifatida
+	loyihalangan: markazi yo'q, bitta yo'l uzilsa paketlar o'zi boshqa yo'l topadi.
+	Simulyatorda 3-stsenariy aynan shu vaziyat.
+</Muhim>
+
+<Muhim turi="gap">
+	E'tibor bering: bu ham qavatli abstraksiya. Paket bo'lish bir qavat, IP-manzillash
+	boshqa qavat, DNS uchinchisi. Har qavat pastkisiga ishonadi — xuddi protsessor
+	minorasi kabi.
+</Muhim>
+
+## Sinab ko'r
+
+Endi o'zingiz paket bo'ling: Samarqanddan serverga yetib boring. Uch stsenariy — oxirgisida magistral uziladi, lekin siz baribir yo'l topasiz. TTL'ni unutmang: 8 sakrashdan ko'pi — paket o'ladi.
+
+<PaketYoli />
+
+## Xulosa
+
+- Ma'lumot **paketlarga** bo'linadi: har biri manzilli, tartib raqamli mustaqil konvert
+- **IP-manzil** — qurilmaning tarmoq raqami; **DNS** ismlarni raqamga o'giradi
+- **Router** butun yo'lni emas, faqat "keyingi qadamni" biladi — tarmoq markazsiz
+- Yo'l uzilsa paketlar **boshqa yo'ldan** boradi — internet shunga qurilgan
+- **TTL** adashgan paketlarni abadiy sayohatdan qutqaradi
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Nega katta faylni bitta katta 'xat' qilib yubormaymiz?">
+	Bitta bit buzilsa hammasi qayta yuborilardi; bitta uzun uzatish tarmoq yo'lini uzoq
+	band qilardi; yo'l o'zgarsa moslashib bo'lmasdi. Paketlar esa mustaqil: yo'qolgani
+	alohida qayta so'raladi, har biri o'z yo'lini topadi.
+</Sinov>
+
+<Sinov raqam={2} savol="DNS ishlamay qolsa nima bo'ladi? Internetning o'zi o'chadimi?">
+	Yo'q — tarmoq ishlayveradi, IP-manzilni bilsangiz saytga kira olasiz. Lekin ismlar
+	ishlamaydi: google.com ni raqamga o'giradigan hech kim yo'q. Odamlar uchun bu
+	"internet o'chdi" bilan deyarli teng — telefon kitobisiz raqamlarni kim eslaydi?
+</Sinov>
+
+<Sinov raqam={3} savol="Router butun yo'lni bilmasa, paket manzilga qanday yetadi?">
+	Har router o'z jadvalidan "bu manzilga eng yaxshi keyingi qadam" ni topib uzatadi.
+	Minglab mahalliy qaror zanjiri paketni manzilga olib boradi — xuddi har chorrahada
+	yo'l so'rab yurgan sayohatchi kabi. Markaziy boshqaruv kerak emas.
+</Sinov>
+
+<Sinov raqam={4} savol="TTL bo'lmasa qanday muammo tug'ilardi? Simulyatorda buni qanday ko'rdingiz?">
+	Xato yo'lga tushgan paket routerlar orasida abadiy aylanib, tarmoqni axlat bilan
+	to'ldirardi. TTL har sakrashda kamayadi va nolda paket o'chiriladi. Simulyatorda 8
+	sakrashdan keyin paket "o'ldi" — qayta boshlashga to'g'ri keldi.
+</Sinov>
+
+<Sinov raqam={5} savol="Bitta xabarning paketlari turli yo'llardan borsa, qabul qiluvchi ularni qanday to'g'ri yig'adi?">
+	Har paketda tartib raqami bor. Qabul qiluvchi paketlarni kelish tartibida emas,
+	tartib raqami bo'yicha teradi. 3-paket 5-dan keyin kelsa ham, joyiga qo'yiladi;
+	yetmagani qayta so'raladi.
+</Sinov>
+
+<Amaliyot daqiqa={30} daraja="o'rta">
+	Terminalda (16-darsni esladingizmi?) uchta tarmoq buyrug'ini bajaring:
+
+	**1. `ping google.com`** — to'rt-besh javobni kuting (Ctrl+C to'xtatadi). Vaqt
+	nima o'lchanyapti? Millisekundlarni yozib oling.
+
+	**2. `tracert google.com`** (Windows) yoki `traceroute google.com` (Mac/Linux) —
+	paketingiz o'tgan routerlar ro'yxati chiqadi. Nechta sakrash bor? Ro'yxatni
+	simulyatordagi xaritaga o'xshatib chizing.
+
+	**3. `nslookup google.com`** — DNS'dan IP-manzilni so'rang va yozib oling.
+
+	Yakuniy savol: ping vaqtini 13-darsdagi "inson miqyosi" jadvaliga qo'ying —
+	protsessor uchun bu qancha "yil"?
+
+	Topshiriladigan natija: uch buyruq natijalari + sakrashlar xaritasi + yakuniy
+	savolga javob.
+</Amaliyot>
+
+<DarsTugadi dars={17} blok={5} />

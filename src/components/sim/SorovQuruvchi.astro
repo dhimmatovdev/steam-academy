@@ -1,0 +1,465 @@
+---
+/**
+ * SorovQuruvchi — 18-dars simulyatori.
+ *
+ * O'quvchi HTTP so'rovni qo'lda yig'adi: metod + yo'l (+ POST'da tana).
+ * "Yuborish" bosilganda soxta steam.uz serveri javob qaytaradi — status,
+ * sarlavhalar va tana, har sarlavha izohi bilan.
+ *
+ * Server soxta (javoblar lug'atda) — internet umuman kerak emas, sekin
+ * aloqada ham ishlaydi. Uch topshiriq: 200 olish, 404 ko'rish, POST yuborish.
+ */
+import Simulyator from '../Simulyator.astro';
+
+const METODLAR = ['GET', 'POST'];
+const YOLLAR = ['/', '/darslar', '/darslar/5', '/eski-sahifa', '/fikr'];
+---
+
+<Simulyator
+	sarlavha="So'rov quruvchi"
+	korsatma="Metod va yo'lni tanlab so'rov yig'ing, so'ng yuborib javobni o'qing."
+	blok={5}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda HTTP so'rov qo'lda yig'iladi: metod (GET/POST), yo'l va POST
+			uchun tana. Soxta server status kodi, sarlavhalar va tana bilan javob beradi —
+			har sarlavha izohlanadi.
+		</p>
+		<p>
+			JavaScript'siz mashq: GET /darslar/5 so'rovining to'liq matnini va unga
+			keladigan 200 javobni darsdagi namunaga qarab qo'lda yozib chiqing.
+		</p>
+	</Fragment>
+
+	<div class="sq2 not-content">
+		<div class="quruvchi">
+			<div class="guruh" role="group" aria-label="Metod">
+				<span class="yorliq">Metod</span>
+				<div class="tugmalar">
+					{
+						METODLAR.map((m, i) => (
+							<button
+								type="button"
+								class:list={['tanlagich', { tanlangan: i === 0 }]}
+								data-metod={m}
+								aria-pressed={i === 0 ? 'true' : 'false'}
+							>
+								{m}
+							</button>
+						))
+					}
+				</div>
+			</div>
+
+			<div class="guruh" role="group" aria-label="Yo'l">
+				<span class="yorliq">Yo'l</span>
+				<div class="tugmalar">
+					{
+						YOLLAR.map((y, i) => (
+							<button
+								type="button"
+								class:list={['tanlagich', { tanlangan: i === 0 }]}
+								data-yol={y}
+								aria-pressed={i === 0 ? 'true' : 'false'}
+							>
+								{y}
+							</button>
+						))
+					}
+				</div>
+			</div>
+
+			<div class="guruh tana-guruh" hidden data-tana-guruh>
+				<span class="yorliq">Tana (POST ma'lumoti)</span>
+				<label>
+					<span class="sr">POST tanasi</span>
+					<input type="text" class="tana-kirish" value="fikr=Zo'r dars!" />
+				</label>
+			</div>
+		</div>
+
+		<div class="panel">
+			<span class="yorliq">Sizning so'rovingiz</span>
+			<pre class="xom" data-sorov></pre>
+		</div>
+
+		<button type="button" class="sim-tugma yubor">Yuborish</button>
+
+		<div class="panel javob-panel" hidden data-javob-panel>
+			<span class="yorliq">Server javobi</span>
+			<pre class="xom" data-javob></pre>
+			<ul class="izohlar" data-izohlar></ul>
+		</div>
+
+		<ul class="topshiriqlar" aria-label="Topshiriqlar">
+			<li data-topshiriq="0">Bosh sahifani oling — 200 OK ko'ring</li>
+			<li data-topshiriq="1">Mavjud bo'lmagan sahifani so'rang — 404 ko'ring</li>
+			<li data-topshiriq="2">POST bilan /fikr ga fikr yuboring — 201 ko'ring</li>
+		</ul>
+
+		<p class="hukm" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	interface Javob {
+		status: string;
+		sarlavhalar: [string, string, string][]; // nom, qiymat, izoh
+		tana: string;
+	}
+
+	const SARLAVHA_UMUMIY: [string, string, string][] = [
+		['Server', 'steam-soxta/1.0', "javob bergan server dasturi o'zini tanishtiradi"],
+		['Date', 'Wed, 05 Aug 2026 12:00:00 GMT', 'javob qachon tuzilgani'],
+	];
+
+	function javobYasa(metod: string, yol: string): Javob {
+		if (metod === 'POST' && yol === '/fikr') {
+			return {
+				status: 'HTTP/1.1 201 Created',
+				sarlavhalar: [
+					...SARLAVHA_UMUMIY,
+					['Content-Type', 'text/plain; charset=utf-8', 'tana qanday formatda ekani'],
+					['Location', '/fikr/42', "yangi yaratilgan narsa endi shu manzilda"],
+				],
+				tana: 'Rahmat! Fikringiz 42-raqam bilan saqlandi.',
+			};
+		}
+		if (metod === 'POST') {
+			return {
+				status: 'HTTP/1.1 405 Method Not Allowed',
+				sarlavhalar: [
+					...SARLAVHA_UMUMIY,
+					['Allow', 'GET', "bu yo'l faqat GET ni qabul qiladi"],
+				],
+				tana: "Bu manzilga POST yuborib bo'lmaydi.",
+			};
+		}
+		const SAHIFALAR: Record<string, string> = {
+			'/': '<h1>STEAM Academy</h1><p>Xush kelibsiz!</p>',
+			'/darslar': "<ul><li>1-dars</li><li>2-dars</li>...<li>20-dars</li></ul>",
+			'/darslar/5': '<h1>5-dars: Mantiq va Bul algebrasi</h1>',
+		};
+		if (yol in SAHIFALAR) {
+			return {
+				status: 'HTTP/1.1 200 OK',
+				sarlavhalar: [
+					...SARLAVHA_UMUMIY,
+					['Content-Type', 'text/html; charset=utf-8', "tana HTML ekani — brauzer uni sahifa qilib chizadi"],
+					['Content-Length', String(SAHIFALAR[yol]!.length), 'tana necha bayt'],
+					['Cache-Control', 'max-age=3600', "brauzer javobni 1 soat keshda saqlashi mumkin — 13-darsni eslang"],
+				],
+				tana: SAHIFALAR[yol]!,
+			};
+		}
+		return {
+			status: 'HTTP/1.1 404 Not Found',
+			sarlavhalar: [
+				...SARLAVHA_UMUMIY,
+				['Content-Type', 'text/html; charset=utf-8', 'xato sahifasi ham HTML'],
+			],
+			tana: '<h1>404</h1><p>Bunday sahifa yo\'q.</p>',
+		};
+	}
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.sq2');
+		if (!qutu) return;
+
+		const sorovEl = qutu.querySelector<HTMLElement>('[data-sorov]')!;
+		const javobPanel = qutu.querySelector<HTMLElement>('[data-javob-panel]')!;
+		const javobEl = qutu.querySelector<HTMLElement>('[data-javob]')!;
+		const izohlarEl = qutu.querySelector<HTMLElement>('[data-izohlar]')!;
+		const tanaGuruh = qutu.querySelector<HTMLElement>('[data-tana-guruh]')!;
+		const tanaKirish = qutu.querySelector<HTMLInputElement>('.tana-kirish')!;
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+
+		let metod = 'GET';
+		let yol = '/';
+		const bajarildi = new Set<number>();
+
+		function sorovMatn(): string {
+			const qatorlar = [
+				`${metod} ${yol} HTTP/1.1`,
+				'Host: steam.uz',
+				'User-Agent: OquvBrauzer/1.0',
+			];
+			if (metod === 'POST') {
+				const tana = tanaKirish.value;
+				qatorlar.push('Content-Type: application/x-www-form-urlencoded');
+				qatorlar.push(`Content-Length: ${tana.length}`);
+				qatorlar.push('');
+				qatorlar.push(tana);
+			}
+			return qatorlar.join('\n');
+		}
+
+		function korsat() {
+			tanaGuruh.hidden = metod !== 'POST';
+			sorovEl.textContent = sorovMatn();
+			qutu.querySelectorAll<HTMLElement>('[data-topshiriq]').forEach((li, i) => {
+				li.dataset.bajarildi = bajarildi.has(i) ? 'ha' : 'yoq';
+			});
+		}
+
+		function yubor() {
+			const j = javobYasa(metod, yol);
+			javobEl.textContent = [
+				j.status,
+				...j.sarlavhalar.map(([n, q]) => `${n}: ${q}`),
+				'',
+				j.tana,
+			].join('\n');
+
+			izohlarEl.innerHTML = '';
+			const statusIzoh = document.createElement('li');
+			statusIzoh.textContent = j.status.includes('200')
+				? "200 OK — hammasi joyida, so'ralgan narsa tanada"
+				: j.status.includes('404')
+					? "404 Not Found — server tirik, lekin bunday yo'l yo'q"
+					: j.status.includes('201')
+						? '201 Created — yuborganingiz qabul qilinib, yangi narsa yaratildi'
+						: "405 — metod bu yo'lga mos emas";
+			izohlarEl.append(statusIzoh);
+			for (const [n, , izoh] of j.sarlavhalar) {
+				const li = document.createElement('li');
+				li.textContent = `${n} — ${izoh}`;
+				izohlarEl.append(li);
+			}
+			javobPanel.hidden = false;
+
+			if (j.status.includes('200')) bajarildi.add(0);
+			if (j.status.includes('404')) bajarildi.add(1);
+			if (j.status.includes('201')) bajarildi.add(2);
+
+			if (bajarildi.size === 3) {
+				amalBelgila('sorov-quruvchi');
+				hukmEl.textContent =
+					"Uchala topshiriq bajarildi! Brauzeringiz har sahifada aynan shu suhbatni o'tkazadi — endi siz uni o'qiy olasiz.";
+			} else {
+				hukmEl.textContent = `Topshiriqlar: ${bajarildi.size}/3.`;
+			}
+			korsat();
+		}
+
+		for (const t of qutu.querySelectorAll<HTMLButtonElement>('[data-metod]')) {
+			t.addEventListener('click', () => {
+				metod = t.dataset.metod!;
+				for (const b of qutu.querySelectorAll<HTMLButtonElement>('[data-metod]')) {
+					const bu = b === t;
+					b.classList.toggle('tanlangan', bu);
+					b.setAttribute('aria-pressed', String(bu));
+				}
+				korsat();
+			});
+		}
+
+		for (const t of qutu.querySelectorAll<HTMLButtonElement>('[data-yol]')) {
+			t.addEventListener('click', () => {
+				yol = t.dataset.yol!;
+				for (const b of qutu.querySelectorAll<HTMLButtonElement>('[data-yol]')) {
+					const bu = b === t;
+					b.classList.toggle('tanlangan', bu);
+					b.setAttribute('aria-pressed', String(bu));
+				}
+				korsat();
+			});
+		}
+
+		tanaKirish.addEventListener('input', korsat);
+		qutu.querySelector<HTMLButtonElement>('.yubor')!.addEventListener('click', yubor);
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			bajarildi.clear();
+			javobPanel.hidden = true;
+			hukmEl.textContent = '';
+			korsat();
+		});
+
+		korsat();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.sr {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	.quruvchi {
+		display: flex;
+		flex-direction: column;
+		gap: 0.7rem;
+	}
+
+	.guruh {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+
+	.yorliq {
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.tugmalar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+	}
+
+	.tanlagich {
+		margin: 0;
+		padding: 0.35rem 0.7rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-3);
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+
+	.tanlagich:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.tanlagich.tanlangan {
+		border-color: var(--blok-5);
+		background: var(--blok-5-fon);
+		color: var(--blok-5);
+		font-weight: 700;
+	}
+
+	.tana-kirish {
+		width: 100%;
+		max-width: 22rem;
+		padding: 0.4rem 0.5rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-white);
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+	}
+
+	.tana-kirish:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 1px;
+	}
+
+	.panel {
+		margin-top: 1rem;
+	}
+
+	.panel .yorliq {
+		display: block;
+		margin-bottom: 0.3rem;
+	}
+
+	.xom {
+		margin: 0;
+		padding: 0.6rem 0.7rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		font-family: var(--sl-font-mono);
+		font-size: 0.8rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-1);
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+	}
+
+	.sim-tugma {
+		margin-top: 0.8rem;
+	}
+
+	.javob-panel .xom {
+		border-color: var(--blok-5-chegara);
+	}
+
+	.izohlar {
+		margin: 0.5rem 0 0 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.izohlar :global(li) {
+		position: relative;
+		padding-left: 1rem;
+		font-size: 0.78rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-3);
+	}
+
+	.izohlar :global(li)::before {
+		content: '·';
+		position: absolute;
+		left: 0.2rem;
+		color: var(--blok-5);
+		font-weight: 700;
+	}
+
+	.topshiriqlar {
+		margin: 1rem 0 0 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.topshiriqlar li {
+		position: relative;
+		padding-left: 1.5rem;
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.topshiriqlar li::before {
+		content: '○';
+		position: absolute;
+		left: 0.2rem;
+		color: var(--sl-color-gray-4);
+	}
+
+	.topshiriqlar li[data-bajarildi='ha'] {
+		color: var(--blok-1);
+	}
+
+	.topshiriqlar li[data-bajarildi='ha']::before {
+		content: '✓';
+		color: var(--blok-1);
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 1.4em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		font-weight: 600;
+		color: var(--blok-1);
+	}
+</style>

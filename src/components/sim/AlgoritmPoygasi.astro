@@ -1,0 +1,300 @@
+---
+/**
+ * AlgoritmPoygasi — 20-dars, birinchi simulyator.
+ *
+ * Ikki qidiruv algoritmi poygasi: chiziqli (birma-bir) va ikkilik
+ * (yarmiga bo'lib). Ro'yxat hajmini tanlaysiz — qadamlar soni va
+ * "har qadam 1 ms bo'lsa" vaqti taqqoslanadi. Hajm o'sgani sari
+ * jarlik kattarishi ko'rinadi: 100 da 7 va 50, million da 20 va 500 000.
+ *
+ * Bu murakkablik NAZARIYASI emas (u algorithms modulining ishi) —
+ * faqat "algoritm tanlash apparatdan kuchli" degan his.
+ */
+import Simulyator from '../Simulyator.astro';
+
+const HAJMLAR = [100, 10_000, 1_000_000];
+---
+
+<Simulyator
+	sarlavha="Algoritm poygasi: qidiruv"
+	korsatma="Ro'yxat hajmini tanlab, ikki algoritm nechta qadam qilishini solishtiring."
+	blok={5}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu poyga tartiblangan ro'yxatdan son qidirishning ikki usulini solishtiradi:
+			chiziqli qidiruv (boshidan birma-bir) va ikkilik qidiruv (har qadamda yarmini
+			tashlash). Million elementda farq: o'rtacha 500 000 qadam va atigi 20 qadam.
+		</p>
+		<p>
+			JavaScript'siz mashq: 1000 sahifalik lug'atdan so'zni qanday topasiz —
+			birinchi sahifadan boshlab varaqlaysizmi yoki o'rtasidan ochasizmi? Har ikki
+			usulda taxminan nechta qadam ketadi?
+		</p>
+	</Fragment>
+
+	<div class="ap not-content">
+		<div class="hajm-qator" role="group" aria-label="Ro'yxat hajmi">
+			<span class="yorliq">Ro'yxat hajmi:</span>
+			{
+				HAJMLAR.map((h, i) => (
+					<button
+						type="button"
+						class:list={['hajm', { tanlangan: i === 0 }]}
+						data-hajm={h}
+						aria-pressed={i === 0 ? 'true' : 'false'}
+					>
+						{h.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}
+					</button>
+				))
+			}
+		</div>
+
+		<button type="button" class="sim-tugma poyga">Poygani boshlash</button>
+
+		<div class="yolakcha" data-algoritm="chiziqli">
+			<div class="y-sarlavha">
+				<span class="y-nom">Chiziqli qidiruv</span>
+				<span class="y-izoh">boshidan birma-bir tekshiradi</span>
+			</div>
+			<div class="y-chiziq"><span class="y-toldirish" data-toldirish="chiziqli"></span></div>
+			<span class="y-natija" data-natija="chiziqli"></span>
+		</div>
+
+		<div class="yolakcha" data-algoritm="ikkilik">
+			<div class="y-sarlavha">
+				<span class="y-nom">Ikkilik qidiruv</span>
+				<span class="y-izoh">har qadamda yarmini tashlaydi</span>
+			</div>
+			<div class="y-chiziq"><span class="y-toldirish" data-toldirish="ikkilik"></span></div>
+			<span class="y-natija" data-natija="ikkilik"></span>
+		</div>
+
+		<p class="hukm" role="status" aria-live="polite">
+			Ikkala algoritm ham tartiblangan ro'yxatdan bitta sonni qidiradi. Poygani
+			boshlang!
+		</p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.ap');
+		if (!qutu) return;
+
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+		/** 500000 -> "500 000" (o'zbekcha guruhlash probel bilan) */
+		const songa = (n: number) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+		let hajm = 100;
+		const korilgan = new Set<number>();
+		let jarayonda = false;
+
+		const vaqtMatn = (qadam: number) => {
+			// har qadam 1 ms
+			const ms = qadam;
+			if (ms < 1000) return `${ms} ms`;
+			if (ms < 60_000) return `${(ms / 1000).toFixed(1)} soniya`;
+			return `${Math.round(ms / 60_000)} daqiqa`;
+		};
+
+		function poyga() {
+			if (jarayonda) return;
+			jarayonda = true;
+
+			// O'rtacha holat: chiziqli = hajm/2, ikkilik = log2(hajm)
+			const chiziqli = Math.round(hajm / 2);
+			const ikkilik = Math.ceil(Math.log2(hajm));
+
+			const chToldirish = qutu.querySelector<HTMLElement>('[data-toldirish="chiziqli"]')!;
+			const ikToldirish = qutu.querySelector<HTMLElement>('[data-toldirish="ikkilik"]')!;
+			const chNatija = qutu.querySelector<HTMLElement>('[data-natija="chiziqli"]')!;
+			const ikNatija = qutu.querySelector<HTMLElement>('[data-natija="ikkilik"]')!;
+
+			chToldirish.style.transition = 'none';
+			ikToldirish.style.transition = 'none';
+			chToldirish.style.width = '0%';
+			ikToldirish.style.width = '0%';
+			chNatija.textContent = '';
+			ikNatija.textContent = '';
+
+			/* Ikkilik deyarli bir zumda, chiziqli esa hajmga qarab cho'ziladi —
+			   animatsiya davomiyligi shu nisbatni his qildiradi (max 3 s). */
+			const chVaqt = Math.min(3000, 300 + (hajm / 1_000_000) * 2700);
+			const ikVaqt = 250;
+
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					chToldirish.style.transition = `width ${chVaqt}ms linear`;
+					ikToldirish.style.transition = `width ${ikVaqt}ms ease-out`;
+					chToldirish.style.width = '100%';
+					ikToldirish.style.width = '100%';
+				});
+			});
+
+			setTimeout(() => {
+				ikNatija.textContent = `${ikkilik} qadam · ${vaqtMatn(ikkilik)}`;
+			}, ikVaqt);
+
+			setTimeout(() => {
+				chNatija.textContent = `${songa(chiziqli)} qadam · ${vaqtMatn(chiziqli)}`;
+				const nisbat = Math.round(chiziqli / ikkilik);
+				korilgan.add(hajm);
+				jarayonda = false;
+
+				if (korilgan.has(1_000_000)) {
+					amalBelgila('algoritm-poygasi');
+					hukmEl.textContent = `Farq: ${songa(nisbat)} barobar! Millionda ham 20 qadam — algoritm tanlash yangi protsessor sotib olishdan kuchliroq.`;
+				} else {
+					hukmEl.textContent = `Farq: ${songa(nisbat)} barobar. Endi kattaroq hajmni sinang — farq qanday o'sadi?`;
+				}
+			}, chVaqt + 60);
+		}
+
+		for (const t of qutu.querySelectorAll<HTMLButtonElement>('.hajm')) {
+			t.addEventListener('click', () => {
+				if (jarayonda) return;
+				hajm = Number(t.dataset.hajm);
+				for (const b of qutu.querySelectorAll<HTMLButtonElement>('.hajm')) {
+					const bu = b === t;
+					b.classList.toggle('tanlangan', bu);
+					b.setAttribute('aria-pressed', String(bu));
+				}
+			});
+		}
+
+		qutu.querySelector<HTMLButtonElement>('.poyga')!.addEventListener('click', poyga);
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			korilgan.clear();
+			jarayonda = false;
+			for (const t of qutu.querySelectorAll<HTMLElement>('.y-toldirish')) {
+				t.style.transition = 'none';
+				t.style.width = '0%';
+			}
+			for (const n of qutu.querySelectorAll<HTMLElement>('.y-natija')) n.textContent = '';
+			hukmEl.textContent =
+				"Ikkala algoritm ham tartiblangan ro'yxatdan bitta sonni qidiradi. Poygani boshlang!";
+		});
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.yorliq {
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.hajm-qator {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem;
+	}
+
+	.hajm {
+		margin: 0;
+		padding: 0.35rem 0.7rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-3);
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+
+	.hajm:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.hajm.tanlangan {
+		border-color: var(--blok-5);
+		background: var(--blok-5-fon);
+		color: var(--blok-5);
+		font-weight: 700;
+	}
+
+	.sim-tugma {
+		margin-top: 0.8rem;
+	}
+
+	.yolakcha {
+		margin-top: 1rem;
+	}
+
+	.y-sarlavha {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.5rem;
+	}
+
+	.y-nom {
+		font-size: 0.85rem;
+		font-weight: 700;
+		color: var(--sl-color-gray-1);
+	}
+
+	.y-izoh {
+		font-size: 0.75rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.y-chiziq {
+		margin-top: 0.3rem;
+		height: 0.9rem;
+		border-radius: 999px;
+		background: var(--sl-color-gray-6);
+		overflow: hidden;
+	}
+
+	.y-toldirish {
+		display: block;
+		height: 100%;
+		width: 0;
+		border-radius: 999px;
+	}
+
+	.yolakcha[data-algoritm='chiziqli'] .y-toldirish {
+		background: var(--blok-5);
+	}
+
+	.yolakcha[data-algoritm='ikkilik'] .y-toldirish {
+		background: var(--blok-1);
+	}
+
+	.y-natija {
+		display: block;
+		margin-top: 0.25rem;
+		min-height: 1.2em;
+		font-family: var(--sl-font-mono);
+		font-size: 0.8rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.y-toldirish {
+			transition: none !important;
+		}
+	}
+</style>

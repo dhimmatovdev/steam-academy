@@ -1,0 +1,130 @@
+---
+title: '18-dars: Internet va Web'
+description: "Klient, server va HTTP: brauzer har sahifada qanday suhbat o'tkazadi."
+sidebar:
+  label: '18-dars'
+  order: 18
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import SorovQuruvchi from '../../../components/sim/SorovQuruvchi.astro';
+
+<Bloknoma blok={5} />
+
+## Nega bu muhim
+
+O'tgan darsda paketlar manzilga yetdi. Lekin yetib borgach nima deyishadi? "Sahifa ber", "rasm ber", "mana fikrim — saqlab qo'y" — bu gaplar qanday tilda aytiladi?
+
+O'sha til — **HTTP**, va u hayratlanarli darajada oddiy: ikkala tomon ham shunchaki **matn** yozadi. Bugun siz brauzer har soniyada qiladigan suhbatni qo'lda o'tkazasiz — va shu bilan "sayt ochilishi" degan sehr oddiy so'rov-javobga aylanadi.
+
+<Maqsad>
+- klient-server modelini o'z so'zingiz bilan tushuntira olasiz
+- HTTP so'rovning qismlarini bilasiz: metod, yo'l, sarlavhalar, tana
+- 200, 404, 201 kabi status kodlarni o'qiy olasiz
+- internet va Web bir narsa emasligini ayta olasiz
+</Maqsad>
+
+## Nazariya
+
+### Internet ≠ Web
+
+Ko'p adashiladigan farq: **internet** — kompyuterlarni ulovchi tarmoq (17-dars: paketlar, IP, routerlar). **Web** — shu tarmoq USTIDA ishlaydigan xizmatlardan biri: sahifalar va havolalar olami. Messenjer, onlayn o'yin, musiqa striming — ular ham internetda, lekin Web emas.
+
+Xuddi yo'l bilan avtobus kabi: yo'l — internet, avtobus — Web. Yo'lda boshqa mashinalar ham yuradi.
+
+### Klient va server: so'rovchi va javob beruvchi
+
+Web'ning butun muloqoti bitta qolipda: **klient so'raydi — server javob beradi**. Klient — brauzeringiz. Server — sahifalarni saqlab, so'rovlarni kutib o'tirgan kompyuter.
+
+<Atama soz="klient-server" eng="client-server">
+	Muloqot modeli: klient so'rov yuboradi, server javob qaytaradi. Suhbatni doim
+	klient boshlaydi — server o'zi hech kimga sahifa "yubormaydi".
+</Atama>
+
+### HTTP: matnli suhbat
+
+So'rov ham, javob ham — oddiy matn. So'rovning birinchi qatori: **metod** (nima qilmoqchisiz: `GET` — ber, `POST` — qabul qil) va **yo'l** (nima haqida: `/darslar/5`). Keyin **sarlavhalar** — suhbat haqidagi qo'shimcha ma'lumot. POST'da oxirida **tana** — yuborilayotgan ma'lumot.
+
+<Atama soz="HTTP" eng="hypertext transfer protocol">
+	Klient va server o'rtasidagi matnli kelishuv: so'rov qanday yoziladi, javob qanday
+	qaytadi. Butun Web shu protokol ustida turadi.
+</Atama>
+
+Javobning birinchi qatori — **status kod**: `200 OK` (mana, oling), `404 Not Found` (bunday narsa yo'q), `201 Created` (qabul qildim, yaratdim), `500` (menda ichki xato). Uch xonali son — suhbatning butun taqdiri.
+
+<Muhim turi="gap">
+	HTTPS oxiridagi S — shifrlangan degani: so'rov va javob yo'lda o'qib bo'lmaydigan
+	ko'rinishda yuradi. Qanday shifrlash — keyingi darsning mavzusi.
+</Muhim>
+
+<Muhim turi="sir">
+	404 raqami afsonaga ko'ra CERN'dagi 404-xona bilan bog'lanadi, lekin aslida bu
+	shunchaki kodlar tizimi: 4xx — "aybdor klient", 5xx — "aybdor server", 2xx — "hammasi
+	yaxshi", 3xx — "boshqa joyga boring". Birinchi raqam — kimning aybi.
+</Muhim>
+
+## Sinab ko'r
+
+So'rovni qo'lda yig'ing: metod va yo'lni tanlang, POST'da tana ham yozing. Yuborilgach, javobni o'qing — har sarlavhaning izohi ostida chiqadi. Uch topshiriq: 200, 404 va 201 kodlarini o'z ko'zingiz bilan ko'ring.
+
+<SorovQuruvchi />
+
+## Xulosa
+
+- **Internet** — tarmoq; **Web** — uning ustidagi xizmatlardan biri
+- **Klient so'raydi, server javob beradi** — suhbatni doim klient boshlaydi
+- HTTP so'rovi: **metod + yo'l + sarlavhalar** (+ POST'da tana) — hammasi matn
+- **Status kod** birinchi raqami aybdorni aytadi: 2 — yaxshi, 4 — klient, 5 — server
+- HTTPS = HTTP + shifrlash
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Internet bilan Web farqini o'z misolingiz bilan tushuntiring.">
+	Internet — kompyuterlarni ulovchi tarmoq infratuzilmasi, Web — uning ustidagi
+	sahifalar xizmati. Misol: telegram xabari internetdan yuradi, lekin Web emas;
+	steam-academy sayti esa Web. Yo'l va avtobus: yo'lda avtobusdan boshqa transport ham bor.
+</Sinov>
+
+<Sinov raqam={2} savol="GET bilan POST qachon ishlatiladi? Ikkalasiga misol keltiring.">
+	GET — olish uchun: sahifa ochish, rasm yuklash, qidiruv natijasi. POST — yuborish
+	uchun: forma to'ldirish, fikr qoldirish, rasm joylash. Qoidasi oddiy: serverda
+	nimadir o'zgaradimi? O'zgarsa POST, faqat o'qisangiz GET.
+</Sinov>
+
+<Sinov raqam={3} savol="404 va 500 kodlarining farqi nimada? Birinchi raqam nimani aytadi?">
+	404 — 4 bilan boshlanadi: ayb klientda, noto'g'ri manzil so'radi. 500 — 5 bilan:
+	ayb serverda, uning ichida xato yuz berdi. Manzilni to'g'rilash klientning qo'lida,
+	500 ni esa faqat sayt egasi tuzata oladi.
+</Sinov>
+
+<Sinov raqam={4} savol="Nega suhbatni doim klient boshlaydi? Server o'zi yangilik 'yuborsa' bo'lmaydimi?">
+	Klassik HTTP'da server faqat javob beradi — kimga yuborishni ham bilmaydi: klientlar
+	IP'lari o'zgarib turadi, ular orqasida routerlar bor. Shuning uchun bildirishnomalar
+	uchun maxsus usullar o'ylab topilgan: klient o'zi so'rab turadi yoki aloqani ochiq
+	ushlab turadi.
+</Sinov>
+
+<Sinov raqam={5} savol="Simulyatordagi javobda Cache-Control: max-age=3600 sarlavhasi bor edi. Bu nima va qaysi darsni eslatadi?">
+	Server brauzerga: "bu javobni 1 soat saqlab, qayta so'ramasdan ishlataver" deyapti.
+	Bu 13-darsdagi kesh g'oyasi — endi tarmoq miqyosida: serverga qatnash SSD'dan ham
+	sekin, shuning uchun javoblar yaqinroqda saqlanadi.
+</Sinov>
+
+<Amaliyot daqiqa={30} daraja="o'rta">
+	Brauzerda istalgan saytni oching va DevTools'ga kiring (F12 yoki o'ng tugma →
+	Inspect), **Network** varag'ini tanlang, sahifani yangilang (F5).
+
+	**Birinchi qism.** Jami nechta so'rov ketdi? Sonini yozing — ehtimol o'nlab.
+	Bitta "sahifa" aslida nechta suhbat ekan!
+
+	**Ikkinchi qism.** Ro'yxatdan uchta so'rovni tanlab jadval tuzing: yo'l, metod,
+	status kod, hajm. Kamida bitta rasm yoki CSS so'rovi bo'lsin.
+
+	**Uchinchi qism.** Birinchi so'rovni bosib, Headers bo'limini oching. Simulyatorda
+	ko'rgan sarlavhalardan nechtasini topa olasiz?
+
+	Topshiriladigan natija: so'rovlar soni, 3 qatorli jadval va topilgan sarlavhalar
+	ro'yxati.
+</Amaliyot>
+
+<DarsTugadi dars={18} blok={5} />

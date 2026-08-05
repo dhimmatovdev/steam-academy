@@ -1,0 +1,474 @@
+---
+/**
+ * PaketYoli — 17-dars simulyatori.
+ *
+ * Paketni Samarqanddan serverga yetkazish o'yini: har qadamda qo'shni
+ * routerlardan birini tanlaysiz. Uch stsenariy:
+ *   1. Yetkazing (istalgan yo'l)
+ *   2. Eng qisqa yo'l (4 sakrash)
+ *   3. Bitta magistral uzilgan — paket boshqa yo'l topsin
+ *
+ * TTL = 8: shuncha sakrashdan keyin paket tashlanadi (haqiqiy TTL kabi).
+ *
+ * Xarita SVG'da chiziladi, lekin tanlash HTML tugmalar orqali — mobil va
+ * klaviatura uchun (SVG ichidagi bosiladigan narsalar bilan ovora bo'lmaymiz).
+ */
+import Simulyator from '../Simulyator.astro';
+
+/** Tugunlar: id, nom, SVG koordinatasi */
+const TUGUNLAR = [
+	{ id: 'SIZ', nom: 'Samarqand (siz)', x: 30, y: 110 },
+	{ id: 'T', nom: 'Toshkent', x: 108, y: 52 },
+	{ id: 'B', nom: 'Buxoro', x: 108, y: 168 },
+	{ id: 'M', nom: 'Moskva', x: 192, y: 32 },
+	{ id: 'I', nom: 'Istanbul', x: 192, y: 132 },
+	{ id: 'F', nom: 'Frankfurt', x: 272, y: 82 },
+	{ id: 'SV', nom: 'Server', x: 330, y: 128 },
+];
+
+/** Qirralar (ikki tomonlama) */
+const QIRRALAR: [string, string][] = [
+	['SIZ', 'T'],
+	['SIZ', 'B'],
+	['T', 'M'],
+	['T', 'I'],
+	['B', 'I'],
+	['M', 'F'],
+	['I', 'F'],
+	['F', 'SV'],
+];
+
+const STSENARIYLAR = [
+	{ nom: '1. Yetkazing' },
+	{ nom: '2. Eng qisqa yo\'l' },
+	{ nom: '3. Uzilgan magistral' },
+];
+---
+
+<Simulyator
+	sarlavha="Paket yo'li"
+	korsatma="Paketni serverga yetkazing: har qadamda qo'shni routerni tanlang. TTL = 8."
+	blok={5}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu o'yinda paket Samarqanddan serverga router-router sakrab boradi. Uch
+			stsenariy bor: shunchaki yetkazish, eng qisqa yo'lni topish va uzilgan
+			magistralni aylanib o'tish.
+		</p>
+		<p>
+			JavaScript'siz mashq: shahar nomlarini qog'ozga tugun qilib chizing, ularni
+			darsdagi xaritadagidek ulang va uzilgan chiziq bilan ham serverga yo'l toping.
+		</p>
+	</Fragment>
+
+	<div class="py not-content">
+		<div class="stsenariylar" role="group" aria-label="Stsenariy tanlash">
+			{
+				STSENARIYLAR.map((s, i) => (
+					<button
+						type="button"
+						class:list={['stsenariy', { tanlangan: i === 0 }]}
+						data-stsenariy={i}
+						aria-pressed={i === 0 ? 'true' : 'false'}
+					>
+						{s.nom}
+						<span class="belgi-tugadi" hidden>
+							✓
+						</span>
+					</button>
+				))
+			}
+		</div>
+
+		<p class="vazifa" data-vazifa></p>
+
+		<svg viewBox="0 0 360 200" class="xarita" role="img" aria-label="Tarmoq xaritasi">
+			{
+				QIRRALAR.map(([a, b]) => {
+					const ta = TUGUNLAR.find((t) => t.id === a)!;
+					const tb = TUGUNLAR.find((t) => t.id === b)!;
+					return (
+						<line
+							x1={ta.x}
+							y1={ta.y}
+							x2={tb.x}
+							y2={tb.y}
+							class="qirra"
+							data-qirra={`${a}-${b}`}
+						/>
+					);
+				})
+			}
+			{
+				TUGUNLAR.map((t) => (
+					<g class="tugun" data-tugun={t.id}>
+						<circle cx={t.x} cy={t.y} r="13" />
+						<text x={t.x} y={t.y + 4}>{t.id === 'SIZ' ? 'S' : t.id === 'SV' ? '⌂' : t.id}</text>
+					</g>
+				))
+			}
+		</svg>
+
+		<p class="legenda">
+			S — Samarqand (siz) · T — Toshkent · B — Buxoro · M — Moskva · I — Istanbul ·
+			F — Frankfurt · ⌂ — server
+		</p>
+
+		<div class="qadam-panel">
+			<span class="ttl" data-ttl>TTL: 8</span>
+			<span class="qayerda" data-qayerda></span>
+		</div>
+
+		<div class="tanlovlar" role="group" aria-label="Keyingi router" data-tanlovlar></div>
+
+		<p class="hukm" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	const NOMLAR: Record<string, string> = {
+		SIZ: 'Samarqand',
+		T: 'Toshkent',
+		B: 'Buxoro',
+		M: 'Moskva',
+		I: 'Istanbul',
+		F: 'Frankfurt',
+		SV: 'Server',
+	};
+
+	const QIRRALAR: [string, string][] = [
+		['SIZ', 'T'],
+		['SIZ', 'B'],
+		['T', 'M'],
+		['T', 'I'],
+		['B', 'I'],
+		['M', 'F'],
+		['I', 'F'],
+		['F', 'SV'],
+	];
+
+	const VAZIFALAR = [
+		"Paketni serverga yetkazing — yo'lni o'zingiz tanlaysiz.",
+		"Endi tejamkorlik: serverga eng ko'pi bilan 4 sakrashda yeting.",
+		"Istanbul–Frankfurt magistrali uzildi (qizil). Paket baribir yetib borsin!",
+	];
+
+	const TTL_BOSH = 8;
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.py');
+		if (!qutu) return;
+
+		const vazifaEl = qutu.querySelector<HTMLElement>('[data-vazifa]')!;
+		const ttlEl = qutu.querySelector<HTMLElement>('[data-ttl]')!;
+		const qayerdaEl = qutu.querySelector<HTMLElement>('[data-qayerda]')!;
+		const tanlovlarEl = qutu.querySelector<HTMLElement>('[data-tanlovlar]')!;
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+
+		let stsenariy = 0;
+		let joriy = 'SIZ';
+		let ttl = TTL_BOSH;
+		let yol: string[] = ['SIZ'];
+		const bajarildi = new Set<number>();
+
+		const uzilgan = () => (stsenariy === 2 ? 'I-F' : null);
+
+		function qoshnilar(t: string): string[] {
+			const r: string[] = [];
+			for (const [a, b] of QIRRALAR) {
+				const id = `${a}-${b}`;
+				if (id === uzilgan()) continue;
+				if (a === t) r.push(b);
+				if (b === t) r.push(a);
+			}
+			return r;
+		}
+
+		function korsat() {
+			ttlEl.textContent = `TTL: ${ttl}`;
+			qayerdaEl.textContent = `Paket hozir: ${NOMLAR[joriy]}`;
+
+			// Xarita: bosib o'tilgan qirralar va joriy tugun
+			for (const q of qutu.querySelectorAll<SVGElement>('.qirra')) {
+				const [a, b] = q.dataset.qirra!.split('-');
+				const otilgan = yol.some(
+					(t, i) =>
+						i > 0 &&
+						((yol[i - 1] === a && t === b) || (yol[i - 1] === b && t === a))
+				);
+				q.dataset.holat =
+					q.dataset.qirra === uzilgan() ? 'uzilgan' : otilgan ? 'otilgan' : 'oddiy';
+			}
+			for (const t of qutu.querySelectorAll<SVGElement>('.tugun')) {
+				t.dataset.holat =
+					t.dataset.tugun === joriy ? 'joriy' : yol.includes(t.dataset.tugun!) ? 'otilgan' : 'oddiy';
+			}
+
+			// Tanlov tugmalari — shu yerda dinamik yasaladi, stil :global orqali
+			tanlovlarEl.innerHTML = '';
+			if (joriy !== 'SV' && ttl > 0) {
+				for (const q of qoshnilar(joriy)) {
+					const t = document.createElement('button');
+					t.type = 'button';
+					t.className = 'tanlov';
+					t.textContent = `→ ${NOMLAR[q]}`;
+					t.addEventListener('click', () => sakra(q));
+					tanlovlarEl.append(t);
+				}
+			}
+
+			qutu.querySelectorAll<HTMLElement>('.belgi-tugadi').forEach((b, i) => {
+				b.hidden = !bajarildi.has(i);
+			});
+		}
+
+		function sakra(qayerga: string) {
+			joriy = qayerga;
+			yol.push(qayerga);
+			ttl--;
+
+			if (joriy === 'SV') {
+				const sakrashlar = yol.length - 1;
+				let otdi = true;
+				if (stsenariy === 1 && sakrashlar > 4) {
+					otdi = false;
+					hukmEl.textContent = `Yetib bordi, lekin ${sakrashlar} sakrashda — 4 tadan oshdi. Qayta urinib, qisqaroq yo'l toping.`;
+					qutu.dataset.holat = 'xato';
+				}
+				if (otdi) {
+					bajarildi.add(stsenariy);
+					qutu.dataset.holat = 'togri';
+					hukmEl.textContent =
+						stsenariy === 2
+							? `Yetkazildi (${sakrashlar} sakrash) — uzilgan magistralni aylanib o'tdingiz. Internet aynan shunday yashaydi: bitta yo'l o'lsa, boshqasi topiladi.`
+							: `Yetkazildi: ${sakrashlar} sakrash. ${stsenariy === 0 ? "Endi 2-stsenariyni oching." : "Endi 3-stsenariy — eng qizig'i."}`;
+					if (bajarildi.size === 3) {
+						amalBelgila('paket-yoli');
+						hukmEl.textContent =
+							"Uchala stsenariy bajarildi! Siz endi routerlar tilida 'o'ylay' olasiz.";
+					}
+				}
+				korsat();
+				return;
+			}
+
+			if (ttl === 0) {
+				qutu.dataset.holat = 'xato';
+				hukmEl.textContent =
+					"TTL tugadi — paket tashlab yuborildi. Haqiqiy tarmoqda ham shunday: adashgan paket abadiy aylanib yurmasin deb. Qayta urinib ko'ring.";
+				korsat();
+				return;
+			}
+
+			delete qutu.dataset.holat;
+			hukmEl.textContent = '';
+			korsat();
+		}
+
+		function stsenariyBoshla(i: number) {
+			stsenariy = i;
+			joriy = 'SIZ';
+			ttl = TTL_BOSH;
+			yol = ['SIZ'];
+			delete qutu.dataset.holat;
+			vazifaEl.textContent = VAZIFALAR[i]!;
+			hukmEl.textContent = '';
+			for (const b of qutu.querySelectorAll<HTMLButtonElement>('.stsenariy')) {
+				const bu = Number(b.dataset.stsenariy) === i;
+				b.classList.toggle('tanlangan', bu);
+				b.setAttribute('aria-pressed', String(bu));
+			}
+			korsat();
+		}
+
+		for (const t of qutu.querySelectorAll<HTMLButtonElement>('.stsenariy')) {
+			t.addEventListener('click', () => stsenariyBoshla(Number(t.dataset.stsenariy)));
+		}
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			bajarildi.clear();
+			stsenariyBoshla(stsenariy);
+		});
+
+		stsenariyBoshla(0);
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.stsenariylar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+
+	.stsenariy {
+		margin: 0;
+		padding: 0.35rem 0.7rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-3);
+		font-size: 0.8rem;
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	.stsenariy:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.stsenariy.tanlangan {
+		border-color: var(--blok-5);
+		background: var(--blok-5-fon);
+		color: var(--blok-5);
+	}
+
+	.belgi-tugadi {
+		color: var(--blok-1);
+	}
+
+	.vazifa {
+		margin: 0.8rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	.xarita {
+		display: block;
+		width: 100%;
+		max-width: 26rem;
+		height: auto;
+		margin: 0.4rem 0 0 0;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+	}
+
+	.qirra {
+		stroke: var(--sl-color-gray-5);
+		stroke-width: 1.5;
+	}
+
+	.qirra[data-holat='otilgan'] {
+		stroke: var(--blok-5);
+		stroke-width: 2.5;
+	}
+
+	.qirra[data-holat='uzilgan'] {
+		stroke: var(--blok-5);
+		stroke-width: 1.5;
+		stroke-dasharray: 4 4;
+		opacity: 0.55;
+	}
+
+	.tugun circle {
+		fill: var(--sl-color-gray-7);
+		stroke: var(--sl-color-gray-4);
+		stroke-width: 1.5;
+	}
+
+	.tugun[data-holat='joriy'] circle {
+		fill: var(--blok-5-fon);
+		stroke: var(--blok-5);
+		stroke-width: 2.5;
+	}
+
+	.tugun[data-holat='otilgan'] circle {
+		stroke: var(--blok-5);
+	}
+
+	.tugun text {
+		fill: var(--sl-color-gray-1);
+		font-family: var(--sl-font-mono);
+		font-size: 11px;
+		font-weight: 700;
+		text-anchor: middle;
+	}
+
+	.tugun[data-holat='joriy'] text {
+		fill: var(--blok-5);
+	}
+
+	.legenda {
+		margin: 0.5rem 0 0 0;
+		font-size: 0.72rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-3);
+	}
+
+	.qadam-panel {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem;
+		margin-top: 0.7rem;
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+	}
+
+	.ttl {
+		color: var(--blok-5);
+		font-weight: 700;
+	}
+
+	.qayerda {
+		color: var(--sl-color-gray-2);
+	}
+
+	.tanlovlar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin-top: 0.7rem;
+		min-height: 2.4rem;
+	}
+
+	/* Tanlov tugmalari JS'da yasaladi — :global va ota chegara orqali stillanadi */
+	.tanlovlar :global(.tanlov) {
+		margin: 0;
+		padding: 0.4rem 0.8rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-1);
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+
+	.tanlovlar :global(.tanlov:hover) {
+		border-color: var(--blok-5);
+	}
+
+	.tanlovlar :global(.tanlov:focus-visible) {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	.py[data-holat='togri'] .hukm {
+		font-weight: 600;
+		color: var(--blok-1);
+	}
+
+	.py[data-holat='xato'] .hukm {
+		color: var(--blok-5);
+	}
+</style>
