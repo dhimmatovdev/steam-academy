@@ -1,0 +1,460 @@
+---
+/**
+ * MiniAssembler — 10-dars simulyatori. LMC (Little Man Computer) uslubidagi
+ * to'liq ishlaydigan mashina, faqat o'zbekcha mnemonikalar bilan.
+ *
+ * Buyruqlar (kod = opcode×100 + operand):
+ *   TOXTA        000   dastur to'xtaydi
+ *   YUKLA n      1nn   A = xotira[n]
+ *   SAQLA n      2nn   xotira[n] = A
+ *   QOSH n       3nn   A = A + xotira[n]
+ *   AYIR n       4nn   A = A - xotira[n]
+ *   SAKRA n      5nn   PC = n
+ *   SAKRA0 n     6nn   A = 0 bo'lsa PC = n
+ *   CHIQAR       700   A ni chiqishga yozadi
+ *   SON n        nnn   ma'lumot katagi (xom son)
+ *
+ * Muhim g'oya ko'zga ko'rinadi: yig'ilgandan keyin buyruq ham, son ham
+ * xotirada BIR XIL ko'rINADI — hammasi shunchaki uch xonali son.
+ *
+ * Xotira 16 katak — shablonda yasalgan, JS faqat matnni yangilaydi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+const KATAKLAR = Array.from({ length: 16 }, (_, i) => i);
+
+const BOSHLANGICH = `; ikki sonni qo'shish
+YUKLA 4
+QOSH 5
+CHIQAR
+TOXTA
+SON 7
+SON 9`;
+---
+
+<Simulyator
+	sarlavha="Mini assembler"
+	korsatma="Dasturni yozing, Yig'ish bosing, so'ng Qadam bilan ijroni kuzating."
+	blok={3}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyator o'zbekcha mnemonikali kichik assembler: YUKLA, QOSH, SAQLA, SAKRA,
+			CHIQAR, TOXTA. Dastur 16 katakli xotiraga uch xonali sonlar bo'lib yig'iladi
+			va qadam-baqadam ijro etiladi.
+		</p>
+		<p>
+			JavaScript'siz sinash: darsdagi buyruqlar jadvalidan foydalanib, YUKLA 4 /
+			QOSH 5 / CHIQAR / TOXTA / SON 7 / SON 9 dasturini qog'ozda ijro eting —
+			har qadamda PC va A qiymatini yozib boring.
+		</p>
+	</Fragment>
+
+	<div class="ma not-content">
+		<div class="muharrir">
+			<label>
+				<span class="yorliq">Dastur (har qator — bitta katak, izoh uchun ;)</span>
+				<textarea class="kod" rows="8" spellcheck="false">{BOSHLANGICH}</textarea>
+			</label>
+			<div class="tugmalar">
+				<button type="button" class="sim-tugma yigish">Yig'ish</button>
+				<button type="button" class="sim-tugma qadam" disabled>Qadam</button>
+				<button type="button" class="sim-tugma yurgiz" disabled>Oxirigacha</button>
+			</div>
+		</div>
+
+		<div class="holat-panel">
+			<span class="registr">PC = <b data-pc>0</b></span>
+			<span class="registr">A = <b data-a>0</b></span>
+			<span class="registr holat-yozuv" data-holat-yozuv>yig'ilmagan</span>
+		</div>
+
+		<div class="xotira-panel">
+			<span class="yorliq">Xotira (16 katak)</span>
+			<div class="xotira-tor">
+				{
+					KATAKLAR.map((i) => (
+						<div class="katak" data-katak={i}>
+							<span class="katak-manzil">{i}</span>
+							<span class="katak-qiymat" data-qiymat={i}>
+								000
+							</span>
+						</div>
+					))
+				}
+			</div>
+		</div>
+
+		<p class="chiqish">
+			<span class="yorliq">Chiqish:</span>
+			<span data-chiqish>—</span>
+		</p>
+
+		<p class="hukm" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	const OPKODLAR: Record<string, number> = {
+		TOXTA: 0,
+		YUKLA: 1,
+		SAQLA: 2,
+		QOSH: 3,
+		AYIR: 4,
+		SAKRA: 5,
+		SAKRA0: 6,
+		CHIQAR: 7,
+	};
+	/** Operand talab qilmaydigan buyruqlar */
+	const OPERANDSIZ = new Set(['TOXTA', 'CHIQAR']);
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.ma');
+		if (!qutu) return;
+
+		const kodEl = qutu.querySelector<HTMLTextAreaElement>('.kod')!;
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+		const holatYozuv = qutu.querySelector<HTMLElement>('[data-holat-yozuv]')!;
+		const chiqishEl = qutu.querySelector<HTMLElement>('[data-chiqish]')!;
+		const qadamTugma = qutu.querySelector<HTMLButtonElement>('.qadam')!;
+		const yurgizTugma = qutu.querySelector<HTMLButtonElement>('.yurgiz')!;
+
+		let xotira = new Array<number>(16).fill(0);
+		let pc = 0;
+		let a = 0;
+		let holat: 'xom' | 'tayyor' | 'toxtadi' | 'xato' = 'xom';
+		let chiqishlar: number[] = [];
+
+		function korsat() {
+			qutu.querySelector('[data-pc]')!.textContent = String(pc);
+			qutu.querySelector('[data-a]')!.textContent = String(a);
+			holatYozuv.textContent =
+				holat === 'xom'
+					? "yig'ilmagan"
+					: holat === 'tayyor'
+						? 'ishga tayyor'
+						: holat === 'toxtadi'
+							? 'TOXTADI'
+							: 'XATO';
+			chiqishEl.textContent = chiqishlar.length ? chiqishlar.join(', ') : '—';
+
+			for (let i = 0; i < 16; i++) {
+				qutu.querySelector(`[data-qiymat="${i}"]`)!.textContent = String(
+					xotira[i]
+				).padStart(3, '0');
+				qutu.querySelector<HTMLElement>(`[data-katak="${i}"]`)!.dataset.joriy =
+					holat === 'tayyor' && i === pc ? 'ha' : 'yoq';
+			}
+
+			const ishlaydi = holat === 'tayyor';
+			qadamTugma.disabled = !ishlaydi;
+			yurgizTugma.disabled = !ishlaydi;
+		}
+
+		function yigish() {
+			const qatorlar = kodEl.value.split('\n');
+			const yangi = new Array<number>(16).fill(0);
+			let katak = 0;
+
+			for (let q = 0; q < qatorlar.length; q++) {
+				// Izohni kesib, bo'sh qatorni tashlab ketamiz
+				const toza = qatorlar[q]!.split(';')[0]!.trim();
+				if (!toza) continue;
+
+				if (katak >= 16) {
+					xato(`${q + 1}-qator: xotira to'ldi — dastur 16 katakdan oshdi.`);
+					return;
+				}
+
+				const [op, operandMatn, ortiqcha] = toza.split(/\s+/);
+				const OP = op!.toUpperCase();
+
+				if (OP === 'SON') {
+					const son = Number(operandMatn);
+					if (!Number.isInteger(son) || son < 0 || son > 999 || ortiqcha !== undefined) {
+						xato(`${q + 1}-qator: SON dan keyin 0..999 oralig'ida bitta son bo'lishi kerak.`);
+						return;
+					}
+					yangi[katak++] = son;
+					continue;
+				}
+
+				if (!(OP in OPKODLAR)) {
+					xato(`${q + 1}-qator: notanish buyruq "${op}". Buyruqlar jadvaliga qarang.`);
+					return;
+				}
+
+				if (OPERANDSIZ.has(OP)) {
+					if (operandMatn !== undefined) {
+						xato(`${q + 1}-qator: ${OP} buyrug'i operand olmaydi.`);
+						return;
+					}
+					yangi[katak++] = OPKODLAR[OP]! * 100;
+					continue;
+				}
+
+				const manzil = Number(operandMatn);
+				if (!Number.isInteger(manzil) || manzil < 0 || manzil > 15 || ortiqcha !== undefined) {
+					xato(`${q + 1}-qator: ${OP} dan keyin 0..15 oralig'ida manzil bo'lishi kerak.`);
+					return;
+				}
+				yangi[katak++] = OPKODLAR[OP]! * 100 + manzil;
+			}
+
+			if (katak === 0) {
+				xato("Dastur bo'sh — kamida bitta buyruq yozing.");
+				return;
+			}
+
+			xotira = yangi;
+			pc = 0;
+			a = 0;
+			chiqishlar = [];
+			holat = 'tayyor';
+			hukmEl.textContent = `Yig'ildi: ${katak} katak band. Endi Qadam bosing — har buyruq shunchaki son ekaniga e'tibor bering.`;
+			delete qutu.dataset.holat;
+			korsat();
+		}
+
+		function xato(matn: string) {
+			holat = 'xato';
+			qutu.dataset.holat = 'xato';
+			hukmEl.textContent = matn;
+			korsat();
+		}
+
+		function birQadam(): boolean {
+			if (holat !== 'tayyor') return false;
+			if (pc < 0 || pc > 15) {
+				xato(`PC = ${pc} — xotiradan tashqariga chiqib ketdi.`);
+				return false;
+			}
+
+			const buyruq = xotira[pc]!;
+			const opkod = Math.floor(buyruq / 100);
+			const operand = buyruq % 100;
+			pc++;
+
+			if (buyruq === 0) {
+				holat = 'toxtadi';
+				pc--; // TOXTA katagida qolamiz — ko'rinishi tushunarli bo'lsin
+				if (chiqishlar.length > 0) amalBelgila('mini-assembler');
+				hukmEl.textContent =
+					chiqishlar.length > 0
+						? `Dastur muvaffaqiyatli to'xtadi. Chiqish: ${chiqishlar.join(', ')}.`
+						: "Dastur to'xtadi, lekin hech narsa chiqarmadi — CHIQAR buyrug'ini unutdingizmi?";
+				qutu.dataset.holat = 'togri';
+				korsat();
+				return false;
+			}
+
+			if (operand > 15 && opkod >= 1 && opkod <= 6) {
+				xato(`${pc - 1}-katak: ${buyruq} — manzil 15 dan katta.`);
+				return false;
+			}
+
+			switch (opkod) {
+				case 1:
+					a = xotira[operand]!;
+					break;
+				case 2:
+					xotira[operand] = a;
+					break;
+				case 3:
+					a += xotira[operand]!;
+					break;
+				case 4:
+					a -= xotira[operand]!;
+					break;
+				case 5:
+					pc = operand;
+					break;
+				case 6:
+					if (a === 0) pc = operand;
+					break;
+				case 7:
+					chiqishlar.push(a);
+					break;
+				default:
+					xato(`${pc - 1}-katak: ${buyruq} — bunday opkod yo'q. Bu katakka SON tushib qolmadimi?`);
+					return false;
+			}
+
+			hukmEl.textContent = '';
+			korsat();
+			return true;
+		}
+
+		function oxirigacha() {
+			// 200 qadam — cheksiz aylanishdan himoya
+			for (let i = 0; i < 200; i++) {
+				if (!birQadam()) return;
+			}
+			xato("200 qadamdan keyin ham to'xtamadi — dasturda cheksiz aylanish bormi?");
+		}
+
+		qutu.querySelector<HTMLButtonElement>('.yigish')!.addEventListener('click', yigish);
+		qadamTugma.addEventListener('click', birQadam);
+		yurgizTugma.addEventListener('click', oxirigacha);
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			xotira = new Array<number>(16).fill(0);
+			pc = 0;
+			a = 0;
+			chiqishlar = [];
+			holat = 'xom';
+			hukmEl.textContent = '';
+			delete qutu.dataset.holat;
+			korsat();
+		});
+
+		korsat();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.yorliq {
+		display: block;
+		margin-bottom: 0.35rem;
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.kod {
+		width: 100%;
+		padding: 0.6rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-white);
+		font-family: var(--sl-font-mono);
+		font-size: 0.9rem;
+		line-height: 1.5;
+		resize: vertical;
+	}
+
+	.kod:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 1px;
+	}
+
+	.tugmalar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-top: 0.6rem;
+	}
+
+	.sim-tugma:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+
+	.holat-panel {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem;
+		margin-top: 1rem;
+	}
+
+	.registr {
+		font-family: var(--sl-font-mono);
+		font-size: 0.9rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.registr b {
+		color: var(--blok-3);
+	}
+
+	.holat-yozuv {
+		font-size: 0.8rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.xotira-panel {
+		margin-top: 1rem;
+	}
+
+	.xotira-tor {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 0.3rem;
+		max-width: 24rem;
+	}
+
+	.katak {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 0.25rem 0.2rem;
+		border: 1px solid var(--sl-color-gray-6);
+		border-radius: var(--sa-radius-kichik);
+	}
+
+	.katak[data-joriy='ha'] {
+		border-color: var(--blok-3);
+		background: var(--blok-3-fon);
+	}
+
+	.katak-manzil {
+		font-family: var(--sl-font-mono);
+		font-size: 0.65rem;
+		color: var(--sl-color-gray-4);
+	}
+
+	.katak-qiymat {
+		font-family: var(--sl-font-mono);
+		font-size: 0.95rem;
+		color: var(--sl-color-gray-1);
+	}
+
+	.katak[data-joriy='ha'] .katak-qiymat {
+		color: var(--blok-3);
+		font-weight: 700;
+	}
+
+	.chiqish {
+		margin: 1rem 0 0 0;
+		font-size: 0.9rem;
+	}
+
+	.chiqish .yorliq {
+		display: inline;
+		margin-right: 0.4rem;
+	}
+
+	.chiqish [data-chiqish] {
+		font-family: var(--sl-font-mono);
+		color: var(--blok-3);
+		font-weight: 700;
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	.ma[data-holat='togri'] .hukm {
+		font-weight: 600;
+		color: var(--blok-1);
+	}
+
+	.ma[data-holat='xato'] .hukm {
+		color: var(--blok-5);
+	}
+</style>

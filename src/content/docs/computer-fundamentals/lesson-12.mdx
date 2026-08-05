@@ -1,0 +1,134 @@
+---
+title: '12-dars: Abstraksiya minorasi'
+description: "Yuqori tildan bitgacha: bitta dastur uch darajada. Kompilyator nima qiladi."
+sidebar:
+  label: '12-dars'
+  order: 12
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import UchDaraja from '../../../components/sim/UchDaraja.astro';
+
+<Bloknoma blok={3} />
+
+## Nega bu muhim
+
+10-darsda uch qatorli oddiy ish uchun sakkiz qator assembler yozdingiz. Endi tasavvur qiling: Instagram millionlab qator koddan iborat. Assemblerda uni yozish — imkonsiz. Ammo protsessor faqat mashina kodini tushunadi. Qanday qilib?
+
+Javob — **abstraksiya minorasi**: odam yuqori qavatda qulay tilda yozadi, maxsus dasturlar esa uni qavatma-qavat pastga, bitlargacha o'girib beradi. Bu dars blokning yakuni: siz minoraga to'liq bir qarash tashlaysiz — eng tepadan eng pastgacha.
+
+<Maqsad>
+- yuqori va past darajali til farqini aniq misolda ko'rsata olasiz
+- kompilyator nima qilishini tushuntira olasiz
+- bitta qator kod nechta buyruq va bitga aylanishini kuzatasiz
+- "abstraksiya" so'zini shu moduldagi barcha qavatlar bilan bog'lay olasiz
+</Maqsad>
+
+## Nazariya
+
+### Uchinchi qavat: yuqori darajali til
+
+`yigindi = a + b` — bu yozuvda registr ham, manzil ham, opkod ham yo'q. Faqat **niyat**: ikki sonni qo'sh. Qolgan ishni mashina o'zi hal qilsin.
+
+<Atama soz="yuqori darajali til" eng="high-level language">
+	Odamning fikrlash tarziga yaqin dasturlash tili: o'zgaruvchilar, ifodalar,
+	funksiyalar. Python, JavaScript, C — shular jumlasidan. Protsessor tafsilotlari
+	yashirilgan.
+</Atama>
+
+Yuqori til — qulaylik uchun to'langan soliq emas, aksincha: dasturchi xatosi kamayadi, kod boshqa protsessorlarga ham mos bo'ladi, million qatorli tizimlarni jamoa bo'lib yozish mumkin bo'ladi.
+
+### Kompilyator: qavatlar orasidagi tarjimon
+
+Yuqori tildagi matnni mashina kodiga o'giruvchi dastur **kompilyator** deb ataladi. U har qatorni tahlil qiladi, o'zgaruvchilarga xotiradan katak ajratadi va buyruqlar ketma-ketligini yasaydi.
+
+<Atama soz="kompilyator" eng="compiler">
+	Yuqori darajali tildagi dasturni mashina kodiga o'giruvchi dastur. O'zi ham
+	dastur — bir paytlar uni ham kimdir assemblerda yozgan.
+</Atama>
+
+Diqqat qiling: `yigindi = a + b` **bitta** qator, lekin undan **uchta** buyruq chiqadi — yukla, qo'sh, saqla. Yuqori qavatda bir qadam, pastda uch qadam. Instagram'ning millionlab qatori — protsessorda milliardlab buyruq.
+
+<Muhim turi="gap">
+	Kompilyatorning o'zi ham dastur ekaniga e'tibor bering. Birinchi kompilyatorlar
+	assemblerda yozilgan, keyingilari — oldingi kompilyatorlar yordamida. Dasturlar
+	dasturlarni yaratadi — minora o'z-o'zini ko'targan.
+</Muhim>
+
+### Minoraga to'liq qarash
+
+Endi butun modulni bir ustunga teraylik. Eng tepada — `yigindi = a + b`. Uni kompilyator buyruqlarga o'giradi. Buyruqlar — sonlar, sonlar — bitlar. Bitlarni darvozalar qayta ishlaydi, darvozalar tranzistorlardan, tranzistorda esa shunchaki tok bor yoki yo'q.
+
+Har qavat pastkisining tafsilotini **yashiradi**: Python yozuvchisi registrni o'ylamaydi, sxema chizuvchi elektronlar fizikasini o'ylamaydi. Aynan shu yashirish tufayli bir odam hammasini bilmasa ham butun tizim ishlaydi.
+
+<Muhim turi="sir">
+	Simulyatorda TOXTA buyrug'iga va SON 0 katagiga qarang: ikkisining bitlari
+	BIR XIL — 0000 0000. Bit o'z ma'nosini bilmaydi; ma'noni unga qavat beradi.
+	Bu 4-darsdagi "72 — harfmi, rangmi?" savolining protsessor darajasidagi aksi.
+</Muhim>
+
+## Sinab ko'r
+
+Bitta dastur uch darajada. Yuqori tildagi istalgan qatorni bosing — unga mos assembler buyruqlari va bitlar yonadi. Teskari yo'nalishda ham ishlaydi: bit qatorini bosib, u qaysi qatordan kelganini toping.
+
+<UchDaraja />
+
+## Xulosa
+
+- **Yuqori darajali til** niyatni yozadi, tafsilotni yashiradi
+- **Kompilyator** uni mashina kodiga o'giradi: bitta qator → bir nechta buyruq
+- Minora: Python → assembler → mashina kodi → darvozalar → tranzistorlar
+- Har qavat pastkisini **yashiradi** — shu tufayli murakkablik boshqariladi
+- Bit o'z ma'nosini bilmaydi: TOXTA va SON 0 — bir xil bitlar, har xil ma'no
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Yuqori darajali tilning uch aniq afzalligini ayting.">
+	Birinchisi: qisqalik — bitta qator o'nlab buyruq o'rnini bosadi. Ikkinchisi:
+	tushunarlilik — o'zgaruvchi nomlari, ifodalar odam tilida. Uchinchisi: ko'chma —
+	bitta kod turli protsessorlarda ishlaydi, har biriga o'z kompilyatori o'giradi.
+</Sinov>
+
+<Sinov raqam={2} savol="Simulyatorda 'a = 5' qatoriga nechta assembler qatori mos keldi va nega aynan shu?">
+	Bitta: SON 5 (5-katak). Chunki bu qator hech narsa hisoblamaydi — kompilyator
+	shunchaki "a" uchun katak ajratib, boshlang'ich qiymatini yozib qo'ydi. Harakat
+	yo'q, faqat joy va qiymat.
+</Sinov>
+
+<Sinov raqam={3} savol="Kompilyator bilan 10-darsdagi 'yig'ish' (assemble) jarayonining farqi nimada?">
+	Assembler yig'uvchisi birma-bir o'giradi: har mnemonika — aynan bitta mashina
+	buyrug'i. Kompilyator esa ijodiy tarjimon: bitta qatordan bir nechta buyruq yasaydi,
+	kataklarni o'zi taqsimlaydi, hatto kodni tezlashtirish uchun qayta ham yozadi.
+</Sinov>
+
+<Sinov raqam={4} savol="Nega TOXTA va SON 0 ning bitlari bir xil bo'lishi xato emas?">
+	Chunki ma'no bitda emas, ishlatilishida. PC o'sha katakka kelsa — buyruq sifatida
+	o'qiladi va dastur to'xtaydi. Boshqa buyruq o'sha katakdan ma'lumot olsa — bu 0
+	soni. Kontekst hal qiladi; xotira uchun ikkisi bir xil 8 bit.
+</Sinov>
+
+<Sinov raqam={5} savol="Abstraksiya qavatlari bo'lmasa, milliondan ortiq qatorli dastur yozish nega imkonsiz bo'lardi?">
+	Har dasturchi bir vaqtda hamma tafsilotni — registr, manzil, takt, darvoza — boshida
+	ushlashi kerak bo'lardi. Inson miyasi buncha detalni ko'tarmaydi. Qavatlar mehnatni
+	bo'ladi: har kim o'z qavatida ishlaydi va pastga ishonadi.
+</Sinov>
+
+<Amaliyot daqiqa={35} daraja="o'rta">
+	Bitta masalani uch darajada o'zingiz yozing. Masala: **ikki son ayirmasini topish**
+	(masalan, 9 − 4).
+
+	**1-daraja (yuqori til):** 3–4 qator, o'zgaruvchilar bilan, xuddi simulyatordagidek.
+
+	**2-daraja (assembler):** 10-darsdagi buyruqlar jadvalidan foydalanib to'liq dastur
+	yozing (ma'lumot kataklari bilan). Xohlasangiz Mini assemblerda ishlatib tekshiring.
+
+	**3-daraja (bitlar):** har assembler qatorini 8 bitga o'giring — yuqori 4 bit opkod,
+	pastki 4 bit operand.
+
+	Oxirida ikki gap yozing: qaysi darajada yozish eng tez bo'ldi va qaysi darajada
+	xato qilish eng oson?
+
+	Topshiriladigan natija: uch daraja yonma-yon yozilgan varaq + ikki gaplik xulosa.
+</Amaliyot>
+
+<DarsTugadi dars={12} blok={3} />

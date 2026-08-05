@@ -1,0 +1,458 @@
+---
+/**
+ * SiklAnimatsiya — 9-dars simulyatori.
+ *
+ * Fon Neyman sikli qadam-baqadam: OLISH → DEKODLASH → BAJARISH.
+ * Qat'iy uch buyruqli dastur ijro etiladi (O'QI 3, QO'SH 4, YOZ 5) —
+ * o'quvchi har bosishda qaysi sim "jonlanganini" ko'radi.
+ *
+ * Assembler hali o'tilmagan (u 10-darsda), shuning uchun buyruqlar
+ * o'zbekcha qisqa fe'llar bilan yozilgan va legenda berilgan.
+ *
+ * Barcha elementlar shablonda: 9 qadam + yakun, JS faqat data-atribut
+ * va matnlarni almashtiradi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+const XOTIRA = [
+	{ manzil: 0, matn: "O'QI 3" },
+	{ manzil: 1, matn: "QO'SH 4" },
+	{ manzil: 2, matn: 'YOZ 5' },
+	{ manzil: 3, matn: '6' },
+	{ manzil: 4, matn: '5' },
+	{ manzil: 5, matn: '—' },
+];
+
+const FAZALAR = ['OLISH', 'DEKODLASH', 'BAJARISH'];
+---
+
+<Simulyator
+	sarlavha="Olish — dekodlash — bajarish"
+	korsatma="Qadam tugmasini bosib, protsessor siklining har bosqichida qaysi yo'l jonlanishini kuzating."
+	blok={3}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda uch buyruqli dastur Fon Neyman sikli bo'yicha ijro etiladi:
+			olish (buyruq xotiradan keladi), dekodlash (boshqaruv bloki tushunadi),
+			bajarish (ALU va registrlar ishlaydi).
+		</p>
+		<p>
+			JavaScript'siz sinash: "6 va 5 ni qo'shib natijani yozish" ishini uch buyruqqa
+			bo'ling va har buyruq uchun uch bosqichni daftarda yozib chiqing — jami
+			9 qadam bo'ladi.
+		</p>
+	</Fragment>
+
+	<div class="sa not-content">
+		<div class="fazalar" role="group" aria-label="Sikl bosqichlari">
+			{FAZALAR.map((f) => <span class="faza" data-faza={f}>{f}</span>)}
+		</div>
+
+		<svg viewBox="0 0 360 200" class="sxema" role="img" aria-label="Protsessor va xotira sxemasi">
+			<g class="simlar">
+				<path class="sim" data-sim="manzil" d="M104,50 H252"></path>
+				<path class="sim" data-sim="buyruq" d="M252,92 H104"></path>
+				<path class="sim" data-sim="dekod" d="M64,106 V120"></path>
+				<path class="sim" data-sim="oqi" d="M252,142 H104"></path>
+				<path class="sim" data-sim="alu" d="M104,150 H130 M170,150 H140 M150,170 V184 H64 V158"></path>
+				<path class="sim" data-sim="yoz" d="M104,134 H252"></path>
+			</g>
+
+			<rect x="12" y="12" width="210" height="180" rx="8" class="cpu-chegara"></rect>
+			<text x="24" y="30" class="cpu-yorliq">PROTSESSOR</text>
+
+			<rect x="24" y="36" width="80" height="28" rx="5" class="quti" data-quti="pc"></rect>
+			<text x="64" y="54" class="quti-nom">PC <tspan data-reg="pc">0</tspan></text>
+
+			<rect x="24" y="78" width="80" height="28" rx="5" class="quti" data-quti="buyruq"></rect>
+			<text x="64" y="96" class="quti-nom buyruq-matn" data-reg="buyruq">—</text>
+
+			<rect x="24" y="120" width="80" height="24" rx="5" class="quti" data-quti="boshqaruv"></rect>
+			<text x="64" y="136" class="quti-izoh">BOSHQARUV</text>
+
+			<rect x="24" y="150" width="80" height="28" rx="5" class="quti" data-quti="a"></rect>
+			<text x="64" y="168" class="quti-nom">A <tspan data-reg="a">—</tspan></text>
+
+			<rect x="130" y="136" width="40" height="28" rx="5" class="quti" data-quti="alu"></rect>
+			<text x="150" y="154" class="quti-izoh">ALU</text>
+
+			<rect x="252" y="16" width="96" height="172" rx="8" class="quti xotira-quti" data-quti="xotira"></rect>
+			<text x="300" y="34" class="cpu-yorliq xotira-yorliq">XOTIRA</text>
+			{
+				XOTIRA.map((k, i) => (
+					<text x="262" y={52 + i * 22} class="katak" data-katak={k.manzil}>
+						{k.manzil}: <tspan data-katak-matn={k.manzil}>{k.matn}</tspan>
+					</text>
+				))
+			}
+		</svg>
+
+		<p class="legenda">
+			O'QI n — n-katakni A ga o'qi · QO'SH n — A ga n-katakni qo'sh · YOZ n — A ni
+			n-katakka yoz
+		</p>
+
+		<div class="qadam-qator">
+			<button type="button" class="sim-tugma qadam">Qadam</button>
+			<span class="hisob" data-hisob>0/9</span>
+		</div>
+
+		<p class="hukm" role="status" aria-live="polite">
+			Dastur: 3 va 4-kataklardagi sonlarni qo'shib, natijani 5-katakka yozish.
+			Qadam bosing.
+		</p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	type Faza = 'OLISH' | 'DEKODLASH' | 'BAJARISH';
+
+	interface Qadam {
+		faza: Faza;
+		simlar: string[];
+		qutilar: string[];
+		izoh: string;
+		/** Shu qadamda xotiraning qaysi katagi yonadi */
+		katak?: number;
+		/** Qadam oxirida registr/xotira o'zgarishi */
+		tasir?: (h: Holat) => void;
+	}
+
+	interface Holat {
+		pc: number;
+		a: number | null;
+		buyruq: string;
+		xotira: Record<number, string>;
+	}
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.sa');
+		if (!qutu) return;
+
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+		const hisobEl = qutu.querySelector<HTMLElement>('[data-hisob]')!;
+		const qadamTugma = qutu.querySelector<HTMLButtonElement>('.qadam')!;
+
+		const BOSH_IZOH =
+			"Dastur: 3 va 4-kataklardagi sonlarni qo'shib, natijani 5-katakka yozish. Qadam bosing.";
+
+		/* Har buyruq uchun uch qadam. Izohlar — sodda hikoya. */
+		const QADAMLAR: Qadam[] = [
+			{
+				faza: 'OLISH',
+				simlar: ['manzil', 'buyruq'],
+				qutilar: ['pc', 'xotira', 'buyruq'],
+				katak: 0,
+				izoh: "OLISH: PC = 0, demak xotiraning 0-katagidagi buyruq protsessorga keladi: O'QI 3.",
+				tasir: (h) => (h.buyruq = "O'QI 3"),
+			},
+			{
+				faza: 'DEKODLASH',
+				simlar: ['dekod'],
+				qutilar: ['buyruq', 'boshqaruv'],
+				izoh: "DEKODLASH: boshqaruv bloki buyruqni tushundi — «3-katakdagi sonni A registrga o'qish kerak».",
+			},
+			{
+				faza: 'BAJARISH',
+				simlar: ['oqi'],
+				qutilar: ['xotira', 'a'],
+				katak: 3,
+				izoh: 'BAJARISH: 3-katakdagi 6 soni A registrga tushdi. PC endi 1 ga oshdi.',
+				tasir: (h) => {
+					h.a = 6;
+					h.pc = 1;
+				},
+			},
+			{
+				faza: 'OLISH',
+				simlar: ['manzil', 'buyruq'],
+				qutilar: ['pc', 'xotira', 'buyruq'],
+				katak: 1,
+				izoh: "OLISH: PC = 1 — navbatdagi buyruq keladi: QO'SH 4.",
+				tasir: (h) => (h.buyruq = "QO'SH 4"),
+			},
+			{
+				faza: 'DEKODLASH',
+				simlar: ['dekod'],
+				qutilar: ['buyruq', 'boshqaruv'],
+				izoh: "DEKODLASH: buyruq ma'nosi — «A ga 4-katakdagi sonni qo'sh». ALU ishga tayyorlanadi.",
+			},
+			{
+				faza: 'BAJARISH',
+				simlar: ['oqi', 'alu'],
+				qutilar: ['xotira', 'alu', 'a'],
+				katak: 4,
+				izoh: 'BAJARISH: ALU 6 + 5 ni hisobladi, natija 11 A registrga qaytdi. PC = 2.',
+				tasir: (h) => {
+					h.a = 11;
+					h.pc = 2;
+				},
+			},
+			{
+				faza: 'OLISH',
+				simlar: ['manzil', 'buyruq'],
+				qutilar: ['pc', 'xotira', 'buyruq'],
+				katak: 2,
+				izoh: 'OLISH: PC = 2 — oxirgi buyruq keladi: YOZ 5.',
+				tasir: (h) => (h.buyruq = 'YOZ 5'),
+			},
+			{
+				faza: 'DEKODLASH',
+				simlar: ['dekod'],
+				qutilar: ['buyruq', 'boshqaruv'],
+				izoh: 'DEKODLASH: buyruq — «A dagi qiymatni xotiraning 5-katagiga yoz».',
+			},
+			{
+				faza: 'BAJARISH',
+				simlar: ['yoz'],
+				qutilar: ['a', 'xotira'],
+				katak: 5,
+				izoh: 'BAJARISH: 11 soni 5-katakka yozildi. Dastur tugadi — natija xotirada!',
+				tasir: (h) => {
+					h.xotira[5] = '11';
+					h.pc = 3;
+				},
+			},
+		];
+
+		let qadam = 0;
+		let holat: Holat = { pc: 0, a: null, buyruq: '—', xotira: { 5: '—' } };
+
+		function korsat(joriy?: Qadam) {
+			qutu.querySelector('[data-reg="pc"]')!.textContent = String(holat.pc);
+			qutu.querySelector('[data-reg="a"]')!.textContent = holat.a === null ? '—' : String(holat.a);
+			qutu.querySelector('[data-reg="buyruq"]')!.textContent = holat.buyruq;
+			qutu.querySelector('[data-katak-matn="5"]')!.textContent = holat.xotira[5]!;
+
+			for (const sim of qutu.querySelectorAll<SVGElement>('.sim')) {
+				sim.dataset.faol = joriy?.simlar.includes(sim.dataset.sim!) ? 'ha' : 'yoq';
+			}
+			for (const q of qutu.querySelectorAll<SVGElement>('[data-quti]')) {
+				q.dataset.faol = joriy?.qutilar.includes(q.dataset.quti!) ? 'ha' : 'yoq';
+			}
+			for (const f of qutu.querySelectorAll<HTMLElement>('.faza')) {
+				f.dataset.faol = joriy && f.dataset.faza === joriy.faza ? 'ha' : 'yoq';
+			}
+			// Shu qadamda murojaat qilinayotgan katakni belgilaymiz
+			for (const k of qutu.querySelectorAll<SVGElement>('.katak')) {
+				k.dataset.faol =
+					joriy?.katak !== undefined && Number(k.dataset.katak) === joriy.katak
+						? 'ha'
+						: 'yoq';
+			}
+
+			hisobEl.textContent = `${qadam}/9`;
+		}
+
+		qadamTugma.addEventListener('click', () => {
+			if (qadam >= QADAMLAR.length) return;
+			const j = QADAMLAR[qadam]!;
+			// Ta'sir qadam OXIRIDA emas, ko'rsatishdan OLDIN qo'llansin —
+			// lekin OLISH katagi eski PC bilan belgilanishi kerak, shu sababli
+			// avval belgilaymiz, keyin ta'sirni qo'llaymiz.
+			korsat(j);
+			j.tasir?.(holat);
+			// Registrlarning yangi qiymatlari ham darhol ko'rinsin
+			qutu.querySelector('[data-reg="pc"]')!.textContent = String(holat.pc);
+			qutu.querySelector('[data-reg="a"]')!.textContent =
+				holat.a === null ? '—' : String(holat.a);
+			qutu.querySelector('[data-reg="buyruq"]')!.textContent = holat.buyruq;
+			qutu.querySelector('[data-katak-matn="5"]')!.textContent = holat.xotira[5]!;
+
+			qadam++;
+			hisobEl.textContent = `${qadam}/9`;
+			hukmEl.textContent = j.izoh;
+
+			if (qadam === QADAMLAR.length) {
+				amalBelgila('sikl-animatsiya');
+				qadamTugma.disabled = true;
+				qutu.dataset.holat = 'togri';
+				hukmEl.textContent =
+					j.izoh + ' Siz to‘qqiz qadamda butun dasturni «protsessor ko‘zi» bilan ko‘rdingiz.';
+			}
+		});
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			qadam = 0;
+			holat = { pc: 0, a: null, buyruq: '—', xotira: { 5: '—' } };
+			qadamTugma.disabled = false;
+			delete qutu.dataset.holat;
+			hukmEl.textContent = BOSH_IZOH;
+			korsat();
+		});
+
+		korsat();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.fazalar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+
+	.faza {
+		padding: 0.25rem 0.7rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 999px;
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.faza[data-faol='ha'] {
+		border-color: var(--blok-3);
+		background: var(--blok-3-fon);
+		color: var(--blok-3);
+		font-weight: 700;
+	}
+
+	.sxema {
+		display: block;
+		width: 100%;
+		max-width: 26rem;
+		height: auto;
+		margin: 0.6rem 0 0 0;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+	}
+
+	.cpu-chegara {
+		fill: none;
+		stroke: var(--sl-color-gray-5);
+		stroke-dasharray: 4 3;
+	}
+
+	.cpu-yorliq {
+		fill: var(--sl-color-gray-4);
+		font-family: var(--sl-font-mono);
+		font-size: 9px;
+		letter-spacing: 0.06em;
+	}
+
+	.xotira-yorliq {
+		text-anchor: middle;
+	}
+
+	.quti {
+		fill: var(--sl-color-gray-7);
+		stroke: var(--sl-color-gray-5);
+		transition: stroke 0.15s ease;
+	}
+
+	.quti[data-faol='ha'] {
+		stroke: var(--blok-3);
+		stroke-width: 2;
+	}
+
+	.xotira-quti {
+		fill: none;
+	}
+
+	.quti-nom {
+		fill: var(--sl-color-gray-2);
+		font-family: var(--sl-font-mono);
+		font-size: 11px;
+		font-weight: 700;
+		text-anchor: middle;
+	}
+
+	.quti-nom tspan {
+		fill: var(--blok-3);
+	}
+
+	.buyruq-matn {
+		font-size: 10px;
+	}
+
+	.quti-izoh {
+		fill: var(--sl-color-gray-3);
+		font-family: var(--sl-font-mono);
+		font-size: 9px;
+		text-anchor: middle;
+	}
+
+	.sim {
+		fill: none;
+		stroke: var(--sl-color-gray-6);
+		stroke-width: 1.5;
+		transition: stroke 0.15s ease;
+	}
+
+	.sim[data-faol='ha'] {
+		stroke: var(--blok-3);
+		stroke-width: 2.5;
+	}
+
+	.katak {
+		fill: var(--sl-color-gray-2);
+		font-family: var(--sl-font-mono);
+		font-size: 11px;
+	}
+
+	.katak[data-faol='ha'] {
+		fill: var(--blok-3);
+		font-weight: 700;
+	}
+
+	.katak tspan {
+		fill: inherit;
+	}
+
+	.legenda {
+		margin: 0.6rem 0 0 0;
+		font-size: 0.75rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-3);
+	}
+
+	.qadam-qator {
+		display: flex;
+		align-items: center;
+		gap: 0.7rem;
+		margin-top: 0.9rem;
+	}
+
+	.hisob {
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.sim-tugma:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 3.9em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	.sa[data-holat='togri'] .hukm {
+		font-weight: 600;
+		color: var(--blok-1);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.sim,
+		.quti {
+			transition: none;
+		}
+	}
+</style>

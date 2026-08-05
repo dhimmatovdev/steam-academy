@@ -1,0 +1,130 @@
+---
+title: '9-dars: Fon Neyman arxitekturasi'
+description: "Protsessor, xotira va kiritish-chiqarish qanday birlashadi. Olish-dekodlash-bajarish sikli."
+sidebar:
+  label: '9-dars'
+  order: 9
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import SiklAnimatsiya from '../../../components/sim/SiklAnimatsiya.astro';
+
+<Bloknoma blok={3} />
+
+## Nega bu muhim
+
+O'tgan blokda uchta qurilma yig'dik: darvozalar qaror qabul qiladi, summator hisoblaydi, registr eslab qoladi. Ular alohida-alohida stolda yotgan detallar, xolos. Kompyuter esa ulardan **yagona mashina** yasagan narsadir.
+
+Bu birlashtirish sxemasini 1945-yilda Jon fon Neyman ta'riflab bergan. Hayratlanarlisi: telefoningizdan superkompyutergacha — sakson yildan beri deyarli hamma kompyuter aynan shu sxemada ishlaydi.
+
+<Maqsad>
+- fon Neyman arxitekturasining asosiy qismlarini sanab bera olasiz
+- "dastur ham xotirada saqlanadi" g'oyasi nega inqilob bo'lganini tushuntira olasiz
+- olish–dekodlash–bajarish siklini qadam-baqadam ko'rsatib bera olasiz
+- protsessor "aqlli" emas, shunchaki juda tez ekanini his qilasiz
+</Maqsad>
+
+## Nazariya
+
+### To'rt qism, bitta mashina
+
+Fon Neyman sxemasida kompyuter to'rt qismdan iborat. **Protsessor** — ichida ALU (hisob) va boshqaruv bloki bor. **Xotira** — kataklar qatori, har birining manzili bor. **Kiritish-chiqarish** — klaviatura, ekran va boshqalar. Ularni bog'lovchi **shinalar** — ma'lumot oqadigan umumiy simlar.
+
+<Atama soz="arxitektura" eng="architecture">
+	Kompyuter qismlarining tuzilishi va ular orasidagi kelishuv: nima qayerda turadi,
+	kim kim bilan qanday gaplashadi.
+</Atama>
+
+Bularning har birini alohida ko'rgansiz. Yangilik — ularning **qanday bog'langanida**.
+
+### Inqilobiy g'oya: dastur ham xotirada
+
+Eng birinchi kompyuterlarni "dasturlash" simlarni qayta ulash degani edi: yangi masala — necha kun ish. Fon Neyman sxemasida esa buyruqlar ham **xotiraga yoziladi** — xuddi sonlar kabi.
+
+8-darsni eslang: xotira katagida shunchaki bitlar turadi. Endi o'sha bitlar ba'zan **son**, ba'zan **buyruq** bo'ladi. Yangi dastur kerakmi? Simlarni emas, xotiradagi sonlarni almashtirasiz.
+
+<Muhim turi="gap">
+	"Dastur ham ma'lumot" — shu to'rt so'z butun dasturiy ta'minot olamini ochib berdi.
+	Dastur yuklab olish, o'rnatish, yangilash — bularning hammasi shunchaki xotiraga
+	yangi sonlar yozish.
+</Muhim>
+
+### Sikl: protsessorning yurak urishi
+
+Protsessor qanchalik murakkab ko'rinmasin, u umrbod faqat **uchta ishni** takrorlaydi.
+
+**Olish** — PC registridagi manzildan navbatdagi buyruqni xotiradan o'qiydi. **Dekodlash** — boshqaruv bloki bu bitlar qaysi amalni bildirishini aniqlaydi. **Bajarish** — kerakli qismlar (ALU, registrlar, xotira) ishga tushadi. Keyin PC bittaga oshadi va hammasi qaytadan.
+
+<Atama soz="olish–dekodlash–bajarish sikli" eng="fetch-decode-execute cycle">
+	Protsessorning asosiy ish aylanishi: buyruqni xotiradan olish, ma'nosini aniqlash,
+	bajarish — va navbatdagisiga o'tish.
+</Atama>
+
+8-darsdagi takt shu yerda uzukka ko'z qo'ygandek tushadi: har sikl qadamlari takt zarblariga bog'lanib, milliardlab element bir tekis yuradi.
+
+### "Aqlli" mashinaning siri
+
+Sikldagi birorta qadam aqlni talab qilmaydi: o'qi, solishtir, qo'sh, yoz. Protsessorning butun "sehri" — shu oddiy qadamlarni sekundiga **milliardlab marta** xatosiz bajarishida.
+
+<Muhim turi="sir">
+	3 GHz protsessor bir sekundda taxminan 3 milliard sikl aylantiradi. Siz bu gapni
+	o'qiguningizcha u 10 milliarddan ortiq buyruq bajarib ulgurdi.
+</Muhim>
+
+## Sinab ko'r
+
+Quyida uch buyruqli dastur bor: 3 va 4-kataklardagi sonlarni qo'shib, natijani 5-katakka yozadi. Har buyruq uch bosqichdan o'tadi — jami 9 qadam. Har bosishda qaysi yo'l "jonlanganiga" qarang.
+
+<SiklAnimatsiya />
+
+## Xulosa
+
+- Fon Neyman arxitekturasi: **protsessor + xotira + kiritish-chiqarish + shinalar**
+- Inqilobiy g'oya: **dastur ham xotirada** — buyruq ham shunchaki son
+- Protsessor umrbod uch qadamni aylantiradi: **olish → dekodlash → bajarish**
+- **PC** registri navbatdagi buyruq manzilini ushlab turadi
+- Protsessor aqlli emas — **juda tez**: sekundiga milliardlab oddiy qadam
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Fon Neyman sxemasidan oldingi kompyuterlarda yangi dastur qanday 'yozilardi' va bu nega noqulay edi?">
+	Simlarni jismonan qayta ulash kerak edi — yangi masala uchun mashinani qayta qurish.
+	Bu kunlab vaqt olardi va xatoga juda moyil edi. Dastur xotiraga ko'chgach, yangi
+	dastur — shunchaki xotiradagi yangi sonlar.
+</Sinov>
+
+<Sinov raqam={2} savol="Sikl uch bosqichining har birida qaysi qism bosh rolda?">
+	Olishda — PC va xotira (manzil boradi, buyruq keladi). Dekodlashda — boshqaruv bloki
+	(bitlarning ma'nosini aniqlaydi). Bajarishda — buyruqqa qarab ALU, registrlar yoki
+	xotira.
+</Sinov>
+
+<Sinov raqam={3} savol="PC registri bo'lmasa protsessor nimani 'unutib qo'yadi'?">
+	Qayerda turganini. PC navbatdagi buyruqning manzilini saqlaydi — usiz protsessor
+	bir buyruqni bajarib bo'lgach, keyingisini qayerdan olishni bilmay qoladi. Dastur
+	oqimi degan tushunchaning o'zi PC ga tayanadi.
+</Sinov>
+
+<Sinov raqam={4} savol="Simulyatordagi dastur 9 qadam bosdi. 100 buyruqli dastur nechta qadam bosadi va bu real vaqtda qancha?">
+	Har buyruq 3 bosqich: 300 qadam. 3 GHz protsessorda har qadam taxminan bir takt desak,
+	bu 0.0000001 sekund — ko'z ochib yumguningizcha million marta ulguradi.
+</Sinov>
+
+<Sinov raqam={5} savol="Xotiradagi 0000 0101 bitlari son ham, buyruq ham bo'lishi mumkin. Protsessor qaysi biri ekanini qanday 'biladi'?">
+	Hech qanday belgi yo'q — farq faqat ishlatilishida. PC shu katakni ko'rsatib tursa,
+	bitlar buyruq sifatida dekodlanadi. Buyruq shu katakdan ma'lumot o'qisa — son bo'ladi.
+	Ma'no bitning o'zida emas, kontekstda.
+</Sinov>
+
+<Amaliyot daqiqa={20} daraja="oson">
+	Simulyatordagi dasturni "protsessor tilidan" hikoya qilib yozing: to'qqiz qadamning
+	har biri uchun bir gap. "Men PC ga qaradim, u 0 dedi..." uslubida — lekin har gapda
+	qaysi qism ishlagani aniq bo'lsin.
+
+	Keyin shu hikoyani yaqiningizga (ota-ona, aka-uka) o'qib bering va bitta savol
+	oling. O'sha savolni va o'z javobingizni yozib qo'ying.
+
+	Topshiriladigan natija: 9 gaplik hikoya + berilgan savol va javobingiz.
+</Amaliyot>
+
+<DarsTugadi dars={9} blok={3} />

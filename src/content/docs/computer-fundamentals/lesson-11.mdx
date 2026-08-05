@@ -1,0 +1,132 @@
+---
+title: "11-dars: O'z protsessoringiz"
+description: "CAPSTONE: ALU, registr va boshqaruvni o'zingiz ulab, ishlaydigan protsessor yig'asiz."
+sidebar:
+  label: '11-dars'
+  order: 11
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import CPUYigish from '../../../components/sim/CPUYigish.astro';
+
+<Bloknoma blok={3} />
+
+## Nega bu muhim
+
+O'n darsdan beri yig'ilgan hamma narsa bugun bitta stolga keladi: darvozalar (5–6), summator va ALU (7), registr (8), sikl (9), buyruqlar (10). Bugun siz ularni **o'zingiz ulaysiz** — va sxemangiz haqiqiy dasturlarni bajaradi.
+
+Bu dars viktorina emas. Simulyator sizning ulanishlaringiz bo'yicha dasturni **haqiqatan ijro etadi**: sim noto'g'ri ulangan bo'lsa, noto'g'ri qiymat oqadi va test yiqiladi. Xuddi haqiqiy muhandislikdagidek.
+
+<Maqsad>
+- protsessor ichidagi asosiy ma'lumot yo'llarini (datapath) sanab bera olasiz
+- har ulanish nima uchun aynan shunday bo'lishi kerakligini asoslaysiz
+- noto'g'ri ulanish qanday noto'g'ri natijaga olib kelishini kuzatasiz
+- ishlaydigan protsessor yig'gan bo'lasiz — bu gap endi majoz emas
+</Maqsad>
+
+## Nazariya
+
+### Datapath: qiymatlar oqadigan daryolar
+
+Protsessorning ichini xarita kabi tasavvur qiling: bloklar — shaharlar, simlar — yo'llar. Qiymatlar shu yo'llardan oqadi. Bu tarmoq **datapath** deb ataladi.
+
+<Atama soz="datapath" eng="datapath">
+	Protsessor ichida qiymatlar oqadigan yo'llar tarmog'i: registrlardan ALU ga,
+	ALU dan registrlarga, xotiradan dekodergacha.
+</Atama>
+
+Bizning o'quv protsessorimizda beshta hal qiluvchi ulanish bor. Har birida savol bitta: **bu kirishga qiymat qayerdan kelishi kerak?**
+
+### Besh ulanishning mantig'i
+
+**Xotira manzili.** Navbatdagi buyruq qayerda? Buni faqat PC biladi — demak xotira manzilga PC ulanadi.
+
+**ALU ning ikki kirishi.** `QOSH 3` degani "A ustiga 3 ni qo'sh": eski qiymat A registrdan, qo'shiluvchi son (operand) dekoderdan keladi.
+
+**A registr kirishi.** Hisob natijasi qayerdan chiqadi? ALU dan. Demak A ga ALU chiqishi yoziladi — YUKLA da ham ALU shunchaki operandni "o'tkazib" beradi.
+
+**PC yangilanishi.** Har buyruqdan keyin navbatdagisi — PC+1. (Haqiqiy protsessorda SAKRA uchun bu yerga multipleksor qo'yiladi: yo PC+1, yo sakrash manzili.)
+
+<Muhim turi="gap">
+	Har ulanishning javobi yodlanmaydi — **so'rab topiladi**: "bu blokka ayni shu
+	qadamda qanday qiymat kerak va uni kim ishlab chiqaradi?" Muhandislikning katta
+	qismi shu bitta savol.
+</Muhim>
+
+### Noto'g'ri sim nima qiladi?
+
+Elektr sxemada "sintaksis xatosi" degan tushuncha yo'q — noto'g'ri ulangan sxema ham **ishlayveradi**, faqat noto'g'ri natija chiqaradi. Masalan, xotira manziliga PC o'rniga A ulansa, protsessor buyruqni A ko'rsatgan katakdan o'qiydi — dastur "aqldan ozadi".
+
+Shu sababli testlar bor: kichik dasturlar ishga tushadi va natija kutilgani bilan solishtiriladi. Haqiqiy protsessor loyihalashda ham xuddi shunday — Intel muhandislari sxemani minglab test dasturlari bilan sinaydi.
+
+<Muhim turi="sir">
+	1994-yilda Intel Pentium protsessorida bo'lish amali xatosi topilgan — ba'zi
+	sonlarda 4 195 835 ÷ 3 145 727 noto'g'ri chiqardi. Kompaniya 475 million dollar
+	zarar ko'rgan. Bitta noto'g'ri ulanishning narxi shu.
+</Muhim>
+
+## Sinab ko'r
+
+Sxemadagi besh ulanishning har biriga manba tanlang — sim shu zahoti chiziladi. Beshalasi tayyor bo'lgach, `Sinovni ishga tushirish` bosing: uch dastur sxemangizda haqiqatan ijro etiladi. Yiqilgan test bo'lsa — qiymat qaysi qadamda buzilganini o'ylang, `Maslahat` ham bor.
+
+<CPUYigish />
+
+Uchala test o'tdimi? Tabriklaymiz — endi "protsessor qanday ishlaydi?" degan savolga siz sxema chizib javob bera olasiz.
+
+## Xulosa
+
+- **Datapath** — protsessor ichida qiymatlar oqadigan yo'llar tarmog'i
+- Har ulanishning javobi bitta savoldan topiladi: **bu qiymatni kim ishlab chiqaradi?**
+- Xotira manzili ← PC, ALU ← A + operand, A ← ALU, PC ← PC+1
+- Noto'g'ri ulangan sxema ishlamay qolmaydi — **noto'g'ri ishlaydi**, shuning uchun testlar shart
+- Siz endi darvozadan protsessorgacha butun zanjirni o'z qo'lingizdan o'tkazdingiz
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Xotira manziliga PC o'rniga A registri ulansa, 1-test (YUKLA 7) nima qiladi?">
+	A boshida 0, demak buyruq 0-katakdan o'qiladi va birinchi qadam tasodifan to'g'ri
+	chiqadi. Lekin YUKLA 7 dan keyin A = 7 bo'ladi va navbatdagi buyruq 7-katakdan
+	o'qiladi — u yerda esa dastur yo'q. Xato birinchi qadamda emas, keyinroq portlaydi.
+</Sinov>
+
+<Sinov raqam={2} savol="Nega YUKLA buyrug'ida ham natija A ga ALU orqali boradi? To'g'ridan-to'g'ri operandni ulasa bo'lmaydimi?">
+	Bo'ladi, lekin unda A registrga IKKITA manba kerak bo'ladi (ALU va operand) va
+	ularni tanlovchi qo'shimcha sxema. ALU ga "o'tkaz" amalini qo'shish arzonroq:
+	bitta yo'l, bitta ulanish. Muhandislikda kam yo'l — kam xato.
+</Sinov>
+
+<Sinov raqam={3} savol="Bizning sxemada SAKRA buyrug'ini bajarib bo'lmaydi. Qaysi ulanish to'sqinlik qiladi va nima o'zgarishi kerak?">
+	PC yangilanishi qat'iy PC+1 ga ulangan. SAKRA uchun PC ga operand ham yozila olishi
+	kerak — demak PC kirishiga tanlovchi (multipleksor) qo'yish kerak: oddiy buyruqda
+	PC+1, sakrashda operand.
+</Sinov>
+
+<Sinov raqam={4} savol="3-testda (YUKLA 9, AYIR 4, QOSH 1) ALU 2-kirishiga OPERAND o'rniga PC ulangan bo'lsa, natija qancha chiqadi?">
+	Har qadamda operand o'rniga joriy PC qiymati ishlatiladi. YUKLA: A = PC = 0.
+	AYIR: A = 0 − 1 = −1. QOSH: A = −1 + 2 = 1. Kutilgan 6 o'rniga 1 — test yiqiladi.
+	Sxema "buzilmadi", shunchaki boshqa hisob qildi.
+</Sinov>
+
+<Sinov raqam={5} savol="Testlar uchalasi ham o'tsa, bu sxema mutlaqo to'g'ri degani emasmi? Qanday holat testdan qochib qutulishi mumkin?">
+	Test faqat o'zi tekshirgan yo'lni kafolatlaydi. Masalan, bizning testlar A ning
+	manfiy oraliq qiymatini faqat bitta yo'ldan o'tkazadi, SAKRA esa umuman yo'q.
+	Shuning uchun haqiqiy protsessorlar minglab test bilan sinaladi — va baribir
+	Pentium xatosi kabi holatlar o'tib ketgan.
+</Sinov>
+
+<Amaliyot daqiqa={60} daraja="qiyin">
+	**Asosiy qism.** [nandgame.com](https://nandgame.com) da davom etib, imkon qadar
+	yuqoriga ko'tariling — maqsad Arithmetic va Memory bo'limlarini tugatib, Processor
+	bosqichiga yetish. Shoshilmang: har daraja shu blokda o'tgan bitta darsingiz.
+
+	**Yozma qism.** "Mening protsessorim qanday ishlaydi" nomli bir betlik tushuntirish
+	yozing. Unda kamida: to'rt blok nomi, olish–dekodlash–bajarish sikli va bitta buyruq
+	misolida qiymatlarning to'liq yo'li bo'lsin. Rasm chizish — katta plyus.
+
+	Matnni sinfdoshingizga o'qitib ko'ring: u tushunmagan joyni qayta yozing. Tushuntira
+	olmagan narsangizni hali o'zingiz ham tushunmagansiz.
+
+	Topshiriladigan natija: nandgame'dagi progress skrinshoti + bir betlik tushuntirish.
+</Amaliyot>
+
+<DarsTugadi dars={11} blok={3} />

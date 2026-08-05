@@ -1,0 +1,253 @@
+---
+/**
+ * UchDaraja — 12-dars simulyatori.
+ *
+ * Bitta dastur uch darajada yonma-yon: yuqori til → assembler → bitlar.
+ * Istalgan ustundagi qatorni bossangiz, unga mos qatorlar qolgan ikki
+ * ustunda ham yonadi. Yuqori tilning BITTA qatori assemblerda BIR NECHTA
+ * buyruqqa aylanishi ko'zga ko'rinadi.
+ *
+ * Mashina kodi 8 bit: yuqori 4 bit — opkod, pastki 4 bit — operand
+ * (10-darsdagi Mini assembler bilan bir xil buyruqlar).
+ *
+ * Yashirin marvarid: TOXTA (0000 0000) va SON 0 (0000 0000) bitlari
+ * BIR XIL — bit ma'nosi kontekstga bog'liqligini o'quvchi o'zi payqaydi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+/** guruh — qaysi yuqori til qatoriga tegishli */
+const YUQORI = [
+	{ guruh: 0, kod: 'a = 5' },
+	{ guruh: 1, kod: 'b = 3' },
+	{ guruh: 2, kod: 'yigindi = a + b' },
+	{ guruh: 3, kod: 'chiqar(yigindi)' },
+];
+
+const ASSEMBLER = [
+	{ guruh: 2, katak: 0, kod: 'YUKLA 5' },
+	{ guruh: 2, katak: 1, kod: 'QOSH 6' },
+	{ guruh: 2, katak: 2, kod: 'SAQLA 7' },
+	{ guruh: 3, katak: 3, kod: 'CHIQAR' },
+	{ guruh: 3, katak: 4, kod: 'TOXTA' },
+	{ guruh: 0, katak: 5, kod: 'SON 5' },
+	{ guruh: 1, katak: 6, kod: 'SON 3' },
+	{ guruh: 2, katak: 7, kod: 'SON 0' },
+];
+
+/** opkod (4 bit) + operand (4 bit) */
+const BITLAR = [
+	{ guruh: 2, bit: '0001 0101' },
+	{ guruh: 2, bit: '0011 0110' },
+	{ guruh: 2, bit: '0010 0111' },
+	{ guruh: 3, bit: '0111 0000' },
+	{ guruh: 3, bit: '0000 0000' },
+	{ guruh: 0, bit: '0000 0101' },
+	{ guruh: 1, bit: '0000 0011' },
+	{ guruh: 2, bit: '0000 0000' },
+];
+
+---
+
+<Simulyator
+	sarlavha="Abstraksiya minorasi: uch daraja"
+	korsatma="Istalgan qatorni bosing — unga mos qatorlar qolgan ikki darajada yonadi."
+	blok={3}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda bitta dastur uch darajada yonma-yon turadi: yuqori til (4 qator),
+			assembler (8 buyruq) va mashina kodi (8 baytlik bitlar). Yuqori tilning bitta
+			qatori assemblerda bir nechta buyruqqa aylanadi.
+		</p>
+		<p>
+			JavaScript'siz sinash: yigindi = a + b qatorini qo'lda assemblerga o'giring —
+			nechta buyruq chiqdi? Keyin har buyruqni 10-darsdagi jadval bo'yicha songa
+			aylantiring.
+		</p>
+	</Fragment>
+
+	<div class="ud not-content">
+		<div class="ustunlar">
+			<div class="ustun">
+				<span class="ustun-nom">Yuqori til</span>
+				{
+					YUQORI.map((q, i) => (
+						<button type="button" class="qator" data-guruh={q.guruh} data-yuqori={i}>
+							{q.kod}
+						</button>
+					))
+				}
+			</div>
+
+			<div class="ustun">
+				<span class="ustun-nom">Assembler</span>
+				{
+					ASSEMBLER.map((q) => (
+						<button type="button" class="qator" data-guruh={q.guruh}>
+							<span class="katak-raqam">{q.katak}</span>
+							{q.kod}
+						</button>
+					))
+				}
+			</div>
+
+			<div class="ustun">
+				<span class="ustun-nom">Bitlar</span>
+				{
+					BITLAR.map((q) => (
+						<button type="button" class="qator bit-qator" data-guruh={q.guruh}>
+							{q.bit}
+						</button>
+					))
+				}
+			</div>
+		</div>
+
+		<p class="izoh" role="status" aria-live="polite">
+			Yuqori tildagi to'rt qatorning har birini bosib chiqing.
+		</p>
+
+		<p class="kuzatuv" data-kuzatuv></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.ud');
+		if (!qutu) return;
+
+		const izohEl = qutu.querySelector<HTMLElement>('.izoh')!;
+		const kuzatuvEl = qutu.querySelector<HTMLElement>('[data-kuzatuv]')!;
+		const qatorlar = [...qutu.querySelectorAll<HTMLButtonElement>('.qator')];
+		const korilgan = new Set<number>();
+
+		const IZOHLAR = [
+			"a = 5 — kompilyator «a» uchun xotiradan 5-katakni ajratdi va unga 5 sonini joyladi.",
+			"b = 3 — «b» uchun 6-katak ajratildi. O'zgaruvchi nomi mashinada yo'q, faqat manzil bor.",
+			"yigindi = a + b — BITTA qator UCHTA buyruqqa aylandi (yukla, qo'sh, saqla) va natija uchun 7-katak ajratildi.",
+			"chiqar(yigindi) — natija chiqariladi va dastur to'xtaydi.",
+		];
+
+		function tanla(guruh: number) {
+			for (const q of qatorlar) {
+				q.dataset.faol = Number(q.dataset.guruh) === guruh ? 'ha' : 'yoq';
+			}
+			izohEl.textContent = IZOHLAR[guruh]!;
+
+			korilgan.add(guruh);
+			if (korilgan.size === IZOHLAR.length) {
+				amalBelgila('uch-daraja');
+				kuzatuvEl.textContent =
+					"To'rttala qatorni ko'rdingiz. E'tibor bering: TOXTA va SON 0 bitlari bir xil (0000 0000) — bitning ma'nosi qayerda turganiga bog'liq!";
+			}
+		}
+
+		for (const q of qatorlar) {
+			q.addEventListener('click', () => tanla(Number(q.dataset.guruh)));
+		}
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			korilgan.clear();
+			kuzatuvEl.textContent = '';
+			izohEl.textContent = "Yuqori tildagi to'rt qatorning har birini bosib chiqing.";
+			for (const q of qatorlar) q.dataset.faol = 'yoq';
+		});
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.ustunlar {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.7rem;
+	}
+
+	/* Telefonda uch ustun sig'maydi — ustma-ust tushadi */
+	@media (max-width: 560px) {
+		.ustunlar {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.ustun {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+
+	.ustun-nom {
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--sl-color-gray-3);
+		margin-bottom: 0.2rem;
+	}
+
+	.qator {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin: 0;
+		padding: 0.35rem 0.5rem;
+		border: 1px solid var(--sl-color-gray-6);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-2);
+		font-family: var(--sl-font-mono);
+		font-size: 0.8rem;
+		text-align: left;
+		cursor: pointer;
+	}
+
+	.qator:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.qator[data-faol='ha'] {
+		border-color: var(--blok-3);
+		background: var(--blok-3-fon);
+		color: var(--blok-3);
+		font-weight: 700;
+	}
+
+	.katak-raqam {
+		min-width: 1.1rem;
+		font-size: 0.65rem;
+		color: var(--sl-color-gray-4);
+	}
+
+	.qator[data-faol='ha'] .katak-raqam {
+		color: var(--blok-3);
+	}
+
+	.bit-qator {
+		letter-spacing: 0.06em;
+	}
+
+	.izoh {
+		margin: 1rem 0 0 0;
+		min-height: 3.9em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	.kuzatuv {
+		margin: 0.4rem 0 0 0;
+		min-height: 1.4em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		font-weight: 600;
+		color: var(--blok-1);
+	}
+</style>

@@ -1,0 +1,470 @@
+---
+/**
+ * CPUYigish — 11-dars (CAPSTONE) simulyatori. Modulning cho'qqisi.
+ *
+ * O'quvchi protsessor ichidagi BESH ulanishni to'g'ri tanlashi kerak:
+ * xotira manzili, ALU ning ikki kirishi, A registr kirishi va PC yangilanishi.
+ * "Sinov" bosilganda uch mikro-dastur HAQIQATAN ijro etiladi — noto'g'ri
+ * ulangan sim noto'g'ri qiymat oqizadi va test tabiiy ravishda yiqiladi.
+ * Ya'ni bu viktorina emas: sxema qanday ulangan bo'lsa, shunday ishlaydi.
+ *
+ * Ulash usuli NANDQurilma bilan bir xil: select ro'yxatlari (mobil va
+ * klaviatura uchun), sxema tanlovga qarab o'zi chiziladi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+/** Har ulanish: nishon nuqta + variantlar. Birinchi variant ataylab
+ *  to'g'risi EMAS — taxmin qilib bosish ishlamasin. */
+const ULANISHLAR = [
+	{ id: 'manzil', nom: 'Xotira manzili', variantlar: ['A', 'PC', 'ALU'] },
+	{ id: 'alu1', nom: 'ALU 1-kirishi', variantlar: ['PC', 'OPERAND', 'A'] },
+	{ id: 'alu2', nom: 'ALU 2-kirishi', variantlar: ['A', 'OPERAND', 'PC'] },
+	{ id: 'aKirish', nom: 'A registr kirishi', variantlar: ['OPERAND', 'ALU', 'PC'] },
+	{ id: 'pcKirish', nom: 'PC yangilanishi', variantlar: ['ALU', 'A', 'PC+1'] },
+];
+
+const TESTLAR = [
+	{ nom: '1-test', dastur: 'YUKLA 7', kutilganA: 7 },
+	{ nom: '2-test', dastur: 'YUKLA 5, QOSH 3', kutilganA: 8 },
+	{ nom: '3-test', dastur: 'YUKLA 9, AYIR 4, QOSH 1', kutilganA: 6 },
+];
+---
+
+<Simulyator
+	sarlavha="Protsessor yig'ish"
+	korsatma="Besh ulanishning har biriga to'g'ri manbani tanlang, so'ng sinovni ishga tushiring."
+	blok={3}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda protsessorning besh ichki ulanishi tanlanadi: xotira manzili
+			qayerdan olinadi, ALU kirishlariga nima boradi, A registrga va PC ga nima
+			yoziladi. Uch sinov dasturi sxemani haqiqatan ijro etib tekshiradi.
+		</p>
+		<p>
+			JavaScript'siz sinash: daftarga PC, xotira, dekoder, ALU va A registrni chizib,
+			YUKLA 5 → QOSH 3 dasturida har qadamda qaysi qiymat qaysi sim orqali oqishini
+			qo'lda kuzating.
+		</p>
+	</Fragment>
+
+	<div class="cy not-content">
+		<svg viewBox="0 0 360 240" class="sxema" role="img" aria-label="Protsessor ichki sxemasi">
+			<g class="simlar">
+				{ULANISHLAR.map((u) => <path class="sim" data-sim={u.id} d="" />)}
+				{/* Doimiy simlar: xotira→dekoder va PC→+1 */}
+				<path class="sim sim-doimiy" d="M232,48 H262"></path>
+				<path class="sim sim-doimiy" d="M52,52 V72"></path>
+				{/* Dekoder → operand chiqish nuqtasi */}
+				<path class="sim sim-doimiy" d="M304,68 V84"></path>
+			</g>
+
+			<rect x="20" y="20" width="64" height="32" rx="5" class="quti" data-quti="pc"></rect>
+			<text x="52" y="40" class="quti-nom">PC</text>
+
+			<rect x="20" y="72" width="64" height="24" rx="5" class="quti" data-quti="pc1"></rect>
+			<text x="52" y="88" class="quti-nom">+1</text>
+
+			<rect x="140" y="20" width="92" height="56" rx="5" class="quti" data-quti="xotira"></rect>
+			<text x="186" y="44" class="quti-nom">XOTIRA</text>
+			<text x="186" y="60" class="quti-izoh">dastur</text>
+
+			<rect x="262" y="28" width="84" height="40" rx="5" class="quti" data-quti="dekoder"></rect>
+			<text x="304" y="46" class="quti-nom">DEKODER</text>
+			<text x="304" y="60" class="quti-izoh">operand</text>
+
+			<rect x="20" y="150" width="64" height="32" rx="5" class="quti" data-quti="a"></rect>
+			<text x="52" y="170" class="quti-nom">A reg</text>
+
+			<rect x="150" y="150" width="92" height="56" rx="5" class="quti" data-quti="alu"></rect>
+			<text x="196" y="174" class="quti-nom">ALU</text>
+			<text x="196" y="190" class="quti-izoh">+ / − / o'tkaz</text>
+		</svg>
+
+		<div class="ulanish-royxat">
+			{
+				ULANISHLAR.map((u) => (
+					<div class="qator">
+						<label>
+							<span class="qator-nom">{u.nom}</span>
+							<select class="ulanish" data-ulanish={u.id}>
+								<option value="">—</option>
+								{u.variantlar.map((v) => (
+									<option value={v}>{v}</option>
+								))}
+							</select>
+						</label>
+					</div>
+				))
+			}
+		</div>
+
+		<div class="test-qism">
+			<button type="button" class="sim-tugma sinov">Sinovni ishga tushirish</button>
+			<ul class="testlar">
+				{
+					TESTLAR.map((t, i) => (
+						<li data-test={i}>
+							<span class="test-nom">{t.nom}:</span>
+							<code class="test-dastur">{t.dastur}</code>
+							<span class="test-kutilgan">kutilgan A = {t.kutilganA}</span>
+							<span class="test-natija" data-natija={i} />
+						</li>
+					))
+				}
+			</ul>
+		</div>
+
+		<p class="hukm" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="maslahat">Maslahat</button>
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	type Ulanish = 'manzil' | 'alu1' | 'alu2' | 'aKirish' | 'pcKirish';
+	type Buyruq = { op: 'YUKLA' | 'QOSH' | 'AYIR'; operand: number };
+
+	const TOGRI: Record<Ulanish, string> = {
+		manzil: 'PC',
+		alu1: 'A',
+		alu2: 'OPERAND',
+		aKirish: 'ALU',
+		pcKirish: 'PC+1',
+	};
+
+	const MASLAHATLAR: [Ulanish, string][] = [
+		['manzil', "Navbatdagi buyruq qayerda turganini KIM biladi? Dastur hisoblagichi — PC."],
+		['alu1', "QOSH amali eski qiymat USTIGA qo'shadi. Eski qiymat qaysi registrda?"],
+		['alu2', "Buyruqdagi son (masalan, QOSH 3 dagi 3) dekoderdan OPERAND bo'lib chiqadi."],
+		['aKirish', 'Hisob natijasini kim chiqaradi? A registrga o‘sha blokning chiqishi yozilishi kerak.'],
+		['pcKirish', "Har buyruqdan keyin navbatdagisiga o'tish kerak — PC bittaga oshadi."],
+	];
+
+	const TESTLAR: { dastur: Buyruq[]; kutilganA: number }[] = [
+		{ dastur: [{ op: 'YUKLA', operand: 7 }], kutilganA: 7 },
+		{
+			dastur: [
+				{ op: 'YUKLA', operand: 5 },
+				{ op: 'QOSH', operand: 3 },
+			],
+			kutilganA: 8,
+		},
+		{
+			dastur: [
+				{ op: 'YUKLA', operand: 9 },
+				{ op: 'AYIR', operand: 4 },
+				{ op: 'QOSH', operand: 1 },
+			],
+			kutilganA: 6,
+		},
+	];
+
+	/** Manba nuqtalari (sxemadagi chiqishlar) */
+	const MANBA: Record<string, [number, number]> = {
+		PC: [84, 36],
+		'PC+1': [84, 84],
+		A: [84, 166],
+		ALU: [242, 178],
+		OPERAND: [304, 84],
+	};
+
+	/** Nishon nuqtalari (har ulanish qayerga kiradi) */
+	const NISHON: Record<Ulanish, [number, number]> = {
+		manzil: [140, 36],
+		alu1: [150, 164],
+		alu2: [150, 192],
+		aKirish: [52, 182],
+		pcKirish: [52, 20],
+	};
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.cy');
+		if (!qutu) return;
+
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+		const selects = [...qutu.querySelectorAll<HTMLSelectElement>('.ulanish')];
+		let yechildi = false;
+
+		const tanlov = (id: Ulanish) =>
+			selects.find((s) => s.dataset.ulanish === id)!.value;
+
+		/** Sxemadagi simlarni tanlovga qarab chizish. Har ulanish uchun
+		 *  alohida yo'lak — simlar iloji boricha kesishmasin. */
+		function sxemaChiz() {
+			for (const s of selects) {
+				const id = s.dataset.ulanish as Ulanish;
+				const yol = qutu.querySelector<SVGPathElement>(`.sim[data-sim="${id}"]`)!;
+				if (!s.value) {
+					yol.setAttribute('d', '');
+					continue;
+				}
+				const [mx, my] = MANBA[s.value]!;
+				const [nx, ny] = NISHON[id];
+				let d: string;
+				if (id === 'manzil') d = `M${mx},${my} H112 V${ny} H${nx}`;
+				else if (id === 'alu1') d = `M${mx},${my} H120 V${ny} H${nx}`;
+				else if (id === 'alu2') d = `M${mx},${my} H130 V${ny} H${nx}`;
+				// aKirish: pastki yo'lak orqali chapga, so'ng A ning tepasiga
+				else if (id === 'aKirish') d = `M${mx},${my} V228 H${nx} V${ny}`;
+				// pcKirish: o'ng va tepa chekka bo'ylab aylanib PC ga qaytadi
+				else d = `M${mx},${my} H352 V8 H${nx} V${ny}`;
+				yol.setAttribute('d', d);
+			}
+		}
+
+		/** Bitta buyruqni JORIY ulanishlar bo'yicha ijro etadi — sxema qanday
+		 *  ulangan bo'lsa, shunday ishlaydi. */
+		function qadam(
+			dastur: Buyruq[],
+			holat: { pc: number; a: number; alu: number }
+		): { xato?: string } {
+			const qiymat = (nom: string, operand: number): number =>
+				nom === 'PC'
+					? holat.pc
+					: nom === 'PC+1'
+						? holat.pc + 1
+						: nom === 'A'
+							? holat.a
+							: nom === 'ALU'
+								? holat.alu
+								: operand; // OPERAND
+
+			const manzil = qiymat(tanlov('manzil'), 0);
+			const buyruq = dastur[manzil];
+			if (!buyruq) return { xato: `xotiraning ${manzil}-katagida buyruq yo'q` };
+
+			const operand = buyruq.operand;
+			const k1 = qiymat(tanlov('alu1'), operand);
+			const k2 = qiymat(tanlov('alu2'), operand);
+			holat.alu =
+				buyruq.op === 'YUKLA' ? k2 : buyruq.op === 'QOSH' ? k1 + k2 : k1 - k2;
+
+			holat.a = qiymat(tanlov('aKirish'), operand);
+			holat.pc = qiymat(tanlov('pcKirish'), operand);
+			return {};
+		}
+
+		function sinovYurgiz() {
+			if (selects.some((s) => !s.value)) {
+				hukmEl.textContent = "Avval beshala ulanishni ham tanlang — sxemada bo'sh sim qolmasin.";
+				delete qutu.dataset.holat;
+				return;
+			}
+
+			let hammasi = true;
+			TESTLAR.forEach((t, i) => {
+				const holat = { pc: 0, a: 0, alu: 0 };
+				let xato: string | undefined;
+				for (let q = 0; q < t.dastur.length && !xato; q++) {
+					xato = qadam(t.dastur, holat).xato;
+				}
+
+				const el = qutu.querySelector<HTMLElement>(`[data-natija="${i}"]`)!;
+				const otdi = !xato && holat.a === t.kutilganA && holat.pc === t.dastur.length;
+				el.dataset.holat = otdi ? 'togri' : 'xato';
+				el.textContent = otdi
+					? `chiqdi A = ${holat.a} — o'tdi`
+					: xato
+						? `xato: ${xato}`
+						: `chiqdi A = ${holat.a} — yiqildi`;
+				if (!otdi) hammasi = false;
+			});
+
+			if (hammasi) {
+				qutu.dataset.holat = 'togri';
+				yechildi = true;
+				amalBelgila('cpu-yigish');
+				hukmEl.textContent =
+					"Uchala test o'tdi! Siz hozir ishlaydigan protsessor yig'dingiz — bu blokda o'rgangan hamma narsa mana shu besh simda birlashdi.";
+			} else {
+				qutu.dataset.holat = 'xato';
+				hukmEl.textContent =
+					"Ba'zi testlar yiqildi. Qiymat qaysi qadamda buzilganini o'ylang: dastur noto'g'ri katakdan o'qilyaptimi, ALU ga noto'g'ri qiymat boryaptimi?";
+			}
+		}
+
+		function maslahatBer() {
+			for (const [id, matn] of MASLAHATLAR) {
+				if (tanlov(id) !== TOGRI[id]) {
+					hukmEl.textContent = matn;
+					delete qutu.dataset.holat;
+					return;
+				}
+			}
+			hukmEl.textContent = "Hamma ulanish to'g'ri ko'rinadi — sinovni ishga tushiring!";
+		}
+
+		function tozala() {
+			for (const s of selects) s.value = '';
+			for (const el of qutu.querySelectorAll<HTMLElement>('.test-natija')) {
+				el.textContent = '';
+				delete el.dataset.holat;
+			}
+			delete qutu.dataset.holat;
+			hukmEl.textContent = '';
+			sxemaChiz();
+		}
+
+		for (const s of selects) s.addEventListener('change', sxemaChiz);
+		qutu.querySelector<HTMLButtonElement>('.sinov')!.addEventListener('click', sinovYurgiz);
+		qobiq.querySelector<HTMLButtonElement>('.maslahat')!.addEventListener('click', maslahatBer);
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', tozala);
+
+		sxemaChiz();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.sxema {
+		display: block;
+		width: 100%;
+		max-width: 26rem;
+		height: auto;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+	}
+
+	.sxema .sim {
+		fill: none;
+		stroke: var(--blok-3);
+		stroke-width: 2;
+	}
+
+	.sxema .sim-doimiy {
+		stroke: var(--sl-color-gray-4);
+		stroke-width: 1.5;
+	}
+
+	.sxema .quti {
+		fill: var(--sl-color-gray-7);
+		stroke: var(--sl-color-gray-5);
+	}
+
+	.sxema .quti-nom {
+		fill: var(--sl-color-gray-2);
+		font-family: var(--sl-font-mono);
+		font-size: 12px;
+		font-weight: 700;
+		text-anchor: middle;
+	}
+
+	.sxema .quti-izoh {
+		fill: var(--sl-color-gray-4);
+		font-family: var(--sl-font-mono);
+		font-size: 9px;
+		text-anchor: middle;
+	}
+
+	.ulanish-royxat {
+		display: flex;
+		flex-direction: column;
+		gap: 0.45rem;
+		margin-top: 1rem;
+	}
+
+	.qator label {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.qator-nom {
+		min-width: 9.5rem;
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	select {
+		padding: 0.25rem 0.4rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 4px;
+		background: var(--sl-color-black);
+		color: var(--sl-color-white);
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		min-height: 2rem;
+	}
+
+	select:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 1px;
+	}
+
+	.test-qism {
+		margin-top: 1.2rem;
+	}
+
+	.testlar {
+		margin: 0.8rem 0 0 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.testlar li {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.4rem;
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.test-nom {
+		font-weight: 600;
+		color: var(--sl-color-gray-1);
+	}
+
+	.test-dastur {
+		background: transparent;
+		border: 1px solid var(--sl-color-gray-6);
+		border-radius: 4px;
+		padding: 0 0.3rem;
+		font-size: 0.8rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.test-kutilgan {
+		color: var(--sl-color-gray-3);
+		font-size: 0.8rem;
+	}
+
+	.test-natija[data-holat='togri'] {
+		color: var(--blok-1);
+		font-weight: 600;
+	}
+
+	.test-natija[data-holat='xato'] {
+		color: var(--blok-5);
+		font-weight: 600;
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	.cy[data-holat='togri'] .hukm {
+		font-weight: 600;
+		color: var(--blok-1);
+	}
+
+	.cy[data-holat='xato'] .hukm {
+		color: var(--blok-5);
+	}
+</style>

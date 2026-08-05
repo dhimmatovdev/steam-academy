@@ -1,0 +1,146 @@
+---
+title: '10-dars: Mashina kodi va assembler'
+description: "Buyruq ham shunchaki son. O'zbekcha mnemonikali mini assemblerda birinchi dasturlar."
+sidebar:
+  label: '10-dars'
+  order: 10
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import MiniAssembler from '../../../components/sim/MiniAssembler.astro';
+
+<Bloknoma blok={3} />
+
+## Nega bu muhim
+
+O'tgan darsda protsessor buyruqlarni xotiradan olib bajarishini ko'rdingiz. Lekin buyruqning o'zi qanday ko'rinishda? Javob sizni ajablantirmasligi kerak: **son ko'rinishida**. Boshqa hech narsa yo'q — protsessor umrida son'dan boshqa narsa ko'rmagan.
+
+Bu darsda siz protsessorning o'z tilida — mashina kodiga birma-bir o'giriladigan assembler tilida — dastur yozasiz. Shundan keyin "kod" degan so'z siz uchun sirli tuman emas, aniq mexanizm bo'ladi.
+
+<Maqsad>
+- buyruq songa qanday kodlanishini (opkod + operand) tushuntira olasiz
+- assembler nima va u mashina kodidan qanday farq qilishini bilasiz
+- mini assemblerda o'zingiz dastur yozib, qadam-baqadam ijro eta olasiz
+- shartli sakrash dasturga qanday "qaror" berishini ko'rasiz
+</Maqsad>
+
+## Nazariya
+
+### Buyruqning anatomiyasi
+
+Bizning o'quv mashinamizda har buyruq uch xonali son: birinchi xona — **nima qilish** (opkod), qolgan ikkitasi — **qaysi katak bilan** (operand). Masalan `104` degani: opkod 1 (yukla), operand 04 — "4-katakdagi sonni A registrga yukla".
+
+<Atama soz="mashina kodi" eng="machine code">
+	Protsessor to'g'ridan-to'g'ri bajaradigan sonlar ketma-ketligi. Har son —
+	opkod va operanddan tuzilgan bitta buyruq.
+</Atama>
+
+Haqiqiy protsessorlarda buyruqlar o'nlik emas, ikkilik va ancha murakkab — lekin tuzilishi xuddi shu: amal + manzillar.
+
+### Assembler: sonlarga taxallus
+
+`104` ni eslab qolish qiyin, `YUKLA 4` ni oson. Assembler — mashina kodining **odam o'qiy oladigan yozuvi**: har buyruqqa qisqa nom (mnemonika) berilgan, xolos.
+
+<Atama soz="assembler" eng="assembly language">
+	Mashina kodi bilan birma-bir mos keluvchi past darajali til. Har mnemonika
+	aynan bitta mashina buyrug'iga aylanadi.
+</Atama>
+
+Bizning mashinamiz buyruqlari:
+
+| Mnemonika | Kod | Ma'nosi |
+|-----------|-----|---------|
+| `YUKLA n` | 1nn | A = n-katak |
+| `SAQLA n` | 2nn | n-katak = A |
+| `QOSH n` | 3nn | A = A + n-katak |
+| `AYIR n` | 4nn | A = A − n-katak |
+| `SAKRA n` | 5nn | PC = n |
+| `SAKRA0 n` | 6nn | A = 0 bo'lsa PC = n |
+| `CHIQAR` | 700 | A ni chiqishga yozish |
+| `TOXTA` | 000 | dasturni to'xtatish |
+| `SON n` | nnn | ma'lumot katagi |
+
+### Sakrash: dasturning burilish nuqtasi
+
+`SAKRA` va `SAKRA0` boshqalardan tubdan farq qiladi: ular hisoblamaydi, **PC ni o'zgartiradi**. PC o'zgardi — dastur boshqa joydan davom etadi.
+
+`SAKRA0` esa shartli: A nol bo'lsagina sakraydi. Mana shu bitta buyruqda dasturlashning butun "agar-unda" olami yotadi: takrorlash, tanlash, qaror — hammasi shartli sakrashdan quriladi.
+
+<Muhim turi="gap">
+	Yuqori darajali tillardagi `if` ham, `while` ham — kompilyatordan keyin oddiy
+	shartli sakrashlarga aylanadi. Sirli hech narsa yo'q: shart tekshiriladi, PC yo
+	o'zgaradi, yo o'zgarmaydi.
+</Muhim>
+
+### Dastur o'zini o'zgartira oladi
+
+E'tibor bering: `SAQLA` istalgan katakka yozadi — jumladan **buyruq turgan katakka ham**. Dastur o'z buyrug'ining ustiga yangi son yozsa, keyingi safar o'sha yerdan boshqa buyruq o'qiladi.
+
+Bu 9-darsdagi "dastur ham ma'lumot" g'oyasining eng keskin ko'rinishi. Zamonaviy tizimlar buni xavfsizlik uchun cheklaydi, lekin imkoniyatning o'zi fon Neyman sxemasiga tabiiy qurilgan.
+
+## Sinab ko'r
+
+Simulyatorda tayyor dastur turibdi: ikki sonni qo'shib chiqaradi. Avval `Yig'ish` bosing va xotira jadvaliga qarang — har qator uch xonali songa aylandi. Keyin `Qadam` bilan ijroni kuzating: PC qaysi katakda, A da nima.
+
+<MiniAssembler />
+
+Endi o'zingiz yozing: 4 va 5-kataklardagi sonlarning **ayirmasini** chiqaradigan qilib o'zgartirib ko'ring. Keyin qiyinrog'i: `SAKRA0` yordamida biror shart qo'shing.
+
+## Xulosa
+
+- Buyruq — shunchaki son: **opkod** (nima qilish) + **operand** (qaysi katak)
+- **Assembler** — mashina kodining odam o'qiydigan yozuvi, birma-bir mos keladi
+- **SAKRA / SAKRA0** PC ni o'zgartiradi — takrorlash va qaror shulardan quriladi
+- Dastur xotirada turgani uchun **o'z-o'zini ham o'zgartira oladi**
+- Yig'ish (assemble) — mnemonikalarni sonlarga o'girish jarayoni
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="345 soni buyruq sifatida o'qilsa nima qiladi?">
+	Opkod 3 — QOSH, operand 45... lekin bizning xotiramiz 16 katak (0–15), demak 45
+	manzil sifatida xato beradi. 305 bo'lganida: A ga 5-katakdagi sonni qo'shardi.
+	Buyruqni o'qishda avval opkod, keyin operand ajratiladi.
+</Sinov>
+
+<Sinov raqam={2} savol="YUKLA 7 bilan SON 7 ning farqi nimada? Ikkisi ham '7' bilan tugaydi-ku.">
+	YUKLA 7 — bajariladigan buyruq (kod 107): "7-katakdagi qiymatni A ga olib kel".
+	SON 7 — shunchaki ma'lumot katagi, qiymati 007. Biri harakat, ikkinchisi xomashyo.
+	Xotirada esa ikkisi ham oddiy son bo'lib turadi.
+</Sinov>
+
+<Sinov raqam={3} savol="SAKRA0 siz dasturda takrorlash (loop) qurish mumkinmi?">
+	SAKRA bilan cheksiz takrorlash quriladi — orqaga sakrayverasiz. Lekin TO'XTAYDIGAN
+	takrorlash uchun shart kerak: qachondir aylanishdan chiqish kerak-ku. SAKRA0 aynan
+	shu chiqish eshigi: sanagich nolga yetdi — aylanish tugadi.
+</Sinov>
+
+<Sinov raqam={4} savol="Quyidagi dastur nimani chiqaradi? YUKLA 4 / AYIR 5 / CHIQAR / TOXTA / SON 9 / SON 4">
+	4-katakda 9, 5-katakda 4 turadi. YUKLA 4 → A = 9. AYIR 5 → A = 9 − 4 = 5.
+	CHIQAR → chiqishga 5 yoziladi. Javob: 5.
+</Sinov>
+
+<Sinov raqam={5} savol="Nega dasturchilar bugungi kunda ham assemblerni butunlay 'unutmagan'?">
+	Yuqori darajali til qanchalik qulay bo'lmasin, protsessorda oxir-oqibat mashina kodi
+	ishlaydi. Tezlik juda muhim joylarda (o'yin dvigateli, drayver, kriptografiya) va
+	xatolarni chuqur qidirishda assembler darajasiga tushishga to'g'ri keladi.
+</Sinov>
+
+<Amaliyot daqiqa={40} daraja="qiyin">
+	Uchala dasturni mini assemblerda yozib ishlating. Har biri ishlagach, kodini va
+	chiqishini daftarga ko'chiring.
+
+	**1. Qo'shish.** 4 va 5-kataklardagi ikki sonni qo'shib chiqaring (tayyor misol —
+	faqat o'z sonlaringiz bilan).
+
+	**2. Kattasini topish.** Ikki sondan kattasini chiqaring. Yordam: ayirma va
+	`SAKRA0` dan foydalaning — teng bo'lsa istalganini chiqarsa bo'ladi. A manfiy
+	bo'lishi mumkinligini unutmang.
+
+	**3. Yig'indi 1..5.** 1 dan 5 gacha sonlar yig'indisini (15) takrorlash bilan
+	hisoblang: bitta katak — sanagich, bitta katak — yig'indi.
+
+	Topshiriladigan natija: uch dastur matni, har birining chiqishi va "eng qiyini
+	qaysi bo'ldi, nega?" savoliga ikki gap javob.
+</Amaliyot>
+
+<DarsTugadi dars={10} blok={3} />
