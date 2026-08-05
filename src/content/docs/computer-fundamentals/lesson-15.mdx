@@ -1,0 +1,138 @@
+---
+title: '15-dars: Operatsion tizim'
+description: "Bitta protsessorda yuz dastur qanday 'bir vaqtda' ishlaydi? Jarayonlar va rejalashtiruvchi."
+sidebar:
+  label: '15-dars'
+  order: 15
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import RejalashtiruvchiSimulyator from '../../../components/sim/RejalashtiruvchiSimulyator.astro';
+
+<Bloknoma blok={4} />
+
+## Nega bu muhim
+
+Hozir kompyuteringizda yuzdan ortiq dastur "ishlab turibdi": brauzer, musiqa, messenjer, antivirus... Protsessor yadrolari esa bir hovuch. Qanday qilib hammasi "bir vaqtda" yuradi?
+
+Javob: **hech qanday bir vaqtda emas**. Protsessor ular orasida shu qadar tez sakraydiki, sizga parallel tuyuladi — xuddi kinodagi 24 kadr harakatdek. Bu sehrni boshqaruvchi dastur — operatsion tizim, va bugun siz uning eng qiziq bo'limini o'zingiz boshqarasiz.
+
+<Maqsad>
+- operatsion tizim qanday vazifalarni bajarishini sanab bera olasiz
+- dastur bilan jarayonning farqini bilasiz
+- round-robin rejalashtirish va kvant tushunchasini amalda ko'rasiz
+- virtual xotira nima uchun kerakligini tushuntira olasiz
+</Maqsad>
+
+## Nazariya
+
+### OS: temir bilan dasturlar orasidagi hokim
+
+Shu paytgacha qurgan mashinamizda dastur apparatning to'la egasi edi. Lekin real kompyuterda dasturlar **ko'p**, apparat esa **bitta**. Kim protsessorni oladi? Kim xotiraning qaysi qismini ishlatadi? Ikkita dastur bir faylga yozsa-chi?
+
+Bu janjallarni hal qiluvchi hakam — **operatsion tizim**: Windows, Linux, Android, iOS. U apparatni birinchi bo'lib egallab, qolgan dasturlarga resurslarni **taqsimlab** beradi.
+
+<Atama soz="operatsion tizim" eng="operating system">
+	Apparat resurslarini (protsessor, xotira, disk, tarmoq) dasturlar o'rtasida
+	taqsimlovchi va ularni bir-biridan himoyalovchi asosiy dastur.
+</Atama>
+
+### Dastur va jarayon: retsept va ovqat
+
+Diskdagi dastur — shunchaki fayl, retsept kabi harakatsiz. Uni ishga tushirsangiz, OS unga xotira ajratadi, registrlar holatini yaratadi va navbatga qo'shadi. Mana shu **jonli nusxa** jarayon deyiladi.
+
+<Atama soz="jarayon" eng="process">
+	Ishga tushirilgan dasturning jonli nusxasi: o'z xotirasi, registrlar holati va
+	huquqlari bilan. Bitta dasturdan bir nechta jarayon ochilishi mumkin.
+</Atama>
+
+Brauzeringizning har varag'i alohida jarayon bo'lishi mumkin — biri qotib qolsa, qolganlari yashayveradi. "Task Manager"da ko'rganingiz ro'yxat — aynan jarayonlar.
+
+### Rejalashtiruvchi va kvant
+
+Protsessorni jarayonlarga taqsimlovchi OS bo'limi **rejalashtiruvchi** deyiladi. Eng sodda adolatli usul — **round-robin**: jarayonlar davra bo'lib turadi, har biriga kichik vaqt bo'lagi — **kvant** — beriladi. Kvant tugadi — navbat keyingisiga, tugatmagani davra oxiriga qaytadi.
+
+Kvantni tanlash — savdo: **kichik kvant** = hamma jarayon "jonli" seziladi, lekin almashishlar ko'payadi (almashish ham vaqt yeydi). **Katta kvant** = almashish kam, lekin navbat kutgan dastur "qotib qolgandek" tuyuladi.
+
+<Muhim turi="gap">
+	Har almashishda OS joriy jarayonning registrlarini (jumladan PC ni!) xotiraga
+	saqlab, keyingisinikini yuklaydi — 8-9-darslardagi registrlar shu yerda yana
+	sahnaga chiqadi. Jarayon buni sezmaydi ham: uyg'onganda hammasi joyida.
+</Muhim>
+
+### Virtual xotira: har jarayonga o'z olami
+
+Yana bir muammo: ikki jarayon bir xil 500-manzilga yozsa nima bo'ladi? Hech nima — chunki OS har jarayonga **o'z xayoliy manzillar olamini** beradi. Jarayon "500-katak" desa, apparat uni jismoniy xotiraning boshqa-boshqa joylariga o'giradi.
+
+<Atama soz="virtual xotira" eng="virtual memory">
+	Har jarayonga beriladigan xayoliy manzillar maydoni. OS va protsessor uni jismoniy
+	RAM'ga (kerak bo'lsa diskka ham) o'girib turadi.
+</Atama>
+
+Natijada jarayonlar bir-birining xotirasini ko'rolmaydi — xato ham, virus ham chegaradan o'ta olmaydi. Bu 13-darsdagi zinapoyaga qo'shilgan yana bir abstraksiya qavati.
+
+## Sinab ko'r
+
+To'rt jarayon, bitta protsessor. Kvantni tanlab, vaqtni taqsimlang — pastdagi chiziq protsessorning har birligi kimga ketganini ko'rsatadi. To'liq ijroni **ikki xil kvant** bilan o'tkazib, almashishlar sonini solishtiring.
+
+<RejalashtiruvchiSimulyator />
+
+## Xulosa
+
+- **OS** — resurs hakami: protsessor, xotira, disk va tarmoqni taqsimlaydi
+- **Jarayon** — ishga tushirilgan dasturning jonli nusxasi (retsept ≠ ovqat)
+- **Round-robin**: har jarayonga kvant; tugatmagani davra oxiriga
+- Kvant savdosi: kichik = sezgir lekin isrofli, katta = tejamli lekin "qotadi"
+- **Virtual xotira** har jarayonga o'z manzil olamini beradi — himoya shundan
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Dastur bilan jarayonning farqini o'z misolingiz bilan tushuntiring.">
+	Dastur — diskdagi harakatsiz fayl (retsept), jarayon — uning ishga tushgan jonli
+	nusxasi (pishayotgan ovqat). Masalan bitta brauzer dasturidan uchta oyna ochsangiz,
+	dastur bitta, jarayonlar bir nechta bo'ladi — har biri o'z xotirasi bilan.
+</Sinov>
+
+<Sinov raqam={2} savol="Simulyatorda kvant 1 va kvant 4 da almashishlar soni qanday farq qildi va bu nimani bildiradi?">
+	Kvant 1 da almashish deyarli har birlikda — jarayonlar "jonli", lekin OS ko'p vaqtni
+	almashishning o'ziga sarflaydi. Kvant 4 da almashish bir necha barobar kam, lekin
+	navbatdagi jarayon uzoqroq kutadi. Ideal kvant — shu ikki yomonlik orasidagi muvozanat.
+</Sinov>
+
+<Sinov raqam={3} savol="Kontekst almashishda OS aynan nimalarni saqlaydi va nega PC eng muhimi?">
+	Jarayonning barcha registrlarini: A (akkumulyator), bayroqlar va birinchi navbatda
+	PC ni. PC — "qayerda to'xtaganim". U saqlanmasa, jarayon uyg'onganda qayerdan davom
+	etishni bilmaydi va boshidan boshlashga majbur bo'lardi.
+</Sinov>
+
+<Sinov raqam={4} savol="Nega bitta dastur qotib qolsa, butun kompyuter qotib qolmaydi?">
+	Chunki protsessorni dastur emas, OS taqsimlaydi. Kvant tugashi bilan rejalashtiruvchi
+	protsessorni baribir tortib oladi — dastur "roziligini" so'ramaydi. Qadimgi OS'larda
+	buning teskarisi edi va bitta dastur butun tizimni osiltirardi.
+</Sinov>
+
+<Sinov raqam={5} savol="Virtual xotirasiz qanday xavf tug'ilardi?">
+	Har jarayon jismoniy xotiraning istalgan joyiga yoza olardi: xatoli dastur boshqa
+	dasturning (yoki OS'ning!) ma'lumotini buzardi, virus esa parollarni to'g'ridan-to'g'ri
+	o'qiy olardi. Virtual xotira har jarayonni o'z "hujrasiga" qamaydi.
+</Sinov>
+
+<Amaliyot daqiqa={30} daraja="o'rta">
+	Kompyuterda Task Manager (Windows: Ctrl+Shift+Esc) yoki Activity Monitor (Mac)
+	oching. Telefonda bo'lsa: Sozlamalar → Batareya → ilovalar sarfi ham bo'ladi.
+
+	**Birinchi qism.** Jarayonlar ro'yxatidan beshtасini tanlab jadval tuzing: nomi,
+	protsessor foizi, xotira sarfi. Ulardan nechtasini o'zingiz ochgansiz, nechtasi
+	"o'zi" ishlab turibdi?
+
+	**Ikkinchi qism.** Eng ko'p xotira yeyayotgan jarayonni toping. Nega aynan u?
+	(Maslahat: brauzer varaqlari alohida jarayonlar bo'lishini eslang.)
+
+	**Uchinchi qism.** Jami jarayonlar sonini yozing va bitta savolga javob bering:
+	protsessoringiz yadrolari soni undan necha barobar kam — va shunga qaramay hammasi
+	qanday "ishlayapti"?
+
+	Topshiriladigan natija: 5 qatorli jadval + ikki savolga javob.
+</Amaliyot>
+
+<DarsTugadi dars={15} blok={4} />

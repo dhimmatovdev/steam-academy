@@ -1,0 +1,135 @@
+---
+title: '16-dars: Terminal'
+description: "Matnli interfeys nega hali ham kuchli? Buyruqlar, yo'llar va pipe — 20 amaliy topshiriq bilan."
+sidebar:
+  label: '16-dars'
+  order: 16
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import TerminalMashq from '../../../components/sim/TerminalMashq.astro';
+
+<Bloknoma blok={4} />
+
+## Nega bu muhim
+
+Kino dagi "xakerlar" doim qora ekranga oq matn yozadi. Bu shunchaki kino emas: professional dasturchilar, server administratorlari va olimlar haqiqatan kunining katta qismini **terminalda** o'tkazadi. Nega, axir sichqoncha qulayroq-ku?
+
+Chunki terminal — **til**, tugmalar esa — menyu. Menyuda faqat oshpaz taklif qilganini tanlaysiz; tilda esa o'zingiz xohlagan gapni tuzasiz. Bu darsda o'sha tilning asoslarini o'rganasiz — 20 topshiriqli mashq bilan.
+
+<Maqsad>
+- terminal grafik interfeysdan nimasi bilan kuchli ekanini tushuntira olasiz
+- buyruq anatomiyasini bilasiz: nom, argument, bayroq
+- fayl daraxti bo'ylab yura olasiz: pwd, ls, cd va yo'llar
+- pipe yordamida buyruqlarni zanjirga ulay olasiz
+</Maqsad>
+
+## Nazariya
+
+### Terminal nega o'lmadi
+
+Grafik interfeys 40 yildan beri bor, terminal esa undan ham qari — lekin yo'qolgani yo'q. Sabablari jiddiy: **aniqlik** (buyruq — bir ma'noli, "o'sha tugmani bos" emas), **takrorlanuvchanlik** (buyruqni saqlab, yuz marta qayta ishlatish mumkin), **avtomatlashtirish** (buyruqlar ketma-ketligi — tayyor skript) va **masofa** (serverda grafik interfeys yo'q, terminal esa istalgan joydan ulanadi).
+
+<Atama soz="terminal" eng="terminal / command line">
+	Kompyuter bilan matn orqali muloqot interfeysi: siz buyruq yozasiz, tizim natija
+	bilan javob beradi.
+</Atama>
+
+### Buyruqning anatomiyasi
+
+Har buyruq gap kabi tuziladi: fe'l + to'ldiruvchi. `cat xat.txt` — "xat.txt ni o'qi". Birinchi so'z — **buyruq nomi**, qolganlari — **argumentlar**.
+
+Haqiqiy terminallarda **bayroqlar** ham bor — buyruq ishini o'zgartiruvchi qo'shimchalar: `ls -l` (batafsil ro'yxat). Bizning o'quv terminalimizda bayroqlar deyarli yo'q — asosiy g'oyaga e'tibor qarating.
+
+14-darsdagi **yo'l** shu yerda jonlanadi: `cd hujjatlar` — daraxt bo'ylab bir qadam pastga, `cd ..` — bir qadam yuqoriga, `pwd` — "hozir qayerdaman?".
+
+### Pipe: buyruqlar konveyeri
+
+Terminalning eng chiroyli g'oyasi — `|` belgisi (pipe, quvur): **bitta buyruqning chiqishi ikkinchisining kirishiga ulanadi**. `ls | wc` — "ro'yxatni chiqir, uni sanagichga uzat".
+
+<Atama soz="pipe" eng="pipe">
+	Buyruqlarni zanjirga ulovchi mexanizm: chapdagi buyruq chiqishi o'ngdagisiga
+	kirish bo'lib beriladi. Kichik asboblardan katta ish yig'iladi.
+</Atama>
+
+<Muhim turi="gap">
+	Bu falsafa Unix falsafasi deyiladi: har asbob **bitta ishni yaxshi** qilsin,
+	murakkab ish esa asboblarni ulab yasalsin. Tanish g'oya, to'g'rimi? NAND'dan
+	protsessor yiqqanimiz ham xuddi shu edi — kichik qismlardan katta tizim.
+</Muhim>
+
+### Ehtiyotkorlik darsi
+
+Terminal kuchli — va shafqatsiz: `rm` o'chirgan fayl **savatga tushmaydi**, so'roq ham ko'p hollarda bo'lmaydi. Buyruq nima qilishini bilmasangiz — avval o'qing, keyin bajaring.
+
+Bizning o'quv terminalimiz xavfsiz: fayl tizimi soxta, xohlagancha tajriba qiling. `Qayta boshlash` hammasini asliga qaytaradi.
+
+## Sinab ko'r
+
+20 topshiriq sizni kutmoqda: yo'l topishdan pipe'gacha. Topshiriq panelda yozilgan, yangi buyruqlar qavsda beriladi. Adashsangiz `yordam` yozing. Yigirmatasini ham bajarsangiz — **Terminal Ustasi** nishoni.
+
+<TerminalMashq />
+
+## Xulosa
+
+- Terminal — til: aniq, takrorlanuvchan, avtomatlashtiriladigan, masofadan ishlaydi
+- Buyruq = **nom + argumentlar** (+ haqiqiy tizimlarda bayroqlar)
+- Daraxtda yurish: `pwd` (qayerdaman), `ls` (nima bor), `cd` (ko'chish)
+- **Pipe** buyruqlarni konveyerga ulaydi — Unix falsafasi: kichik asbob, katta ish
+- Terminal so'roq bermaydi: buyruqni tushunmasdan bajarmang
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Terminalning grafik interfeysdan ustun keladigan uchta vaziyatini ayting.">
+	Birinchi: yuz faylni bir buyruq bilan qayta nomlash — sichqoncha bilan yuz marta
+	bosish o'rniga. Ikkinchi: uzoqdagi serverni boshqarish — u yerda grafik interfeys
+	yo'q. Uchinchi: ishni skriptga yozib avtomatlashtirish — menyu bosishlarni "saqlab"
+	bo'lmaydi, buyruqlarni bo'ladi.
+</Sinov>
+
+<Sinov raqam={2} savol="cd hujjatlar va cd .. buyruqlari daraxtda qaysi yo'nalishda yuradi?">
+	cd hujjatlar — pastga: joriy papka ichidagi "hujjatlar"ga kiradi. cd .. — yuqoriga:
+	ota papkaga qaytadi. Ikki nuqta ".." har doim "bir qavat tepa" degan maxsus nom.
+</Sinov>
+
+<Sinov raqam={3} savol="echo Salom > xat.txt bilan echo Salom ning farqi nimada?">
+	echo Salom natijani ekranga chiqaradi. > belgisi esa oqimni burib yuboradi: natija
+	ekran o'rniga xat.txt fayliga yoziladi (fayl bo'lmasa yaratiladi). Chiqishni
+	yo'naltirish — pipe'ning aka-ukasi: u ham oqimni boshqa joyga ulaydi.
+</Sinov>
+
+<Sinov raqam={4} savol="ls | wc zanjirida ma'lumot qanday oqadi va natija nimani bildiradi?">
+	ls papka tarkibini qatorlar ro'yxati qilib chiqaradi; pipe bu ro'yxatni ekranga
+	emas, wc ga uzatadi; wc qator va so'zlarni sanaydi. Natija — papkadagi narsalar
+	soni. Ikkala buyruq ham bir-biri haqida hech narsa bilmaydi — konveyer ularni ulaydi.
+</Sinov>
+
+<Sinov raqam={5} savol="Nega serverlarda deyarli har doim faqat terminal bo'ladi?">
+	Grafik interfeys resurs yeydi (xotira, protsessor) va masofadan sekin ishlaydi.
+	Server esa har baytini asosiy ishga berishi kerak. Terminal matn uzatadi — bu
+	tez, ishonchli va istalgan zaif internetda ham ishlaydi.
+</Sinov>
+
+<Amaliyot daqiqa={40} daraja="qiyin">
+	Endi haqiqiy terminalda! Windows'da PowerShell (Win tugmasi → "powershell"),
+	Mac/Linux'da Terminal oching.
+
+	**Birinchi qism.** Simulyatorda o'rgangan mashqni takrorlang: `pwd`, `ls`
+	(Windows'da ham ishlaydi), `cd` bilan hujjatlar papkasiga boring, `mkdir sinov`
+	bilan papka yarating, ichiga kirib `echo salom > xat.txt` yozing, `cat xat.txt`
+	(PowerShell'da ham ishlaydi) bilan o'qing.
+
+	**Ehtiyot bo'ling:** bu haqiqiy fayl tizimi. `rm` ni faqat o'zingiz yaratgan
+	sinov fayllarida ishlating.
+
+	**Ikkinchi qism.** Har bajargan buyrug'ingizni va natijasini daftarga yozing —
+	kamida 15 buyruq bo'lsin (takrorlashlar hisobga kiradi).
+
+	**Uchinchi qism.** Oxirida `sinov` papkasini ichidagi fayli bilan o'chirib,
+	iz qoldirmang.
+
+	Topshiriladigan natija: 15+ buyruqlik jurnal + "terminal menga qayerda asqotishi
+	mumkin?" savoliga bir paragraf javob.
+</Amaliyot>
+
+<DarsTugadi dars={16} blok={4} />

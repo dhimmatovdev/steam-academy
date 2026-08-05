@@ -1,0 +1,337 @@
+---
+/**
+ * MagicBaytKuzatuvchi — 14-dars simulyatori.
+ *
+ * O'quvchi istalgan faylni tanlaydi (yoki sudrab tashlaydi) — birinchi
+ * baytlari hex ko'rinishida chiqadi va imzo (magic bytes) bo'yicha
+ * HAQIQIY turi aniqlanadi. Kengaytma bilan solishtiriladi: rost yoki
+ * yolg'on gapiryaptimi?
+ *
+ * MAXFIYLIK: fayl faqat brauzerda o'qiladi, hech qayerga yuborilmaydi —
+ * bu interfeysda ham aniq yozilgan. Faqat birinchi 16 bayt o'qiladi.
+ */
+import Simulyator from '../Simulyator.astro';
+---
+
+<Simulyator
+	sarlavha="Magic bayt kuzatuvchi"
+	korsatma="Istalgan faylni tanlang — birinchi baytlari haqiqiy turini fosh qiladi."
+	blok={4}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyator faylning birinchi baytlarini (imzosini) o'qib, haqiqiy turini
+			aniqlaydi va kengaytma bilan solishtiradi. Masalan har PNG fayl 89 50 4E 47
+			baytlari bilan, har JPEG esa FF D8 FF bilan boshlanadi.
+		</p>
+		<p>
+			JavaScript'siz sinash: hexed.it saytida istalgan PNG va JPEG faylni ochib,
+			birinchi to'rt baytini solishtiring.
+		</p>
+	</Fragment>
+
+	<div class="mb not-content">
+		<label class="tanlash-maydon" data-tashlash>
+			<input type="file" class="fayl-kirish" />
+			<span class="tanlash-matn">
+				Fayl tanlang yoki shu yerga sudrab tashlang
+			</span>
+			<span class="maxfiylik">
+				Fayl kompyuteringizdan chiqmaydi: faqat birinchi 16 bayti brauzerda o'qiladi.
+			</span>
+		</label>
+
+		<div class="natija" hidden>
+			<p class="fayl-nomi" data-nomi></p>
+
+			<div class="hex-panel">
+				<span class="yorliq">Birinchi 16 bayt (hex)</span>
+				<code class="hex-qator" data-hex></code>
+			</div>
+
+			<dl class="tahlil">
+				<div class="t-qator">
+					<dt>Kengaytma da'vosi:</dt>
+					<dd data-davo>—</dd>
+				</div>
+				<div class="t-qator">
+					<dt>Baytlar guvohligi:</dt>
+					<dd data-guvoh>—</dd>
+				</div>
+				<div class="t-qator hukm-qator">
+					<dt>Hukm:</dt>
+					<dd data-hukm-qiymat>—</dd>
+				</div>
+			</dl>
+		</div>
+
+		<p class="hukm" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	interface Imzo {
+		nom: string;
+		baytlar: number[];
+		/** Tekshirish boshlanadigan o'rin (ko'pchilikda 0) */
+		orin?: number;
+		kengaytmalar: string[];
+	}
+
+	/** Eng ko'p uchraydigan imzolar. Tartib muhim: aniqrog'i oldin. */
+	const IMZOLAR: Imzo[] = [
+		{ nom: 'PNG rasm', baytlar: [0x89, 0x50, 0x4e, 0x47], kengaytmalar: ['png'] },
+		{ nom: 'JPEG rasm', baytlar: [0xff, 0xd8, 0xff], kengaytmalar: ['jpg', 'jpeg'] },
+		{ nom: 'GIF rasm', baytlar: [0x47, 0x49, 0x46, 0x38], kengaytmalar: ['gif'] },
+		{ nom: 'PDF hujjat', baytlar: [0x25, 0x50, 0x44, 0x46], kengaytmalar: ['pdf'] },
+		{
+			nom: 'ZIP arxiv (docx/xlsx/apk ham shu)',
+			baytlar: [0x50, 0x4b, 0x03, 0x04],
+			kengaytmalar: ['zip', 'docx', 'xlsx', 'pptx', 'apk', 'jar'],
+		},
+		{ nom: 'MP3 audio (ID3)', baytlar: [0x49, 0x44, 0x33], kengaytmalar: ['mp3'] },
+		{ nom: 'BMP rasm', baytlar: [0x42, 0x4d], kengaytmalar: ['bmp'] },
+		{ nom: 'EXE dastur', baytlar: [0x4d, 0x5a], kengaytmalar: ['exe', 'dll'] },
+		{ nom: 'WEBP rasm', baytlar: [0x57, 0x45, 0x42, 0x50], orin: 8, kengaytmalar: ['webp'] },
+		{ nom: 'MP4 video', baytlar: [0x66, 0x74, 0x79, 0x70], orin: 4, kengaytmalar: ['mp4', 'm4a', 'mov'] },
+		{ nom: 'OGG audio', baytlar: [0x4f, 0x67, 0x67, 0x53], kengaytmalar: ['ogg'] },
+	];
+
+	function imzoTop(baytlar: Uint8Array): Imzo | null {
+		for (const imzo of IMZOLAR) {
+			const orin = imzo.orin ?? 0;
+			if (imzo.baytlar.every((b, i) => baytlar[orin + i] === b)) return imzo;
+		}
+		return null;
+	}
+
+	/** Baytlar matnga o'xshaydimi? (ASCII harflar, raqamlar, bo'shliq) */
+	function matnmi(baytlar: Uint8Array): boolean {
+		if (baytlar.length === 0) return false;
+		let mos = 0;
+		for (const b of baytlar) {
+			if ((b >= 0x20 && b < 0x7f) || b === 0x0a || b === 0x0d || b === 0x09) mos++;
+		}
+		return mos / baytlar.length > 0.85;
+	}
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.mb');
+		if (!qutu) return;
+
+		const kirish = qutu.querySelector<HTMLInputElement>('.fayl-kirish')!;
+		const tashlash = qutu.querySelector<HTMLElement>('[data-tashlash]')!;
+		const natija = qutu.querySelector<HTMLElement>('.natija')!;
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+		let korilganlar = 0;
+
+		async function tahlil(fayl: File) {
+			const bufer = await fayl.slice(0, 16).arrayBuffer();
+			const baytlar = new Uint8Array(bufer);
+
+			qutu.querySelector('[data-nomi]')!.textContent = `${fayl.name} (${fayl.size} bayt)`;
+			qutu.querySelector('[data-hex]')!.textContent = [...baytlar]
+				.map((b) => b.toString(16).padStart(2, '0').toUpperCase())
+				.join(' ');
+
+			const nuqta = fayl.name.lastIndexOf('.');
+			const kengaytma = nuqta > 0 ? fayl.name.slice(nuqta + 1).toLowerCase() : '';
+			qutu.querySelector('[data-davo]')!.textContent = kengaytma
+				? `.${kengaytma} — "men ${kengaytma.toUpperCase()} faylman"`
+				: "kengaytma yo'q";
+
+			const imzo = imzoTop(baytlar);
+			const guvohEl = qutu.querySelector<HTMLElement>('[data-guvoh]')!;
+			const hukmQiymat = qutu.querySelector<HTMLElement>('[data-hukm-qiymat]')!;
+
+			if (imzo) {
+				guvohEl.textContent = `bu ${imzo.nom} imzosi`;
+				const rost = imzo.kengaytmalar.includes(kengaytma);
+				hukmQiymat.textContent = rost
+					? "KENGAYTMA ROST GAPIRYAPTI — imzo va da'vo mos."
+					: `KENGAYTMA YOLG'ON GAPIRYAPTI! Baytlar buni ${imzo.nom} deydi.`;
+				hukmQiymat.dataset.holat = rost ? 'togri' : 'xato';
+			} else if (matnmi(baytlar)) {
+				guvohEl.textContent = "taniqli imzo yo'q, baytlar oddiy matnga o'xshaydi";
+				hukmQiymat.textContent = "Bu, ehtimol, ODDIY MATN fayli (txt, csv, kod...).";
+				delete hukmQiymat.dataset.holat;
+			} else {
+				guvohEl.textContent = "bizning kichik lug'atimizda bunday imzo yo'q";
+				hukmQiymat.textContent =
+					"Turi aniqlanmadi — dunyoda minglab format bor, lug'atimizda esa 11 tasi.";
+				delete hukmQiymat.dataset.holat;
+			}
+
+			natija.hidden = false;
+			korilganlar++;
+			if (korilganlar === 1) {
+				hukmEl.textContent =
+					"Endi qiziq tajriba: fayl kengaytmasini o'zgartirib (masalan rasmni .txt qilib) qayta tekshiring.";
+			} else if (korilganlar >= 2) {
+				amalBelgila('magic-bayt');
+				hukmEl.textContent =
+					"Ikki va undan ortiq fayl tekshirildi. Endi bilasiz: kompyuter fayl turini kengaytmadan emas, baytlardan so'raydi.";
+			}
+		}
+
+		kirish.addEventListener('change', () => {
+			const fayl = kirish.files?.[0];
+			if (fayl) void tahlil(fayl);
+		});
+
+		/* Sudrab tashlash — qo'shimcha qulaylik, asosiy yo'l input orqali */
+		tashlash.addEventListener('dragover', (e) => {
+			e.preventDefault();
+			tashlash.dataset.ustida = 'ha';
+		});
+		tashlash.addEventListener('dragleave', () => {
+			delete tashlash.dataset.ustida;
+		});
+		tashlash.addEventListener('drop', (e) => {
+			e.preventDefault();
+			delete tashlash.dataset.ustida;
+			const fayl = e.dataTransfer?.files?.[0];
+			if (fayl) void tahlil(fayl);
+		});
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			kirish.value = '';
+			natija.hidden = true;
+			korilganlar = 0;
+			hukmEl.textContent = '';
+		});
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.tanlash-maydon {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 1.4rem 1rem;
+		border: 2px dashed var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		cursor: pointer;
+		text-align: center;
+	}
+
+	.tanlash-maydon[data-ustida='ha'] {
+		border-color: var(--blok-4);
+		background: var(--blok-4-fon);
+	}
+
+	.tanlash-maydon:focus-within {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	/* Input ko'rinmaydi, lekin klaviatura uchun mavjud */
+	.fayl-kirish {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+	}
+
+	.tanlash-matn {
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--sl-color-gray-1);
+	}
+
+	.maxfiylik {
+		font-size: 0.75rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.natija {
+		margin-top: 1rem;
+	}
+
+	.fayl-nomi {
+		margin: 0;
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-1);
+		overflow-wrap: anywhere;
+	}
+
+	.hex-panel {
+		margin-top: 0.7rem;
+	}
+
+	.yorliq {
+		display: block;
+		margin-bottom: 0.3rem;
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.hex-qator {
+		display: block;
+		padding: 0.5rem 0.6rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		font-size: 0.85rem;
+		color: var(--blok-4);
+		overflow-wrap: anywhere;
+	}
+
+	.tahlil {
+		margin: 0.9rem 0 0 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.t-qator {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		font-size: 0.85rem;
+	}
+
+	.t-qator dt {
+		font-weight: 600;
+		color: var(--sl-color-gray-3);
+	}
+
+	.t-qator dd {
+		margin: 0;
+		color: var(--sl-color-gray-1);
+	}
+
+	.hukm-qator dd {
+		font-weight: 700;
+	}
+
+	dd[data-holat='togri'] {
+		color: var(--blok-1);
+	}
+
+	dd[data-holat='xato'] {
+		color: var(--blok-5);
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+</style>

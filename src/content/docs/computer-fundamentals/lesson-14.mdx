@@ -1,0 +1,136 @@
+---
+title: '14-dars: Fayl tizimi'
+description: "Fayl aslida nima? Kengaytma nega yolg'on gapira oladi va magic baytlar haqiqatni qanday aytadi."
+sidebar:
+  label: '14-dars'
+  order: 14
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import MagicBaytKuzatuvchi from '../../../components/sim/MagicBaytKuzatuvchi.astro';
+
+<Bloknoma blok={4} />
+
+## Nega bu muhim
+
+Diskingizda `rasm.jpg` yotibdi. Uni `rasm.txt` deb qayta nomlasangiz nima o'zgaradi? Ko'pchilik "fayl buziladi" deb o'ylaydi. Aslida — **hech narsa o'zgarmaydi**: baytlar joyida, rasm ham joyida. Faqat kompyuter uni endi "matn" deb ochishga urinadi.
+
+Bu darsda fayl degan tushunchaning pardasini ochamiz: ichida nima bor, nomi qayerda saqlanadi va haqiqiy turini kim biladi. Bu bilim xavfsizlikda ham asqotadi: virus ba'zan o'zini "rasm" deb tanishtiradi.
+
+<Maqsad>
+- fayl aslida nimalardan iboratligini (baytlar + metama'lumot) bilasiz
+- papkalar daraxti va yo'l (path) tushunchasini tushuntira olasiz
+- kengaytma shunchaki kelishuv ekanini va magic baytlar nima ekanini bilasiz
+- fayl "o'chirilganda" aslida nima bo'lishini ayta olasiz
+</Maqsad>
+
+## Nazariya
+
+### Fayl = baytlar qatori + pasport
+
+Disk darajasida fayl — shunchaki **baytlar ketma-ketligi**. 4-darsda ko'rgansiz: o'sha baytlar matn ham, rasm ham, ovoz ham bo'lishi mumkin. Diskda ular hech qanday "turga" ega emas.
+
+Fayl tizimi har faylga qo'shimcha "pasport" yuritadi: nomi, hajmi, yaratilgan sanasi, kim o'qiy olishi. Bu pasport faylning **ichida emas**, fayl tizimining o'z jadvallarida saqlanadi.
+
+<Atama soz="fayl tizimi" eng="file system">
+	Diskdagi baytlarni fayl va papkalarga tartiblab, har biriga nom, joy va huquqlarni
+	biriktirib beruvchi tizim. NTFS, APFS, ext4 — shular jumlasidan.
+</Atama>
+
+### Daraxt va yo'l
+
+Fayllar papkalarga, papkalar papkalarga joylanadi — **daraxt** hosil bo'ladi. Daraxtdagi manzil **yo'l** deyiladi: `hujjatlar/maktab/insho.txt` — ildizdan boshlab har qadam.
+
+<Atama soz="yo'l" eng="path">
+	Fayl yoki papkaning daraxtdagi to'liq manzili. Har bo'g'in — bitta papka,
+	oxirgisi — nishon.
+</Atama>
+
+Aslida esa daraxt ham illyuziya: diskda hammasi yonma-yon bloklarda yotadi. Daraxtni fayl tizimi o'z jadvallari bilan "chizib beradi" — xuddi RAM'dagi manzillar ustiga qurilgan tartib kabi.
+
+### Kengaytma — shunchaki va'da
+
+`.jpg`, `.pdf`, `.mp3` — bular faylning **nomidagi dumcha**, xolos. Hech qanday qulf yo'q: nomni o'zgartirish baytlarga tegmaydi. Kengaytma operatsion tizimga beriladigan **va'da**: "meni rasm ko'ruvchida och".
+
+Haqiqat esa faylning **birinchi baytlarida** yotadi. Ko'p formatlar o'z imzosi bilan boshlanadi: PNG doim `89 50 4E 47`, PDF doim `25 50 44 46` (bu ASCII'da `%PDF`).
+
+<Atama soz="magic baytlar" eng="magic bytes">
+	Fayl boshidagi formatni bildiruvchi qat'iy baytlar imzosi. Kengaytmadan farqli,
+	faylning o'zida yashaydi — nom o'zgarsa ham qoladi.
+</Atama>
+
+<Muhim turi="ogoh">
+	Virus mualliflari buni yaxshi biladi: `rasm.jpg.exe` nomli fayl Windows'da ba'zan
+	shunchaki `rasm.jpg` bo'lib ko'rinadi. Fayl turiga nomidan emas, manbasidan va
+	tizim ogohlantirishidan qarab ishoning.
+</Muhim>
+
+### "O'chirish" aslida nimani o'chiradi
+
+Faylni o'chirsangiz, diskdagi baytlar **joyida qoladi** — fayl tizimi shunchaki o'z jadvalidan yozuvni olib tashlab, "bu joy bo'sh" deb belgilaydi. Baytlar ustiga yangi narsa yozilgunicha ular tiklanishi mumkin.
+
+Shu sababli maxsus dasturlar "o'chirilgan" fayllarni qaytara oladi. Va shu sababli telefonni sotishdan oldin oddiy o'chirish yetarli emas — to'liq shifrlash yoki qayta yozish kerak.
+
+## Sinab ko'r
+
+Istalgan faylni tanlang (u kompyuteringizdan chiqmaydi, faqat birinchi 16 bayti brauzerda o'qiladi). Baytlar imzosi kengaytma bilan solishtiriladi. Keyin faylning nusxasini boshqa kengaytma bilan saqlab, qayta tekshiring — kim yolg'on gapiradi?
+
+<MagicBaytKuzatuvchi />
+
+## Xulosa
+
+- Fayl diskda — **baytlar qatori**; nomi, sanasi, huquqlari fayl tizimi jadvalida
+- **Yo'l** — daraxtdagi manzil; daraxtning o'zi ham fayl tizimi chizgan illyuziya
+- **Kengaytma** — nomdagi va'da; **magic baytlar** — fayl ichidagi haqiqat
+- "O'chirish" — jadvaldan yozuvni olish; baytlar ustiga yozilgunicha tiklanadi
+- Fayl turiga nomidan qarab emas, mazmunidan qarab ishonish kerak
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="rasm.jpg ni rasm.txt deb nomlasak, diskdagi baytlarga nima bo'ladi?">
+	Hech narsa. Nom fayl tizimining jadvalida saqlanadi, baytlar esa diskda o'z joyida.
+	O'zgargan yagona narsa — tizim endi faylni matn muharririda ochishga urinadi va
+	ekranda "qiyqim" belgilar ko'rasiz. Bu baytlar buzilgani emas, noto'g'ri o'qilgani.
+</Sinov>
+
+<Sinov raqam={2} savol="Nega PNG mualliflari faylni aynan 89 50 4E 47 bilan boshlashga kelishgan?">
+	50 4E 47 — ASCII'da "PNG", odam hex'da ko'rsa tanisin. Birinchi 89 esa ataylab
+	ASCII'dan tashqarida: fayl tasodifan matn deb o'qilsa darhol "bu matn emas" degan
+	signal beradi. O'ylab qilingan muhandislik.
+</Sinov>
+
+<Sinov raqam={3} savol="Fayl tizimisiz disk qanday ko'rinardi va nima yo'qolardi?">
+	Milliardlab baytning uzluksiz qatori. "Fayl", "nom", "papka" tushunchalarining o'zi
+	yo'qolardi — qaysi bayt qaysi hujjatga tegishli ekanini hech kim bilmasdi. Fayl
+	tizimi — xotira ustiga qurilgan tartib abstraksiyasi.
+</Sinov>
+
+<Sinov raqam={4} savol="O'chirilgan faylni tiklash dasturlari qanday ishlaydi va qachon ojiz qoladi?">
+	Ular jadvaldan o'chirilgan, lekin baytlari hali joyida turgan fayllarni qidiradi —
+	ko'pincha magic baytlar bo'yicha. Ustiga yangi ma'lumot yozilgan bo'lsa, tiklab
+	bo'lmaydi: eski baytlarning o'rnida endi yangilari.
+</Sinov>
+
+<Sinov raqam={5} savol="Nega docx fayli ZIP imzosi bilan boshlanadi?">
+	Chunki docx aslida ZIP arxiv: ichida matn, rasmlar va formatlash alohida fayllar
+	bo'lib yotadi. Kengaytmani .zip ga o'zgartirsangiz, arxiv sifatida ochib ichini
+	ko'rishingiz mumkin. Yana bir dalil: tur — kelishuv, mazmun — baytlar.
+</Sinov>
+
+<Amaliyot daqiqa={30} daraja="o'rta">
+	**Birinchi qism.** Kompyuterda istalgan rasmning NUSXASINI oling (aslini emas!) va
+	kengaytmasini `.txt` ga o'zgartiring. Matn muharririda oching — nima ko'rinadi?
+	Birinchi qatorda formatga oid belgilar bormi? Keyin kengaytmani qaytarib, rasm
+	ochilishini tekshiring.
+
+	**Ikkinchi qism.** O'sha nusxani yuqoridagi simulyatorda `.txt` holida tekshiring:
+	baytlar haqiqatni aytdimi?
+
+	**Uchinchi qism.** [hexed.it](https://hexed.it) saytida bitta PNG va bitta JPEG
+	faylni ochib, birinchi 8 baytini daftarga yozing va solishtiring.
+
+	Topshiriladigan natija: `.txt` tajribasi tavsifi (2-3 gap), simulyator xulosasi
+	va ikki faylning bosh baytlari.
+</Amaliyot>
+
+<DarsTugadi dars={14} blok={4} />

@@ -1,0 +1,413 @@
+---
+/**
+ * RejalashtiruvchiSimulyator — 15-dars simulyatori.
+ *
+ * To'rt jarayon, bitta protsessor, round-robin rejalashtirish.
+ * O'quvchi kvantni (vaqt bo'lagini) tanlab, har Qadam'da bitta vaqt
+ * birligi o'tishini kuzatadi: vaqt chizig'i jarayon rangi bilan
+ * to'ladi, kontekst almashishlar sanaladi.
+ *
+ * Asosiy dars: kichik kvant = hamma "jonli", lekin almashish ko'p;
+ * katta kvant = almashish kam, lekin navbat kutish uzoq. Buni ko'rish
+ * uchun to'liq ijroni IKKI XIL kvant bilan o'tkazish so'raladi.
+ *
+ * Jami ish = 24 birlik — vaqt chizig'i shablonda 24 katak.
+ */
+import Simulyator from '../Simulyator.astro';
+
+const JARAYONLAR = [
+	{ nom: 'Musiqa', kerak: 4, rang: 1 },
+	{ nom: 'Brauzer', kerak: 8, rang: 2 },
+	{ nom: 'Yuklab olish', kerak: 5, rang: 3 },
+	{ nom: 'Matn muharriri', kerak: 7, rang: 5 },
+];
+
+const JAMI = 24;
+const KVANTLAR = [1, 2, 4];
+---
+
+<Simulyator
+	sarlavha="Rejalashtiruvchi: bitta protsessor, to'rt ish"
+	korsatma="Kvantni tanlab, Qadam bilan protsessor vaqtini jarayonlarga bo'lib bering."
+	blok={4}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda to'rt jarayon bitta protsessorni navbat bilan oladi
+			(round-robin). Kvant — har jarayonga uzluksiz beriladigan vaqt bo'lagi.
+			Kichik kvantda almashish ko'p, katta kvantda navbat kutish uzoq.
+		</p>
+		<p>
+			JavaScript'siz mashq: 4 ta ishni (4, 8, 5, 7 birlik) kvant 2 bilan qog'ozda
+			taqsimlab, 24 katakli chiziqqa rang bilan bo'lib chiqing.
+		</p>
+	</Fragment>
+
+	<div class="rj not-content">
+		<div class="kvant-qator" role="group" aria-label="Kvant tanlash">
+			<span class="yorliq">Kvant:</span>
+			{
+				KVANTLAR.map((k, i) => (
+					<button
+						type="button"
+						class:list={['kvant', { tanlangan: i === 1 }]}
+						data-kvant={k}
+						aria-pressed={i === 1 ? 'true' : 'false'}
+					>
+						{k}
+					</button>
+				))
+			}
+			<span class="kvant-izoh">birlik uzluksiz ish</span>
+		</div>
+
+		<div class="jarayonlar">
+			{
+				JARAYONLAR.map((j, i) => (
+					<div class="jarayon" data-jarayon={i} data-rang={j.rang}>
+						<span class="j-rang" />
+						<span class="j-nom">{j.nom}</span>
+						<span class="j-chiziq">
+							<span class="j-toldirish" data-toldirish={i} />
+						</span>
+						<span class="j-holat" data-jholat={i}>
+							0/{j.kerak}
+						</span>
+					</div>
+				))
+			}
+		</div>
+
+		<div class="vaqt-panel">
+			<span class="yorliq">Protsessor vaqti (24 birlik)</span>
+			<div class="vaqt-chiziq">
+				{Array.from({ length: JAMI }, (_, i) => <span class="v-katak" data-vaqt={i} />)}
+			</div>
+		</div>
+
+		<div class="boshqarish">
+			<button type="button" class="sim-tugma qadam">Qadam</button>
+			<button type="button" class="sim-tugma oxirigacha">Oxirigacha</button>
+			<span class="statistika" data-stat>vaqt: 0 · almashishlar: 0</span>
+		</div>
+
+		<p class="hukm" role="status" aria-live="polite">
+			Hozir kvant = 2. Qadam bosing — protsessor birinchi jarayonga o'tadi.
+		</p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	const KERAK = [4, 8, 5, 7];
+	const JAMI = 24;
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.rj');
+		if (!qutu) return;
+
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+		const statEl = qutu.querySelector<HTMLElement>('[data-stat]')!;
+
+		let kvant = 2;
+		let bajarilgan = [0, 0, 0, 0];
+		/** Navbatda turgan jarayonlar (indekslar) */
+		let navbat = [0, 1, 2, 3];
+		let joriy = -1; // hali hech kim ishlamagan
+		let kvantQoldiq = 0;
+		let vaqt = 0;
+		let almashishlar = 0;
+		let tugadi = false;
+		/** Qaysi kvantlar bilan to'liq ijro o'tkazildi */
+		const otkazilgan = new Set<number>();
+
+		function korsat() {
+			for (let i = 0; i < 4; i++) {
+				const foiz = (bajarilgan[i]! / KERAK[i]!) * 100;
+				qutu.querySelector<HTMLElement>(`[data-toldirish="${i}"]`)!.style.width = `${foiz}%`;
+				qutu.querySelector(`[data-jholat="${i}"]`)!.textContent =
+					`${bajarilgan[i]}/${KERAK[i]}`;
+				qutu.querySelector<HTMLElement>(`[data-jarayon="${i}"]`)!.dataset.faol =
+					i === joriy && !tugadi ? 'ha' : 'yoq';
+			}
+			statEl.textContent = `vaqt: ${vaqt} · almashishlar: ${almashishlar}`;
+		}
+
+		function qadam() {
+			if (tugadi) return;
+
+			// Joriy jarayon tugagan yoki kvanti tugagan bo'lsa — navbatdagisini olamiz
+			if (joriy === -1 || kvantQoldiq === 0 || bajarilgan[joriy]! >= KERAK[joriy]!) {
+				// Joriy hali tugamagan bo'lsa, navbat oxiriga qaytadi
+				if (joriy !== -1 && bajarilgan[joriy]! < KERAK[joriy]!) navbat.push(joriy);
+				// Navbatdan tugamaganini topamiz
+				let keyingi = -1;
+				while (navbat.length > 0) {
+					const n = navbat.shift()!;
+					if (bajarilgan[n]! < KERAK[n]!) {
+						keyingi = n;
+						break;
+					}
+				}
+				if (keyingi === -1) {
+					tugadi = true;
+					korsat();
+					return;
+				}
+				if (joriy !== -1 && joriy !== keyingi) almashishlar++;
+				joriy = keyingi;
+				kvantQoldiq = kvant;
+			}
+
+			// Bitta vaqt birligi ishlaymiz
+			bajarilgan[joriy]!++;
+			kvantQoldiq--;
+			const katak = qutu.querySelector<HTMLElement>(`[data-vaqt="${vaqt}"]`)!;
+			katak.dataset.rang = qutu.querySelector<HTMLElement>(
+				`[data-jarayon="${joriy}"]`
+			)!.dataset.rang;
+			vaqt++;
+
+			const nom = qutu.querySelector(`[data-jarayon="${joriy}"] .j-nom`)!.textContent;
+			if (bajarilgan[joriy] === KERAK[joriy]) {
+				hukmEl.textContent = `${nom} ishini tugatdi (${vaqt}-birlikda).`;
+			} else if (kvantQoldiq === 0) {
+				hukmEl.textContent = `${nom} kvantini ishlatib bo'ldi — navbat keyingisiga.`;
+			} else {
+				hukmEl.textContent = `${nom} ishlayapti (kvantdan ${kvantQoldiq} birlik qoldi).`;
+			}
+
+			if (vaqt >= JAMI) {
+				tugadi = true;
+				otkazilgan.add(kvant);
+				if (otkazilgan.size >= 2) {
+					amalBelgila('rejalashtiruvchi');
+					hukmEl.textContent = `Tugadi: 24 birlik, ${almashishlar} almashish (kvant ${kvant}). Ikki xil kvantda sinab ko'rdingiz — farqni o'z ko'zingiz bilan ko'rdingiz!`;
+				} else {
+					hukmEl.textContent = `Tugadi: 24 birlik, ${almashishlar} almashish (kvant ${kvant}). Endi BOSHQA kvant tanlab qayta o'tkazing — almashishlar soni qanday o'zgaradi?`;
+				}
+			}
+			korsat();
+		}
+
+		function oxirigacha() {
+			for (let i = 0; i < JAMI + 8 && !tugadi; i++) qadam();
+		}
+
+		function tozala() {
+			bajarilgan = [0, 0, 0, 0];
+			navbat = [0, 1, 2, 3];
+			joriy = -1;
+			kvantQoldiq = 0;
+			vaqt = 0;
+			almashishlar = 0;
+			tugadi = false;
+			for (const k of qutu.querySelectorAll<HTMLElement>('.v-katak')) delete k.dataset.rang;
+			hukmEl.textContent = `Hozir kvant = ${kvant}. Qadam bosing — protsessor birinchi jarayonga o'tadi.`;
+			korsat();
+		}
+
+		for (const t of qutu.querySelectorAll<HTMLButtonElement>('.kvant')) {
+			t.addEventListener('click', () => {
+				kvant = Number(t.dataset.kvant);
+				for (const b of qutu.querySelectorAll<HTMLButtonElement>('.kvant')) {
+					const bu = b === t;
+					b.classList.toggle('tanlangan', bu);
+					b.setAttribute('aria-pressed', String(bu));
+				}
+				tozala();
+			});
+		}
+
+		qutu.querySelector<HTMLButtonElement>('.qadam')!.addEventListener('click', qadam);
+		qutu.querySelector<HTMLButtonElement>('.oxirigacha')!.addEventListener('click', oxirigacha);
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			otkazilgan.clear();
+			tozala();
+		});
+
+		korsat();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.yorliq {
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.kvant-qator {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem;
+	}
+
+	.kvant {
+		min-width: 2.2rem;
+		height: 2.2rem;
+		margin: 0;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-3);
+		font-family: var(--sl-font-mono);
+		font-size: 0.95rem;
+		font-weight: 700;
+		cursor: pointer;
+	}
+
+	.kvant:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.kvant.tanlangan {
+		border-color: var(--blok-4);
+		background: var(--blok-4-fon);
+		color: var(--blok-4);
+	}
+
+	.kvant-izoh {
+		font-size: 0.75rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.jarayonlar {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		margin-top: 1rem;
+	}
+
+	.jarayon {
+		display: grid;
+		grid-template-columns: 0.8rem 7.5rem 1fr 3rem;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.35rem 0.5rem;
+		border: 1px solid transparent;
+		border-radius: var(--sa-radius-kichik);
+	}
+
+	@media (max-width: 480px) {
+		.jarayon {
+			grid-template-columns: 0.8rem 6rem 1fr 3rem;
+			gap: 0.35rem;
+		}
+	}
+
+	.jarayon[data-faol='ha'] {
+		border-color: var(--blok-4);
+		background: var(--blok-4-fon);
+	}
+
+	.j-rang {
+		width: 0.8rem;
+		height: 0.8rem;
+		border-radius: 3px;
+	}
+
+	.jarayon[data-rang='1'] .j-rang { background: var(--blok-1); }
+	.jarayon[data-rang='2'] .j-rang { background: var(--blok-2); }
+	.jarayon[data-rang='3'] .j-rang { background: var(--blok-3); }
+	.jarayon[data-rang='5'] .j-rang { background: var(--blok-5); }
+
+	.j-nom {
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-1);
+	}
+
+	.j-chiziq {
+		display: block;
+		height: 0.5rem;
+		border-radius: 999px;
+		background: var(--sl-color-gray-6);
+		overflow: hidden;
+	}
+
+	.j-toldirish {
+		display: block;
+		height: 100%;
+		width: 0;
+		border-radius: 999px;
+		background: var(--sl-color-gray-3);
+		transition: width 0.2s ease;
+	}
+
+	.jarayon[data-rang='1'] .j-toldirish { background: var(--blok-1); }
+	.jarayon[data-rang='2'] .j-toldirish { background: var(--blok-2); }
+	.jarayon[data-rang='3'] .j-toldirish { background: var(--blok-3); }
+	.jarayon[data-rang='5'] .j-toldirish { background: var(--blok-5); }
+
+	.j-holat {
+		font-family: var(--sl-font-mono);
+		font-size: 0.75rem;
+		color: var(--sl-color-gray-3);
+		text-align: right;
+	}
+
+	.vaqt-panel {
+		margin-top: 1rem;
+	}
+
+	.vaqt-panel .yorliq {
+		display: block;
+		margin-bottom: 0.35rem;
+	}
+
+	.vaqt-chiziq {
+		display: grid;
+		grid-template-columns: repeat(24, 1fr);
+		gap: 2px;
+	}
+
+	.v-katak {
+		aspect-ratio: 1 / 1.6;
+		border-radius: 2px;
+		background: var(--sl-color-gray-6);
+	}
+
+	.v-katak[data-rang='1'] { background: var(--blok-1); }
+	.v-katak[data-rang='2'] { background: var(--blok-2); }
+	.v-katak[data-rang='3'] { background: var(--blok-3); }
+	.v-katak[data-rang='5'] { background: var(--blok-5); }
+
+	.boshqarish {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.6rem;
+		margin-top: 1rem;
+	}
+
+	.statistika {
+		font-family: var(--sl-font-mono);
+		font-size: 0.8rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.j-toldirish {
+			transition: none;
+		}
+	}
+</style>

@@ -1,0 +1,607 @@
+---
+/**
+ * TerminalMashq — 16-dars simulyatori. Brauzerdagi soxta terminal.
+ *
+ * Virtual fayl tizimi (xotirada, sahifa yangilansa tiklanadi) va 20 ta
+ * ketma-ket topshiriq. Har buyruqdan keyin joriy topshiriq tekshiriladi,
+ * bajarilsa keyingisi ochiladi. 20/20 — `terminal-ustasi` nishoni.
+ *
+ * Buyruqlar: pwd, ls, cd, cat, mkdir, touch, echo (> bilan), cp, mv, rm,
+ * grep, wc, history, clear, yordam. Bitta `|` (pipe) qo'llab-quvvatlanadi.
+ *
+ * Git buyruqlari YO'Q — ular git-github modulining ishi.
+ */
+import Simulyator from '../Simulyator.astro';
+---
+
+<Simulyator
+	sarlavha="Terminal mashqi: 20 topshiriq"
+	korsatma="Topshiriqni o'qing, buyruqni yozib Enter bosing. Adashsangiz: yordam"
+	blok={4}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu brauzerdagi soxta terminal: pwd, ls, cd, cat, mkdir, echo kabi buyruqlar
+			ishlaydi va 20 ta topshiriq ketma-ket tekshiriladi. Fayl tizimi virtual —
+			kompyuteringizga tegmaydi.
+		</p>
+		<p>
+			JavaScript'siz mashq: kompyuterdagi haqiqiy terminalni oching va darsdagi
+			buyruqlar jadvalini birma-bir sinang.
+		</p>
+	</Fragment>
+
+	<div class="tr not-content">
+		<div class="topshiriq-panel">
+			<span class="t-hisob" data-hisob>1/20</span>
+			<span class="t-matn" data-topshiriq-matn></span>
+		</div>
+
+		<div class="terminal">
+			<div class="oqim" data-oqim role="log" aria-label="Terminal chiqishi"></div>
+			<div class="kirish-qator">
+				<span class="prompt" data-prompt>~$</span>
+				<label class="kirish-label">
+					<span class="sr">Terminal buyrug'i</span>
+					<input
+						type="text"
+						class="buyruq-kirish"
+						autocomplete="off"
+						autocapitalize="off"
+						spellcheck="false"
+					/>
+				</label>
+			</div>
+		</div>
+
+		<p class="hukm" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	type Fayl = { turi: 'fayl'; matn: string };
+	type Papka = { turi: 'papka'; ichida: Record<string, Tugun> };
+	type Tugun = Fayl | Papka;
+
+	const KITOB = [
+		'Kompyuter faqat ikki belgini biladi: 0 va 1.',
+		'Har bit — bitta kichik qaror.',
+		'Sakkiz bit birlashsa bayt hosil qiladi.',
+		'Million bayt — megabayt deyiladi.',
+		"Bit'lar dunyosi ana shunday boshlanadi.",
+	].join('\n');
+
+	function boshFS(): Papka {
+		return {
+			turi: 'papka',
+			ichida: {
+				'xat.txt': {
+					turi: 'fayl',
+					matn: 'Salom, terminalchi!\nBu xatni cat buyrug\'i bilan o\'qidingiz.',
+				},
+				'kitob.txt': { turi: 'fayl', matn: KITOB },
+				hujjatlar: {
+					turi: 'papka',
+					ichida: {
+						'maxfiy.txt': { turi: 'fayl', matn: 'Parol: 1010 (albatta, soxta)' },
+						'eslatma.txt': { turi: 'fayl', matn: 'Sut olishni unutma.' },
+					},
+				},
+				rasmlar: {
+					turi: 'papka',
+					ichida: {
+						'tog.png': { turi: 'fayl', matn: 'PNG (soxta rasm)' },
+					},
+				},
+			},
+		};
+	}
+
+	interface Topshiriq {
+		matn: string;
+		tekshir: (k: {
+			buyruq: string;
+			chiqish: string;
+			xato: boolean;
+			ildiz: Papka;
+			cwd: string[];
+		}) => boolean;
+	}
+
+	function tugunOl(ildiz: Papka, yol: string[]): Tugun | null {
+		let t: Tugun = ildiz;
+		for (const nom of yol) {
+			if (t.turi !== 'papka' || !(nom in t.ichida)) return null;
+			t = t.ichida[nom]!;
+		}
+		return t;
+	}
+
+	const fayl = (ildiz: Papka, yol: string[]) => {
+		const t = tugunOl(ildiz, yol);
+		return t?.turi === 'fayl' ? t : null;
+	};
+	const papka = (ildiz: Papka, yol: string[]) => {
+		const t = tugunOl(ildiz, yol);
+		return t?.turi === 'papka' ? t : null;
+	};
+
+	const TOPSHIRIQLAR: Topshiriq[] = [
+		{
+			matn: "Qayerda turganingizni bilib oling (buyruq: pwd)",
+			tekshir: (k) => k.buyruq === 'pwd' && !k.xato,
+		},
+		{
+			matn: "Atrofga qarang: bu yerda nimalar bor? (buyruq: ls)",
+			tekshir: (k) => k.buyruq === 'ls' && !k.xato,
+		},
+		{
+			matn: "xat.txt faylini o'qing (buyruq: cat xat.txt)",
+			tekshir: (k) => k.buyruq.startsWith('cat') && k.chiqish.includes('Salom, terminalchi'),
+		},
+		{
+			matn: "hujjatlar papkasiga kiring (buyruq: cd hujjatlar)",
+			tekshir: (k) => k.cwd.join('/') === 'hujjatlar',
+		},
+		{
+			matn: "Bu papkada nima borligini ko'ring",
+			tekshir: (k) => k.buyruq === 'ls' && k.cwd.join('/') === 'hujjatlar' && !k.xato,
+		},
+		{
+			matn: 'maxfiy.txt ichidagi parolni toping',
+			tekshir: (k) => k.chiqish.includes('Parol'),
+		},
+		{
+			matn: "Uy papkasiga qayting (buyruq: cd ..)",
+			tekshir: (k) => k.buyruq.startsWith('cd') && k.cwd.length === 0,
+		},
+		{
+			matn: "loyiha nomli yangi papka yarating (buyruq: mkdir loyiha)",
+			tekshir: (k) => papka(k.ildiz, ['loyiha']) !== null,
+		},
+		{
+			matn: 'Yangi papkangizga kiring',
+			tekshir: (k) => k.cwd.join('/') === 'loyiha',
+		},
+		{
+			matn: "Bo'sh reja.txt fayli yarating (buyruq: touch reja.txt)",
+			tekshir: (k) => fayl(k.ildiz, ['loyiha', 'reja.txt']) !== null,
+		},
+		{
+			matn: 'Matnli fayl yarating: echo Salom dunyo > salom.txt',
+			tekshir: (k) => (fayl(k.ildiz, ['loyiha', 'salom.txt'])?.matn ?? '') === 'Salom dunyo',
+		},
+		{
+			matn: "salom.txt ni o'qib, yozilganini tekshiring",
+			tekshir: (k) => k.buyruq.startsWith('cat') && k.chiqish.includes('Salom dunyo'),
+		},
+		{
+			matn: 'Faylning nusxasini oling: cp salom.txt nusxa.txt',
+			tekshir: (k) => fayl(k.ildiz, ['loyiha', 'nusxa.txt']) !== null,
+		},
+		{
+			matn: 'nusxa.txt nomini eski.txt ga o\'zgartiring (buyruq: mv nusxa.txt eski.txt)',
+			tekshir: (k) =>
+				fayl(k.ildiz, ['loyiha', 'eski.txt']) !== null &&
+				fayl(k.ildiz, ['loyiha', 'nusxa.txt']) === null,
+		},
+		{
+			matn: "eski.txt ni o'chiring (buyruq: rm eski.txt)",
+			tekshir: (k) => fayl(k.ildiz, ['loyiha', 'eski.txt']) === null && k.buyruq.startsWith('rm'),
+		},
+		{
+			matn: 'Uy papkasiga qayting',
+			tekshir: (k) => k.cwd.length === 0,
+		},
+		{
+			matn: "kitob.txt ichidan 'bit' so'zi bor qatorlarni toping (buyruq: grep bit kitob.txt)",
+			tekshir: (k) => k.buyruq.startsWith('grep') && k.chiqish.split('\n').length >= 2,
+		},
+		{
+			matn: 'kitob.txt necha qator va necha so\'z ekanini sanang (buyruq: wc kitob.txt)',
+			tekshir: (k) => k.buyruq.startsWith('wc') && k.chiqish.includes('qator'),
+		},
+		{
+			matn: "Pipe ishlating: uy papkasidagi narsalar sonini sanang (ls | wc)",
+			tekshir: (k) => k.buyruq.includes('|') && k.buyruq.includes('ls') && k.buyruq.includes('wc'),
+		},
+		{
+			matn: "Qilgan ishlaringizga qarang (buyruq: history)",
+			tekshir: (k) => k.buyruq === 'history',
+		},
+	];
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.tr');
+		if (!qutu) return;
+
+		const oqim = qutu.querySelector<HTMLElement>('[data-oqim]')!;
+		const kirish = qutu.querySelector<HTMLInputElement>('.buyruq-kirish')!;
+		const promptEl = qutu.querySelector<HTMLElement>('[data-prompt]')!;
+		const hisobEl = qutu.querySelector<HTMLElement>('[data-hisob]')!;
+		const topshiriqEl = qutu.querySelector<HTMLElement>('[data-topshiriq-matn]')!;
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+
+		let ildiz = boshFS();
+		let cwd: string[] = [];
+		let tarix: string[] = [];
+		let tarixKursori = 0;
+		let topshiriq = 0;
+
+		const promptMatn = () => `~${cwd.length ? '/' + cwd.join('/') : ''}$`;
+
+		/** Yo'lni cwd ga nisbatan massivga aylantiradi. */
+		function yechYol(p: string): string[] {
+			let qism = p.startsWith('~') ? [] : [...cwd];
+			const bolaklar = p.replace(/^~\/?/, '').split('/');
+			for (const b of bolaklar) {
+				if (!b || b === '.') continue;
+				if (b === '..') qism.pop();
+				else qism.push(b);
+			}
+			return qism;
+		}
+
+		function bajar(matn: string, stdin: string | null): { chiqish: string; xato: boolean } {
+			const tokenlar = matn.trim().split(/\s+/);
+			const buyruq = tokenlar[0] ?? '';
+			let arglar = tokenlar.slice(1);
+
+			// > orqali faylga yozish (asosan echo uchun)
+			let yonaltirish: string | null = null;
+			const yi = arglar.indexOf('>');
+			if (yi !== -1) {
+				yonaltirish = arglar[yi + 1] ?? null;
+				arglar = arglar.slice(0, yi);
+				if (!yonaltirish) return { chiqish: "xato: > dan keyin fayl nomi kerak", xato: true };
+			}
+
+			const natija = buyruqBajar(buyruq, arglar, stdin);
+
+			if (yonaltirish && !natija.xato) {
+				const yol = yechYol(yonaltirish);
+				const ota = papka(ildiz, yol.slice(0, -1));
+				if (!ota) return { chiqish: `xato: papka topilmadi`, xato: true };
+				ota.ichida[yol[yol.length - 1]!] = { turi: 'fayl', matn: natija.chiqish };
+				return { chiqish: '', xato: false };
+			}
+			return natija;
+		}
+
+		function buyruqBajar(
+			buyruq: string,
+			arglar: string[],
+			stdin: string | null
+		): { chiqish: string; xato: boolean } {
+			const ok = (chiqish = '') => ({ chiqish, xato: false });
+			const xato = (chiqish: string) => ({ chiqish, xato: true });
+
+			switch (buyruq) {
+				case '':
+					return ok();
+				case 'yordam':
+				case 'help':
+					return ok(
+						[
+							'pwd — qayerdaman? · ls — ro\'yxat · cd PAPKA — kirish (cd .. — orqaga)',
+							'cat FAYL — o\'qish · mkdir PAPKA · touch FAYL · rm FAYL',
+							'echo MATN > FAYL — yozish · cp NIMA QAYERGA · mv NIMA QAYERGA',
+							"grep SOZ FAYL — qidirish · wc FAYL — sanash · history · clear",
+						].join('\n')
+					);
+				case 'pwd':
+					return ok('/uy' + (cwd.length ? '/' + cwd.join('/') : ''));
+				case 'ls': {
+					const joy = papka(ildiz, arglar[0] ? yechYol(arglar[0]) : cwd);
+					if (!joy) return xato(`ls: papka topilmadi: ${arglar[0]}`);
+					const nomlar = Object.entries(joy.ichida).map(([nom, t]) =>
+						t.turi === 'papka' ? nom + '/' : nom
+					);
+					return ok(nomlar.sort().join('\n') || "(bo'sh)");
+				}
+				case 'cd': {
+					if (!arglar[0] || arglar[0] === '~') {
+						cwd = [];
+						return ok();
+					}
+					const yol = yechYol(arglar[0]);
+					if (!papka(ildiz, yol)) return xato(`cd: papka topilmadi: ${arglar[0]}`);
+					cwd = yol;
+					return ok();
+				}
+				case 'cat': {
+					if (!arglar[0]) return stdin !== null ? ok(stdin) : xato('cat: fayl nomi kerak');
+					const f = fayl(ildiz, yechYol(arglar[0]));
+					if (!f) return xato(`cat: fayl topilmadi: ${arglar[0]}`);
+					return ok(f.matn);
+				}
+				case 'mkdir': {
+					if (!arglar[0]) return xato('mkdir: papka nomi kerak');
+					const yol = yechYol(arglar[0]);
+					const ota = papka(ildiz, yol.slice(0, -1));
+					if (!ota) return xato('mkdir: yo\'l topilmadi');
+					const nom = yol[yol.length - 1]!;
+					if (nom in ota.ichida) return xato(`mkdir: allaqachon mavjud: ${nom}`);
+					ota.ichida[nom] = { turi: 'papka', ichida: {} };
+					return ok();
+				}
+				case 'touch': {
+					if (!arglar[0]) return xato('touch: fayl nomi kerak');
+					const yol = yechYol(arglar[0]);
+					const ota = papka(ildiz, yol.slice(0, -1));
+					if (!ota) return xato('touch: yo\'l topilmadi');
+					const nom = yol[yol.length - 1]!;
+					if (!(nom in ota.ichida)) ota.ichida[nom] = { turi: 'fayl', matn: '' };
+					return ok();
+				}
+				case 'echo':
+					return ok(arglar.join(' '));
+				case 'rm': {
+					if (!arglar[0]) return xato('rm: fayl nomi kerak');
+					const yol = yechYol(arglar[0]);
+					const ota = papka(ildiz, yol.slice(0, -1));
+					const nom = yol[yol.length - 1]!;
+					if (!ota || !(nom in ota.ichida)) return xato(`rm: topilmadi: ${arglar[0]}`);
+					if (ota.ichida[nom]!.turi === 'papka')
+						return xato(`rm: ${nom} — papka, bu mashqda faqat fayl o'chiriladi`);
+					delete ota.ichida[nom];
+					return ok();
+				}
+				case 'cp':
+				case 'mv': {
+					if (arglar.length < 2) return xato(`${buyruq}: NIMA va QAYERGA kerak`);
+					const dan = yechYol(arglar[0]!);
+					const f = fayl(ildiz, dan);
+					if (!f) return xato(`${buyruq}: fayl topilmadi: ${arglar[0]}`);
+					const ga = yechYol(arglar[1]!);
+					const ota = papka(ildiz, ga.slice(0, -1));
+					if (!ota) return xato(`${buyruq}: yo'l topilmadi`);
+					ota.ichida[ga[ga.length - 1]!] = { turi: 'fayl', matn: f.matn };
+					if (buyruq === 'mv') {
+						const eskiOta = papka(ildiz, dan.slice(0, -1))!;
+						delete eskiOta.ichida[dan[dan.length - 1]!];
+					}
+					return ok();
+				}
+				case 'grep': {
+					if (!arglar[0]) return xato('grep: qidiriladigan so\'z kerak');
+					let matn: string;
+					if (arglar[1]) {
+						const f = fayl(ildiz, yechYol(arglar[1]));
+						if (!f) return xato(`grep: fayl topilmadi: ${arglar[1]}`);
+						matn = f.matn;
+					} else if (stdin !== null) {
+						matn = stdin;
+					} else {
+						return xato('grep: fayl nomi kerak');
+					}
+					const mos = matn.split('\n').filter((q) => q.includes(arglar[0]!));
+					return mos.length ? ok(mos.join('\n')) : xato('(hech narsa topilmadi)');
+				}
+				case 'wc': {
+					let matn: string;
+					if (arglar[0]) {
+						const f = fayl(ildiz, yechYol(arglar[0]));
+						if (!f) return xato(`wc: fayl topilmadi: ${arglar[0]}`);
+						matn = f.matn;
+					} else if (stdin !== null) {
+						matn = stdin;
+					} else {
+						return xato('wc: fayl nomi kerak');
+					}
+					const qatorlar = matn ? matn.split('\n').length : 0;
+					const sozlar = matn.trim() ? matn.trim().split(/\s+/).length : 0;
+					return ok(`${qatorlar} qator, ${sozlar} so'z`);
+				}
+				case 'history':
+					return ok(tarix.map((b, i) => `${i + 1}  ${b}`).join('\n') || "(bo'sh)");
+				case 'clear':
+					oqim.innerHTML = '';
+					return ok();
+				default:
+					return xato(`buyruq topilmadi: ${buyruq} — "yordam" deb yozing`);
+			}
+		}
+
+		function chiqar(matn: string, sinf: string) {
+			for (const qator of matn.split('\n')) {
+				const p = document.createElement('div');
+				p.className = sinf;
+				p.textContent = qator;
+				oqim.append(p);
+			}
+			oqim.scrollTop = oqim.scrollHeight;
+		}
+
+		function topshiriqKorsat() {
+			if (topshiriq < TOPSHIRIQLAR.length) {
+				hisobEl.textContent = `${topshiriq + 1}/20`;
+				topshiriqEl.textContent = TOPSHIRIQLAR[topshiriq]!.matn;
+			} else {
+				hisobEl.textContent = '20/20';
+				topshiriqEl.textContent = "Hammasi bajarildi — Terminal Ustasi nishoni sizniki!";
+			}
+		}
+
+		function yurgiz(matn: string) {
+			chiqar(promptMatn() + ' ' + matn, 'satr-buyruq');
+			tarix.push(matn);
+			tarixKursori = tarix.length;
+
+			// Bitta pipe: chapdagi buyruq chiqishi o'ngdagiga stdin bo'ladi
+			const bolaklar = matn.split('|').map((b) => b.trim());
+			let natija = bajar(bolaklar[0]!, null);
+			for (let i = 1; i < bolaklar.length && !natija.xato; i++) {
+				natija = bajar(bolaklar[i]!, natija.chiqish);
+			}
+
+			if (natija.chiqish) chiqar(natija.chiqish, natija.xato ? 'satr-xato' : 'satr-chiqish');
+			promptEl.textContent = promptMatn();
+
+			// Joriy topshiriqni tekshiramiz
+			if (topshiriq < TOPSHIRIQLAR.length) {
+				const otdi = TOPSHIRIQLAR[topshiriq]!.tekshir({
+					buyruq: matn.trim(),
+					chiqish: natija.chiqish,
+					xato: natija.xato,
+					ildiz,
+					cwd,
+				});
+				if (otdi) {
+					topshiriq++;
+					hukmEl.textContent = `Topshiriq bajarildi! (${topshiriq}/20)`;
+					if (topshiriq === TOPSHIRIQLAR.length) {
+						amalBelgila('terminal-ustasi');
+						hukmEl.textContent =
+							"20/20 — Terminal Ustasi nishoni ochildi! Endi haqiqiy terminalda ham bemalol yura olasiz.";
+					}
+					topshiriqKorsat();
+				}
+			}
+		}
+
+		kirish.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter') {
+				const matn = kirish.value;
+				kirish.value = '';
+				if (matn.trim()) yurgiz(matn);
+			} else if (e.key === 'ArrowUp') {
+				e.preventDefault();
+				if (tarixKursori > 0) kirish.value = tarix[--tarixKursori] ?? '';
+			} else if (e.key === 'ArrowDown') {
+				e.preventDefault();
+				if (tarixKursori < tarix.length) kirish.value = tarix[++tarixKursori] ?? '';
+			}
+		});
+
+		// Terminalning istalgan joyini bosish — kirishga fokus
+		qutu.querySelector<HTMLElement>('.terminal')!.addEventListener('click', () => kirish.focus());
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			ildiz = boshFS();
+			cwd = [];
+			tarix = [];
+			tarixKursori = 0;
+			topshiriq = 0;
+			oqim.innerHTML = '';
+			promptEl.textContent = promptMatn();
+			hukmEl.textContent = '';
+			topshiriqKorsat();
+		});
+
+		topshiriqKorsat();
+		chiqar("Xush kelibsiz! Bu o'quv terminali. Buyruqlar ro'yxati: yordam", 'satr-chiqish');
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.sr {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	.topshiriq-panel {
+		display: flex;
+		align-items: baseline;
+		gap: 0.6rem;
+		padding: 0.55rem 0.7rem;
+		border: 1px solid var(--blok-4-chegara);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--blok-4-fon);
+	}
+
+	.t-hisob {
+		font-family: var(--sl-font-mono);
+		font-size: 0.8rem;
+		font-weight: 700;
+		color: var(--blok-4);
+		white-space: nowrap;
+	}
+
+	.t-matn {
+		font-size: 0.85rem;
+		line-height: 1.45;
+		color: var(--sl-color-gray-1);
+	}
+
+	.terminal {
+		margin-top: 0.8rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		cursor: text;
+	}
+
+	.oqim {
+		height: 14rem;
+		padding: 0.6rem 0.7rem 0.2rem;
+		overflow-y: auto;
+		overflow-wrap: anywhere;
+	}
+
+	.oqim :global(.satr-buyruq) {
+		color: var(--sl-color-white);
+	}
+
+	.oqim :global(.satr-chiqish) {
+		color: var(--sl-color-gray-2);
+	}
+
+	.oqim :global(.satr-xato) {
+		color: var(--blok-5);
+	}
+
+	.kirish-qator {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.4rem 0.7rem 0.6rem;
+	}
+
+	.prompt {
+		color: var(--blok-4);
+		font-weight: 700;
+		white-space: nowrap;
+	}
+
+	.kirish-label {
+		flex: 1;
+	}
+
+	.buyruq-kirish {
+		width: 100%;
+		border: none;
+		background: transparent;
+		color: var(--sl-color-white);
+		font: inherit;
+	}
+
+	.buyruq-kirish:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+		border-radius: 2px;
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 1.4em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		font-weight: 600;
+		color: var(--blok-1);
+	}
+</style>

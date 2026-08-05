@@ -1,0 +1,137 @@
+---
+title: '13-dars: Xotira ierarxiyasi'
+description: "Nega kompyuterda beshta xotira bor? Tezlik, narx va hajm o'rtasidagi abadiy savdo."
+sidebar:
+  label: '13-dars'
+  order: 13
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import TezlikInsonMiqyosi from '../../../components/sim/TezlikInsonMiqyosi.astro';
+
+<Bloknoma blok={4} />
+
+## Nega bu muhim
+
+8-darsda registr yasadik — juda tez xotira. Savol tug'iladi: nega butun kompyuterni registrlardan qurib qo'ya qolmaymiz? Javob achchiq: bunday kompyuterning narxi million dollardan oshib ketadi, hajmi esa baribir kichkina qoladi.
+
+Shu sababli muhandislar ayyorlik qilgan: **bir nechta** xotira ishlatiladi — kichkina-yu chaqmoqday tezi protsessor yonida, katta-yu sekini uzoqroqda. Bu darsda o'sha zinapoyani va uning ustida turgan sehrni — keshni o'rganasiz.
+
+<Maqsad>
+- tezlik, narx va hajm nega bir-biriga qarshi ishlashini tushuntira olasiz
+- xotira zinapoyasining qavatlarini tartib bilan sanab bera olasiz
+- kesh nima va u nima uchun ishlashini (lokallik) bilasiz
+- "dastur yuklanmoqda" degani aslida nima ekanini ayta olasiz
+</Maqsad>
+
+## Nazariya
+
+### Uchburchak: tez, katta, arzon — ikkitasini tanlang
+
+Xotira texnologiyalarida temir qoida bor: **tezlik oshgan sari bir baytning narxi ham oshadi**. Registr RAM'dan yuz barobar tez — va yuz ming barobar qimmat. Shu sababli tez xotira doim kichkina bo'ladi.
+
+Yechim — zinapoya. Protsessorga eng yaqin joyda ozgina, lekin juda tez xotira; undan uzoqroqda kattaroq, lekin sekinroq; eng chetda — terabaytlab, lekin "sudralib" ishlaydigan disk.
+
+<Atama soz="xotira ierarxiyasi" eng="memory hierarchy">
+	Xotiralarning tezlik bo'yicha zinapoyasi: registr → kesh → RAM → SSD/HDD.
+	Yuqorida tez va kichik, pastda sekin va katta.
+</Atama>
+
+### Kesh: protsessorning yon daftarchasi
+
+Kutubxonada ishlayapsiz deylik. Har so'z uchun javonga borib kelmaysiz — kerakli kitoblarni **stol ustiga** olib qo'yasiz. Stol kichkina, hammasi sig'maydi, lekin ayni ishlatayotganlaringiz shu yerda.
+
+Kesh — protsessorning ana shu stoli. RAM'dan o'qilgan ma'lumotning nusxasi keshda qoladi; keyingi safar so'ralsa, RAM'ga bormasdan shu yerdan olinadi.
+
+<Atama soz="kesh" eng="cache">
+	Katta va sekin xotiradagi ma'lumotlarning tez-tez ishlatiladigan qismini saqlovchi
+	kichik va tez xotira. Protsessor chipining ichida joylashadi.
+</Atama>
+
+### Nega kesh ishlaydi: lokallik
+
+Kesh foyda berishi uchun bitta shart kerak: dastur yaqinda ishlatgan narsasini **yana** ishlatishi. Va dasturlar aynan shunday yashaydi: takrorlash ichida bir xil o'zgaruvchilar, massivda ketma-ket kataklar.
+
+Bu hodisa **lokallik** deyiladi: dastur xotiraning hamma joyiga baravar emas, kichik "issiq nuqtalarga" qayta-qayta murojaat qiladi. Shu tufayli kichkina kesh murojaatlarning 90%dan ortig'ini ushlab qoladi.
+
+<Muhim turi="gap">
+	Kesh — shaffof: dastur ham, dasturchi ham uni so'ramaydi, apparat o'zi boshqaradi.
+	Bu blokdagi tanish g'oyaning yana bir ko'rinishi — **abstraksiya**: tezlik sehri
+	bor, lekin yuqoridan ko'rinmaydi.
+</Muhim>
+
+### "Yuklanmoqda..." ning asl ma'nosi
+
+Endi simulyatordagi raqamlarga qarang: registr 1 soniya bo'lsa, SSD — 2 kun. O'yin ishga tushayotganda nima bo'ladi? Gigabaytlab ma'lumot **diskdan RAM'ga ko'chiriladi** — protsessor miqyosida bu haftalab yuk tashish.
+
+Shuning uchun telefonda ilovalar "orqa fonda" turadi: RAM'dan chiqarib yuborilsa, keyingi ochilish yana "kema bilan yuk kutish" bo'lardi.
+
+<Muhim turi="sir">
+	O'yinlardagi "loading" ekrani, telefonningizning "ilova qayta ishga tushdi" holati,
+	brauzerning sahifani eslab qolishi — hammasi bitta jadvalning oqibatlari. Endi bu
+	jadval sizning qo'lingizda.
+</Muhim>
+
+## Sinab ko'r
+
+Protsessor uchun vaqt qanday oqishini his qiling: registrga murojaat 1 soniya deb olamiz. Har darajani bosib, uning "inson vaqtini" oching — oxirgisi hammasidan hayratlanarli.
+
+<TezlikInsonMiqyosi />
+
+## Xulosa
+
+- Tez xotira qimmat, shuning uchun **kichik**; arzon xotira katta, lekin **sekin**
+- Zinapoya: **registr → kesh → RAM → SSD → HDD** — har qadam ~10-100 barobar sekin
+- **Kesh** tez-tez ishlatiladigan ma'lumot nusxasini protsessor yonida saqlaydi
+- Kesh **lokallik** tufayli ishlaydi: dastur "issiq nuqtalarga" qayta-qayta qaytadi
+- "Yuklanmoqda" = diskdan RAM'ga ko'chirish — protsessor miqyosida haftalab ish
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Nega butun xotirani registr tezligida qurib bo'lmaydi?">
+	Narx va fizika. Tez xotira katakka ko'p tranzistor sarflaydi va protsessorga jismonan
+	yaqin turishi kerak — joy esa chegaralangan. Terabayt registr qurish texnik jihatdan
+	ham, iqtisodiy jihatdan ham imkonsiz.
+</Sinov>
+
+<Sinov raqam={2} savol="Kesh RAM'dagi ma'lumotning faqat nusxasini saqlaydi. Nega bu muammo emas?">
+	Chunki asl nusxa RAM'da turibdi. Keshdan biror narsa chiqarib tashlansa, hech narsa
+	yo'qolmaydi — keyingi safar yana RAM'dan o'qiladi, faqat sekinroq. Kesh to'g'rilikka
+	emas, faqat tezlikka xizmat qiladi.
+</Sinov>
+
+<Sinov raqam={3} savol="Lokallik bo'lmaganda kesh nima bo'lardi? Misol keltiring.">
+	Foydasiz bo'lardi: har murojaat yangi joyga tushsa, kesh doim "quruq" qoladi va har
+	safar RAM'ga borishga to'g'ri keladi. Misol: xotiraning tasodifiy joylaridan o'qiydigan
+	dastur — keshni har qadamda "sog'inadi" va sekin ishlaydi.
+</Sinov>
+
+<Sinov raqam={4} savol="Telefonda ilovani yopib qayta ochsangiz ba'zan bir zumda, ba'zan 'yuklanish' bilan ochiladi. Sababi nima?">
+	Birinchi holatda ilova hali RAM'da turgan — uni ko'rsatish registr-kesh miqyosidagi
+	ish. Ikkinchisida tizim RAM bo'shatish uchun ilovani chiqarib yuborgan — endi hammasi
+	diskdan qayta o'qiladi, bu esa protsessor miqyosida kunlab mehnat.
+</Sinov>
+
+<Sinov raqam={5} savol="SSD kompyuterni nega HDD'dan sezilarli 'tezlashtiradi'? Axir protsessor bir xil-ku.">
+	Kompyuterning sekinligi ko'pincha protsessorda emas, diskni kutishda. Inson miqyosida
+	HDD 10 oy bo'lsa, SSD 2 kun — dastur ochilishi, tizim yuklanishi asosan disk o'qishdan
+	iborat. Eng sekin bo'g'in almashsa, butun zanjir tezlashadi.
+</Sinov>
+
+<Amaliyot daqiqa={40} daraja="o'rta">
+	**Asosiy variant (imkon bo'lsa).** Eski yoki ochiq kompyuterni toping (uy, maktab
+	ustaxonasi) va uchta qismni ko'rsating: protsessor (kesh uning ichida), RAM
+	plankalari va disk (SSD yoki HDD). Har birini suratga oling va yoniga zinapoyaning
+	qaysi qavati ekanini yozing.
+
+	**Muqobil variant.** O'z kompyuteringiz yoki telefoningizning xarakteristikalarini
+	toping (Sozlamalar → Qurilma haqida): RAM hajmi, disk hajmi va turi. Ularni
+	zinapoya rasmiga joylashtiring va har qavat uchun "inson vaqtini" yozing.
+
+	Ikkala variantda ham yakuniy savol: nega RAM 8 GB-yu, disk 256 GB? Teskarisi bo'lsa
+	nima bo'lardi? Uch-to'rt gap javob yozing.
+
+	Topshiriladigan natija: rasmlar (yoki xarakteristikalar) + zinapoya sxemasi + javob.
+</Amaliyot>
+
+<DarsTugadi dars={13} blok={4} />

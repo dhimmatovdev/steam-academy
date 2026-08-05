@@ -1,0 +1,322 @@
+---
+/**
+ * TezlikInsonMiqyosi — 13-dars simulyatori.
+ *
+ * Xotira ierarxiyasining tezlik farqini INSON miqyosida ko'rsatadi:
+ * registrga murojaat 1 soniya deb olinsa, qolganlari qancha bo'ladi?
+ * Kesh 10 soniya, RAM 6 daqiqa, SSD 2 kun, HDD 10 oy, internet 12 yil.
+ *
+ * Chiziqlar logarifmik masshtabda — aks holda registr chizig'i bir
+ * pikselga ham yetmay qolardi. Bu haqda izohda aytilgan.
+ *
+ * Barcha qator shablonda, JS faqat tanlov va ochilganlik holatini boshqaradi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+const DARAJALAR = [
+	{
+		id: 'registr',
+		nom: 'Registr',
+		real: '~0.4 ns',
+		inson: '1 soniya',
+		foiz: 8,
+		izoh: "Protsessorning o'z cho'ntagi. Qo'lingizdagi qalamga qaragandek — javob shu zahoti.",
+	},
+	{
+		id: 'kesh',
+		nom: 'Kesh (L2)',
+		real: '~4 ns',
+		inson: '10 soniya',
+		foiz: 21,
+		izoh: 'Stol ustidagi kitobni ochib qaragandek. Tez-tez kerak bo\'ladigan narsalar shu yerda turadi.',
+	},
+	{
+		id: 'ram',
+		nom: 'RAM',
+		real: '~150 ns',
+		inson: '6 daqiqa',
+		foiz: 42,
+		izoh: "Qo'shni xonadagi javondan kitob olib kelgandek. Protsessor shu vaqtda YUZLAB boshqa ish qilib ulguradi.",
+	},
+	{
+		id: 'ssd',
+		nom: 'SSD',
+		real: '~0.07 ms',
+		inson: '2 kun',
+		foiz: 63,
+		izoh: "Boshqa shahardagi do'stingizdan pochta orqali kitob so'ragandek. Endi nega dastur 'yuklanishini' tushunasiz.",
+	},
+	{
+		id: 'hdd',
+		nom: 'HDD',
+		real: '~10 ms',
+		inson: '10 oy',
+		foiz: 84,
+		izoh: 'Kitob chet eldan kema bilan kelgandek. Mexanik disk aylanishini kutish protsessor uchun abadiyat.',
+	},
+	{
+		id: 'internet',
+		nom: 'Internet (uzoq server)',
+		real: '~150 ms',
+		inson: '12 yil',
+		foiz: 100,
+		izoh: "Kitobni yozuvchining o'zidan qo'lda so'rab olgandek. Shuning uchun ilovalar ma'lumotni oldindan yuklab oladi.",
+	},
+];
+---
+
+<Simulyator
+	sarlavha="Tezlik: inson miqyosida"
+	korsatma="Har darajani bosib, registr 1 soniya bo'lsa u qancha bo'lishini bilib oling."
+	blok={4}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyator xotira darajalarining tezligini inson miqyosida taqqoslaydi:
+			registrga murojaat 1 soniya deb olinsa, kesh 10 soniya, RAM 6 daqiqa, SSD 2 kun,
+			HDD 10 oy, uzoq serverdan javob esa 12 yil bo'ladi.
+		</p>
+		<p>
+			JavaScript'siz mashq: shu olti raqamni daftarga ustun qilib yozing va har biri
+			yonida "hayotdagi o'xshashi"ni o'ylab toping.
+		</p>
+	</Fragment>
+
+	<div class="tm not-content">
+		<div class="darajalar">
+			{
+				DARAJALAR.map((d, i) => (
+					<button type="button" class="daraja" data-daraja={d.id} aria-expanded="false">
+						<span class="d-tartib">{i + 1}</span>
+						<span class="d-nom">{d.nom}</span>
+						<span class="d-real">{d.real}</span>
+						<span class="d-chiziq">
+							<span class="d-toldirish" style={`--kenglik: ${d.foiz}%`} />
+						</span>
+						<span class="d-inson" data-inson={d.id}>
+							?
+						</span>
+					</button>
+				))
+			}
+		</div>
+
+		<p class="masshtab-izoh">
+			Chiziqlar logarifmik masshtabda: har qadam ~10 baravar sekinlashish. To'g'ri
+			chiziqli chizsak, registr chizig'i atom kengligicha ham chiqmasdi.
+		</p>
+
+		<p class="hukm" role="status" aria-live="polite">
+			Registrga murojaat = 1 soniya deb olamiz. Qolganlari qancha? Birinchi darajani
+			bosing.
+		</p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	import { amalBelgila } from '../../scripts/progress';
+
+	const MALUMOT: Record<string, { inson: string; izoh: string }> = {
+		registr: {
+			inson: '1 soniya',
+			izoh: "Protsessorning o'z cho'ntagi. Qo'lingizdagi qalamga qaragandek — javob shu zahoti.",
+		},
+		kesh: {
+			inson: '10 soniya',
+			izoh: "Stol ustidagi kitobni ochib qaragandek. Tez-tez kerak bo'ladigan narsalar shu yerda turadi.",
+		},
+		ram: {
+			inson: '6 daqiqa',
+			izoh: "Qo'shni xonadagi javondan kitob olib kelgandek. Protsessor shu vaqtda YUZLAB boshqa ish qilib ulguradi.",
+		},
+		ssd: {
+			inson: '2 kun',
+			izoh: "Boshqa shahardagi do'stingizdan pochta orqali kitob so'ragandek. Endi nega dastur 'yuklanishini' tushunasiz.",
+		},
+		hdd: {
+			inson: '10 oy',
+			izoh: "Kitob chet eldan kema bilan kelgandek. Mexanik disk aylanishini kutish protsessor uchun abadiyat.",
+		},
+		internet: {
+			inson: '12 yil',
+			izoh: "Kitobni yozuvchining o'zidan qo'lda so'rab olgandek. Shuning uchun ilovalar ma'lumotni oldindan yuklab oladi.",
+		},
+	};
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.tm');
+		if (!qutu) return;
+
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+		const ochilgan = new Set<string>();
+		const BOSH =
+			"Registrga murojaat = 1 soniya deb olamiz. Qolganlari qancha? Birinchi darajani bosing.";
+
+		for (const t of qutu.querySelectorAll<HTMLButtonElement>('.daraja')) {
+			t.addEventListener('click', () => {
+				const id = t.dataset.daraja!;
+				const m = MALUMOT[id]!;
+
+				ochilgan.add(id);
+				t.dataset.ochilgan = 'ha';
+				qutu.querySelector(`[data-inson="${id}"]`)!.textContent = m.inson;
+
+				for (const b of qutu.querySelectorAll<HTMLButtonElement>('.daraja')) {
+					const bu = b === t;
+					b.dataset.tanlangan = bu ? 'ha' : 'yoq';
+					b.setAttribute('aria-expanded', String(bu));
+				}
+
+				if (ochilgan.size === 6) {
+					amalBelgila('tezlik-miqyosi');
+					hukmEl.textContent =
+						m.izoh +
+						" — Olti daraja ochildi. Sekundlardan yillargacha — mana shu jarlik tufayli kesh, RAM va 'yuklanish' degan tushunchalar mavjud.";
+				} else {
+					hukmEl.textContent = m.izoh;
+				}
+			});
+		}
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			ochilgan.clear();
+			hukmEl.textContent = BOSH;
+			for (const b of qutu.querySelectorAll<HTMLButtonElement>('.daraja')) {
+				delete b.dataset.ochilgan;
+				b.dataset.tanlangan = 'yoq';
+				b.setAttribute('aria-expanded', 'false');
+				qutu.querySelector(`[data-inson="${b.dataset.daraja}"]`)!.textContent = '?';
+			}
+		});
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.darajalar {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.daraja {
+		display: grid;
+		grid-template-columns: 1.4rem 7.5rem 1fr 4.5rem;
+		grid-template-areas:
+			'tartib nom chiziq inson'
+			'tartib real chiziq inson';
+		align-items: center;
+		column-gap: 0.5rem;
+		margin: 0;
+		padding: 0.45rem 0.6rem;
+		border: 1px solid var(--sl-color-gray-6);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		text-align: left;
+		cursor: pointer;
+	}
+
+	/* Tor ekranda ikki qavat: nom+real tepada, chiziq pastda */
+	@media (max-width: 480px) {
+		.daraja {
+			grid-template-columns: 1.4rem 1fr 4.5rem;
+			grid-template-areas:
+				'tartib nom inson'
+				'tartib real inson'
+				'tartib chiziq chiziq';
+			row-gap: 0.25rem;
+		}
+	}
+
+	.daraja:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.daraja[data-tanlangan='ha'] {
+		border-color: var(--blok-4);
+		background: var(--blok-4-fon);
+	}
+
+	.d-tartib {
+		grid-area: tartib;
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		color: var(--sl-color-gray-4);
+	}
+
+	.d-nom {
+		grid-area: nom;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--sl-color-gray-1);
+	}
+
+	.d-real {
+		grid-area: real;
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.d-chiziq {
+		grid-area: chiziq;
+		display: block;
+		height: 0.6rem;
+		border-radius: 999px;
+		background: var(--sl-color-gray-6);
+		overflow: hidden;
+	}
+
+	.d-toldirish {
+		display: block;
+		height: 100%;
+		width: 0;
+		border-radius: 999px;
+		background: var(--blok-4);
+		transition: width 0.5s ease;
+	}
+
+	.daraja[data-ochilgan='ha'] .d-toldirish {
+		width: var(--kenglik);
+	}
+
+	.d-inson {
+		grid-area: inson;
+		justify-self: end;
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		font-weight: 700;
+		color: var(--sl-color-gray-4);
+	}
+
+	.daraja[data-ochilgan='ha'] .d-inson {
+		color: var(--blok-4);
+	}
+
+	.masshtab-izoh {
+		margin: 0.8rem 0 0 0;
+		font-size: 0.75rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-3);
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 3.9em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.d-toldirish {
+			transition: none;
+		}
+	}
+</style>
