@@ -1,0 +1,374 @@
+---
+/**
+ * AlgoritmMashinasi — 1-dars simulyatori.
+ *
+ * O'quvchi sandvich yasash qadamlarini to'g'ri tartibga soladi va robotga
+ * beradi. Robot buyruqlarni SO'ZMA-SO'Z bajaradi — tartib xato bo'lsa
+ * natija kulgili chiqadi.
+ *
+ * Pedagogik maqsad: "kompyuter o'zi o'ylamaydi" degan gapni aytib emas,
+ * ko'rsatib tushuntirish. Xato tartib = xato natija, hech qanday
+ * "robot tushunib oldi" degan narsa yo'q.
+ *
+ * TARTIBLASH USULI: yuqoriga/pastga tugmalari, drag-and-drop emas.
+ * Sabab — loyiha qoidasi "mobil birinchi" va "klaviatura bilan
+ * boshqarilishi shart". HTML5 drag-and-drop telefonda umuman ishlamaydi
+ * va klaviatura bilan boshqarilmaydi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+interface Qadam {
+	id: string;
+	matn: string;
+}
+
+/** To'g'ri tartib — tekshirish shu ro'yxatga qarab bajariladi. */
+const QADAMLAR: Qadam[] = [
+	{ id: 'ol', matn: 'Nonni oling' },
+	{ id: 'kes', matn: 'Nonni ikkiga kesing' },
+	{ id: 'boting', matn: 'Pichoqni murabboga botiring' },
+	{ id: 'surt', matn: 'Murabboni non ustiga surting' },
+	{ id: 'birlashtir', matn: 'Ikki bo‘lakni birlashtiring' },
+	{ id: 'qoy', matn: 'Sandvichni tarelkaga qo‘ying' },
+];
+
+/* Boshlang'ich tartib ataylab aralashtirilgan va QAT'IY (random emas):
+   build har safar bir xil natija berishi kerak, aks holda sahifa
+   har yangilanishda boshqa ko'rinadi va o'qituvchi ko'rsatib tushuntira olmaydi. */
+const BOSHLANGICH = ['surt', 'ol', 'qoy', 'boting', 'birlashtir', 'kes'];
+const aralash = BOSHLANGICH.map((id) => QADAMLAR.find((q) => q.id === id)!);
+---
+
+<Simulyator
+	sarlavha="Algoritm mashinasi"
+	korsatma="Qadamlarni to'g'ri tartibga soling, keyin robotga bering."
+	blok={1}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda sandvich yasash qadamlarini tartibga solib robotga berasiz. Robot
+			buyruqlarni so'zma-so'z bajaradi.
+		</p>
+		<p>
+			JavaScript'siz ham sinab ko'rish mumkin: qadamlarni daftarga yozib, tartibini
+			o'zgartirib ko'ring va har tartibda robot nima qilishini yozib chiqing.
+		</p>
+	</Fragment>
+
+	<div class="am not-content">
+		<ol class="royxat" aria-label="Sandvich yasash qadamlari">
+			{
+				aralash.map((q, i) => (
+					<li class="qadam" data-id={q.id}>
+						<span class="raqam" aria-hidden="true">{i + 1}</span>
+						<span class="matn">{q.matn}</span>
+						{/*
+							Strelkalar SVG bilan chiziladi, "↑" belgisi bilan emas: ba'zi
+							tizimlarda bu belgilar emoji shriftiga tushib ko'k/sariq rangda
+							chiqadi va dizayn rangiga bo'ysunmaydi.
+							`sim-tugma` klassi ataylab QO'YILMAGAN — bu tugmalar ixcham,
+							kvadrat ko'rinishga ega va umumiy tugma uslubi bilan
+							to'qnashmasligi kerak.
+						*/}
+						<span class="tugmalar">
+							<button
+								type="button"
+								class="yon yuqori"
+								aria-label={`"${q.matn}" qadamini yuqoriga ko'chirish`}
+							>
+								<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+									<path d="M8 3.5 3 9h10z" />
+								</svg>
+							</button>
+							<button
+								type="button"
+								class="yon past"
+								aria-label={`"${q.matn}" qadamini pastga ko'chirish`}
+							>
+								<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+									<path d="M8 12.5 3 7h10z" />
+								</svg>
+							</button>
+						</span>
+					</li>
+				))
+			}
+		</ol>
+
+		<p class="elon" role="status" aria-live="polite"></p>
+
+		<div class="natija" data-holat="bosh" hidden>
+			<p class="natija-sarlavha"></p>
+			<ul class="natija-royxat"></ul>
+		</div>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="ishga">Robotga ber</button>
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	/** To'g'ri tartib. */
+	const TOGRI = ['ol', 'kes', 'boting', 'surt', 'birlashtir', 'qoy'];
+
+	/**
+	 * Qoidalar: `avval` qadami `keyin` qadamidan oldin turishi SHART.
+	 * Buzilsa — robot nima qilishi `xabar` da yozilgan.
+	 *
+	 * Bu ataylab "to'g'ri/xato" degan quruq baho emas: o'quvchi robot
+	 * aynan nima qilganini ko'rishi kerak.
+	 */
+	const QOIDALAR: { avval: string; keyin: string; xabar: string }[] = [
+		{
+			avval: 'ol',
+			keyin: 'kes',
+			xabar: 'Robot pichoqni havoda yurgizdi — non hali qo‘lida emas edi.',
+		},
+		{
+			avval: 'kes',
+			keyin: 'surt',
+			xabar: 'Robot butun nonning ustiga murabbo surtdi. Ichi quruq qoldi.',
+		},
+		{
+			avval: 'boting',
+			keyin: 'surt',
+			xabar: 'Robot quruq pichoq bilan nonni ishqaladi. Murabbo idishda qoldi.',
+		},
+		{
+			avval: 'kes',
+			keyin: 'birlashtir',
+			xabar: 'Robot butun nonni o‘ziga bosdi. Hech narsa o‘zgarmadi.',
+		},
+		{
+			avval: 'surt',
+			keyin: 'birlashtir',
+			xabar: 'Robot quruq ikki bo‘lakni birlashtirdi. Bu shunchaki non.',
+		},
+		{
+			avval: 'birlashtir',
+			keyin: 'qoy',
+			xabar: 'Robot yarim nonni tarelkaga qo‘ydi, ikkinchi bo‘lak stolda qoldi.',
+		},
+	];
+
+	/**
+	 * MUHIM naqsh: `boshqaruv` slotidagi tugmalar `.am` ichida EMAS — ular
+	 * Simulyator qobig'ining footer'ida turadi, ya'ni boshqa shoxda.
+	 * Shu sababli ildiz sifatida `.simulyator` olinadi, `.am` emas.
+	 * Barcha simulyatorlar shu naqshga amal qiladi (AGENTS.md).
+	 */
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.am');
+		if (!qutu) return; // bu boshqa simulyator
+
+		const royxat = qutu.querySelector<HTMLOListElement>('.royxat')!;
+		const elon = qutu.querySelector<HTMLElement>('.elon')!;
+		const natija = qutu.querySelector<HTMLElement>('.natija')!;
+		const natijaSarlavha = natija.querySelector<HTMLElement>('.natija-sarlavha')!;
+		const natijaRoyxat = natija.querySelector<HTMLUListElement>('.natija-royxat')!;
+
+		// Boshlang'ich tartibni eslab qolamiz — "Qayta boshlash" shunga qaytaradi
+		const boshTartib = [...royxat.children] as HTMLLIElement[];
+
+		function raqamlarniYangila() {
+			[...royxat.children].forEach((li, i) => {
+				li.querySelector('.raqam')!.textContent = String(i + 1);
+			});
+		}
+
+		/** Qadamni bir pog'ona yuqoriga yoki pastga ko'chiradi. */
+		function kochir(li: HTMLLIElement, yon: 'yuqori' | 'past') {
+			const qoshni =
+				yon === 'yuqori'
+					? (li.previousElementSibling as HTMLLIElement | null)
+					: (li.nextElementSibling as HTMLLIElement | null);
+			if (!qoshni) {
+				elon.textContent = yon === 'yuqori' ? 'Bu birinchi qadam.' : 'Bu oxirgi qadam.';
+				return;
+			}
+			if (yon === 'yuqori') royxat.insertBefore(li, qoshni);
+			else royxat.insertBefore(qoshni, li);
+
+			raqamlarniYangila();
+			natija.hidden = true;
+
+			const matn = li.querySelector('.matn')!.textContent;
+			const orin = [...royxat.children].indexOf(li) + 1;
+			elon.textContent = `"${matn}" endi ${orin}-o'rinda.`;
+
+			// Fokus ko'chgan tugmada qolsin — klaviatura bilan ketma-ket bosish uchun
+			li.querySelector<HTMLButtonElement>(`.${yon}`)!.focus();
+		}
+
+		royxat.addEventListener('click', (e) => {
+			const tugma = (e.target as HTMLElement).closest('button');
+			if (!tugma) return;
+			const li = tugma.closest('li') as HTMLLIElement;
+			kochir(li, tugma.classList.contains('yuqori') ? 'yuqori' : 'past');
+		});
+
+		qobiq.querySelector<HTMLButtonElement>('.ishga')!.addEventListener('click', () => {
+			const tartib = [...royxat.children].map((li) => (li as HTMLElement).dataset.id!);
+			const orin = new Map(tartib.map((id, i) => [id, i]));
+
+			const xatolar = QOIDALAR.filter(
+				(q) => orin.get(q.avval)! > orin.get(q.keyin)!
+			).map((q) => q.xabar);
+
+			natija.hidden = false;
+			natijaRoyxat.innerHTML = '';
+
+			if (xatolar.length === 0) {
+				natija.dataset.holat = 'togri';
+				natijaSarlavha.textContent = 'Robot sandvich yasadi.';
+				for (const id of TOGRI) {
+					const li = document.createElement('li');
+					li.textContent = qutu.querySelector(`[data-id="${id}"] .matn`)!.textContent;
+					natijaRoyxat.append(li);
+				}
+			} else {
+				natija.dataset.holat = 'xato';
+				natijaSarlavha.textContent = 'Robot buyruqlarni so‘zma-so‘z bajardi:';
+				// Ko'pi bilan ikkita xabar — o'quvchini xatolar ro'yxati bilan bosmaymiz
+				for (const x of xatolar.slice(0, 2)) {
+					const li = document.createElement('li');
+					li.textContent = x;
+					natijaRoyxat.append(li);
+				}
+			}
+		});
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			royxat.append(...boshTartib);
+			raqamlarniYangila();
+			natija.hidden = true;
+			elon.textContent = 'Boshlang‘ich tartib qaytarildi.';
+		});
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.royxat {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.qadam {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.5rem 0.6rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+	}
+
+	.raqam {
+		flex: 0 0 1.5rem;
+		height: 1.5rem;
+		display: grid;
+		place-items: center;
+		border-radius: 50%;
+		background: var(--blok-1-fon);
+		color: var(--blok-1);
+		font-family: var(--sl-font-mono);
+		font-size: 0.75rem;
+		font-weight: 700;
+	}
+
+	.matn {
+		flex: 1 1 auto;
+		font-size: 0.9rem;
+		line-height: 1.35;
+	}
+
+	.tugmalar {
+		flex: 0 0 auto;
+		display: flex;
+		gap: 0.25rem;
+	}
+
+	/* Barmoq bilan bosish uchun yetarli katta nishon (32x32px) */
+	.tugmalar button {
+		width: 2rem;
+		height: 2rem;
+		display: grid;
+		place-items: center;
+		margin: 0;
+		padding: 0;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-2);
+		cursor: pointer;
+	}
+
+	.tugmalar button:hover {
+		border-color: var(--blok-1);
+		color: var(--blok-1);
+	}
+
+	.tugmalar button:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.tugmalar svg {
+		width: 0.7rem;
+		height: 0.7rem;
+		fill: currentColor;
+	}
+
+	.elon {
+		margin: 0.75rem 0 0 0;
+		min-height: 1.2em;
+		font-size: 0.8rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.natija {
+		margin-top: 0.75rem;
+		padding: 0.75rem 0.9rem;
+		border-radius: var(--sa-radius-kichik);
+		border: 1px solid var(--n-chegara);
+		background: var(--n-fon);
+	}
+
+	.natija[data-holat='togri'] {
+		--n-chegara: var(--blok-1-chegara);
+		--n-fon: var(--blok-1-fon);
+		--n-rang: var(--blok-1);
+	}
+
+	.natija[data-holat='xato'] {
+		--n-chegara: var(--blok-2-chegara);
+		--n-fon: var(--blok-2-fon);
+		--n-rang: var(--blok-2);
+	}
+
+	.natija-sarlavha {
+		margin: 0 0 0.4rem 0;
+		font-weight: 600;
+		font-size: 0.9rem;
+		color: var(--n-rang);
+	}
+
+	.natija-royxat {
+		margin: 0;
+		padding-left: 1.1rem;
+		font-size: 0.875rem;
+		line-height: 1.5;
+	}
+
+	.natija-royxat li {
+		margin: 0.15rem 0;
+	}
+</style>

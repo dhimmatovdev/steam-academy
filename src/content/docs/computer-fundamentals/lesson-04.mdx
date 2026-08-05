@@ -1,0 +1,166 @@
+---
+title: '4-dars: Matn, rasm, ovoz'
+description: "Harf, piksel va tovush qanday songa aylanadi. Unicode, RGB va diskretlash tushunchalari."
+sidebar:
+  label: '4-dars'
+  order: 4
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import BaytKuzatuvchi from '../../../components/sim/BaytKuzatuvchi.astro';
+import PikselChizgich from '../../../components/sim/PikselChizgich.astro';
+import TovushDiskret from '../../../components/sim/TovushDiskret.astro';
+
+<Bloknoma blok={1} />
+
+## Nega bu muhim
+
+Telefoningizda "Salom" so'zi, do'stingizning surati va sevimli qo'shig'ingiz bir xil joyda — bir xil xotirada — turadi. Xotira esa faqat sonlarni saqlaydi.
+
+Demak matn ham, rasm ham, ovoz ham songa aylantirilgan. Bu darsda aynan qanday aylantirilishini ko'ramiz. Va nega ismingizdagi `o'` harfi ikki barobar joy egallashini ham bilib olasiz.
+
+<Maqsad>
+- harflar qanday songa aylanishini va Unicode nima uchun kerakligini bilasiz
+- nega o'zbekcha matn inglizchadan ko'proq joy egallashini tushuntira olasiz
+- rasm sonlar to'plami ekanligini va RGB qanday ishlashini bilasiz
+- diskretlash nima ekanligini va sifat nimaga bog'liqligini aytib bera olasiz
+</Maqsad>
+
+## Nazariya
+
+### Matn: har harfga bitta raqam
+
+G'oya juda oddiy: har harfga bitta raqam beriladi va shu raqam saqlanadi.
+
+1960-yillarda **ASCII** standarti shu tarzda tuzilgan: `A` = 65, `B` = 66, `a` = 97, `0` = 48. Jami 128 belgi — lotin alifbosi, raqamlar va tinish belgilari uchun yetarli edi.
+
+Lekin dunyoda faqat lotin alifbosi emas. Kirill, arab, xitoy, hind yozuvlari — jami 100 mingdan ortiq belgi bor. 128 o'rin kamlik qildi.
+
+<Atama soz="Unicode" eng="Unicode">
+	Dunyodagi barcha yozuv tizimlarining belgilariga yagona raqam beruvchi standart.
+	Hozirda 150 mingdan ortiq belgi ro'yxatga olingan.
+</Atama>
+
+### Nega o'zbekcha matn ko'proq joy oladi?
+
+Unicode har belgiga raqam beradi, lekin bu raqamni xotiraga qanday yozish — alohida masala. Eng keng tarqalgan usul **UTF-8**.
+
+UTF-8 aqlli ishlaydi: keng tarqalgan belgilarga kam joy, kam uchraydiganlarga ko'p joy ajratadi.
+
+- oddiy lotin harflari (`a`, `S`, `7`) — **1 bayt**
+- kirill, arab, tutuq belgisi (`ʻ`) — **2 bayt**
+- xitoy, yapon belgilari — **3 bayt**
+- emoji — **4 bayt**
+
+Shu sababli `o'zbek` so'zi 6 harfdan iborat, lekin xotirada 7 bayt egallaydi — tutuq belgisi qo'shimcha bayt oladi.
+
+<Muhim turi="ogoh">
+	"Bitta harf = bitta bayt" degan tushuncha xato va u haqiqiy xatolarga olib keladi.
+	Matnni bayt bo'yicha kesib qo'ysangiz, harf yarmidan bo'linib ekranda `?` yoki
+	tushunarsiz belgi chiqadi.
+</Muhim>
+
+### Rasm: sonlar to'ri
+
+Rasm — kichik rangli kvadratchalar to'ri. Har kvadratcha **piksel** deb ataladi.
+
+Har pikselning rangi uchta son bilan yoziladi: qizil, yashil va ko'k miqdori. Har biri 0 dan 255 gacha, ya'ni bitta bayt.
+
+<Atama soz="RGB" eng="RGB">
+	Rangni uch komponent orqali ifodalash usuli: Red (qizil), Green (yashil), Blue (ko'k).
+	Har komponent 0–255 oralig'ida.
+</Atama>
+
+Masalan: `255, 0, 0` — sof qizil. `0, 0, 0` — qora. `255, 255, 255` — oq. `250, 200, 40` — sariq.
+
+Bitta piksel = 3 bayt. Telefon kamerasi 12 million piksel oladi, ya'ni siqilmagan holda **36 megabayt**. Shu sababli rasmlar JPEG yoki PNG formatida siqiladi.
+
+<Muhim turi="gap">
+	Matn, rasm va ovoz — uchtasi ham bitta narsa: **sonlar ketma-ketligi**. Farq faqat
+	shu sonlarni qanday o'qish kerakligida. Fayl formati aynan shu o'qish qoidasini
+	saqlaydi.
+</Muhim>
+
+### Ovoz: uzluksiz dunyoni kesib olish
+
+Tovush — havoning tebranishi. Bu tebranish **uzluksiz**: har lahzada aniq bir qiymati bor va lahzalar cheksiz ko'p.
+
+Xotira esa cheksiz son saqlay olmaydi. Yechim: to'lqinni sekundda ko'p marta o'lchab, o'lchov natijalarini saqlash.
+
+<Atama soz="diskretlash" eng="sampling">
+	Uzluksiz signalni ma'lum oraliqlarda o'lchab, alohida sonlarga aylantirish. Sekundiga
+	qancha o'lchov olinsa, saqlangan shakl asl to'lqinga shuncha yaqin bo'ladi.
+</Atama>
+
+CD sifatida sekundiga **44 100 marta** o'lchov olinadi. Telefon qo'ng'irog'ida esa faqat 8000 marta — shu sababli telefondagi ovoz "quvurdan kelayotgandek" eshitiladi.
+
+## Sinab ko'r
+
+Birinchi navbatda matn. O'z ismingizni yozib ko'ring — `o'` yoki `g'` harflari bo'lsa, ular sariq bilan belgilanadi.
+
+<BaytKuzatuvchi />
+
+Endi rasm. 8×8 katakda biror shakl chizing va o'ngdagi sonlarga qarab turing.
+
+<PikselChizgich />
+
+Oxirida ovoz. Slayderni chapga surib, saqlangan shakl asl to'lqindan qanday uzoqlashishini ko'ring.
+
+<TovushDiskret />
+
+## Xulosa
+
+- Matn: har belgiga **Unicode** raqami beriladi, xotiraga **UTF-8** bilan yoziladi
+- Lotin harflari 1 bayt, o'zbekcha tutuq belgisi 2 bayt, emoji 4 bayt oladi
+- Rasm: har piksel **RGB** — uchta bayt (qizil, yashil, ko'k)
+- Ovoz: uzluksiz to'lqin sekundda minglab marta o'lchanadi (**diskretlash**)
+- Uchtasi ham sonlar ketma-ketligi. Ma'noni **fayl formati** — o'qish qoidasi — beradi
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="ASCII yetarli bo'lmaganining sababi nima edi?">
+	ASCII faqat 128 belgiga joy ajratgan — bu lotin alifbosi, raqamlar va tinish belgilari
+	uchun yetarli edi. Dunyoda esa kirill, arab, xitoy va boshqa yozuvlar bor: jami 100
+	mingdan ortiq belgi. Shu sababli Unicode yaratildi.
+</Sinov>
+
+<Sinov raqam={2} savol="`o'g'il` so'zi nechta belgidan iborat va xotirada necha bayt egallaydi?">
+	6 ta belgi: `o`, `'`, `g`, `'`, `i`, `l`. Lotin harflari 1 bayt, ikkita tutuq belgisi
+	esa 2 bayt oladi. Jami: 4 × 1 + 2 × 2 = **8 bayt**.
+</Sinov>
+
+<Sinov raqam={3} savol="100×100 pikselli siqilmagan rangli rasm necha bayt joy oladi?">
+	Piksellar soni: 100 × 100 = 10 000. Har piksel RGB uchun 3 bayt oladi.
+	10 000 × 3 = **30 000 bayt**, ya'ni taxminan 30 kilobayt.
+</Sinov>
+
+<Sinov raqam={4} savol="Nega telefondagi ovoz musiqa yozuvidan pastroq sifatda eshitiladi?">
+	Telefon aloqasida sekundiga taxminan 8000 marta o'lchov olinadi, CD sifatida esa
+	44 100 marta. Kam namuna — yo'qolgan tafsilotlar. Shakl umumiy holda tanilsa ham,
+	yuqori chastotalar saqlanmaydi va ovoz "bo'g'iq" chiqadi.
+</Sinov>
+
+<Sinov raqam={5} savol="Bir xil 3 bayt — `72, 101, 108` — nima bo'lishi mumkin?">
+	Har narsa bo'lishi mumkin. Matn deb o'qilsa: `Hel`. Rang deb o'qilsa: to'q qizil-jigarrang
+	piksel. Ovoz namunasi deb o'qilsa: uch lahzalik tebranish qiymati. Sonlar bir xil —
+	ma'noni **o'qish qoidasi** beradi.
+</Sinov>
+
+<Amaliyot daqiqa={30} daraja="o'rta">
+	**Birinchi qism.** Ismingiz va familiyangizni 16-lik ko'rinishda yozib chiqing.
+	Yuqoridagi "Bayt kuzatuvchi" simulyatoridan foydalanishingiz mumkin, lekin
+	natijani daftarga ko'chirib yozing va har baytni izohlang.
+
+	**Ikkinchi qism.** Istalgan PNG rasmni [hexed.it](https://hexed.it) saytida oching
+	(fayl brauzerdan chiqmaydi, hech qayerga yuklanmaydi).
+
+	Birinchi 8 baytga qarang. Ular har doim bir xil bo'ladi:
+	`89 50 4E 47 0D 0A 1A 0A`. `50 4E 47` baytlarini matn deb o'qib ko'ring — nima chiqdi?
+
+	Endi JPEG faylni ochib, uning birinchi baytlarini yozib oling va PNG bilan solishtiring.
+
+	Topshiriladigan natija: ismingizning hex yozuvi, PNG va JPEG sarlavhalari,
+	va "kompyuter fayl turini qanday biladi?" savoliga bir paragraf javob.
+</Amaliyot>
+
+<DarsTugadi dars={4} blok={1} />

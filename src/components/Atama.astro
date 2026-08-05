@@ -1,0 +1,80 @@
+---
+/**
+ * Atama — yangi tushuncha birinchi marta uchraganda ishlatiladi.
+ *
+ *   <Atama soz="kesh" eng="cache">
+ *   Protsessor yonidagi juda tez, lekin juda kichik xotira.
+ *   </Atama>
+ *
+ * Nima uchun kerak: o'quvchi keyinchalik inglizcha manbalarni o'qiy olishi
+ * uchun atamaning inglizcha shakli ham yonida turishi shart. Lekin dars
+ * matni inglizcha atamalar bilan to'lib ketmasligi kerak -- shu sababli
+ * inglizcha variant asosiy matnda emas, shu blok ichida beriladi.
+ */
+interface Props {
+	/** O'zbekcha atama */
+	soz: string;
+	/** Inglizcha varianti */
+	eng?: string;
+}
+
+const { soz, eng } = Astro.props;
+---
+
+<dl class="atama">
+	<dt>
+		<span class="soz">{soz}</span>
+		{eng && <code class="eng">{eng}</code>}
+	</dt>
+	<dd>
+		<slot />
+	</dd>
+</dl>
+
+<style>
+	.atama {
+		margin: 1.25rem 0;
+		padding: 0.75rem 1rem;
+		border: 1px dashed var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-gray-7);
+	}
+
+	dt {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem;
+		margin: 0 0 0.3rem 0;
+	}
+
+	.soz {
+		font-weight: 700;
+		color: var(--sl-color-white);
+	}
+
+	.eng {
+		font-size: 0.8rem;
+		/* Starlight'ning inline code foni bu yerda ortiqcha shovqin qiladi */
+		background: transparent;
+		border: 1px solid var(--sl-color-gray-5);
+		color: var(--sl-color-gray-2);
+	}
+
+	dd {
+		/* Starlight'ning `dt + dd` qoidasini bosib o'tamiz: oraliq dt ning
+		   margin-bottom'i orqali beriladi */
+		margin: 0;
+		font-size: 0.95rem;
+		line-height: 1.55;
+		color: var(--sl-color-gray-2);
+	}
+
+	dd :global(p:first-child) {
+		margin-top: 0;
+	}
+
+	dd :global(p:last-child) {
+		margin-bottom: 0;
+	}
+</style>

@@ -1,0 +1,201 @@
+---
+/**
+ * Simulyator — barcha interaktiv komponentlar uchun umumiy qobiq.
+ *
+ * Har simulyator bir xil ko'rinadi va bir xil qoidalarga bo'ysunadi:
+ *   - sarlavha va BITTA qatorli ko'rsatma (o'quvchi nima qilishini biladi)
+ *   - "Qayta boshlash" tugmasi uchun joy (boshqaruv sloti)
+ *   - JS ishlamasa — fallback matn ko'rinadi, sahifa buzilmaydi
+ *   - 360px kenglikda gorizontal scroll bo'lmaydi
+ *
+ * Ishlatilishi:
+ *   <Simulyator sarlavha="Bit lampalar" korsatma="Lampani bosib yoqing." blok={1}>
+ *     <Fragment slot="fallback">JS'siz ko'rsatiladigan izoh</Fragment>
+ *     ...interaktiv maydon...
+ *     <Fragment slot="boshqaruv"><button>Qayta boshlash</button></Fragment>
+ *   </Simulyator>
+ *
+ * Nima uchun umumiy qobiq: modulda 15 dan ortiq simulyator bor. Har birini
+ * alohida stillash — nomuvofiqlik va ortiqcha CSS degani.
+ */
+interface Props {
+	sarlavha: string;
+	/** Bir qatorli ko'rsatma. Uzun bo'lsa — simulyator juda murakkab. */
+	korsatma: string;
+	/** Rang uchun: dars qaysi blokda */
+	blok?: 1 | 2 | 3 | 4 | 5;
+}
+
+const { sarlavha, korsatma, blok = 1 } = Astro.props;
+const boshqaruvBormi = Astro.slots.has('boshqaruv');
+const fallbackBormi = Astro.slots.has('fallback');
+---
+
+{/*
+	`not-content` — Starlight qoidasi: u `.sl-markdown-content` ichidagi HAR QANDAY
+	qo'shni element juftiga `margin-top: 1rem` qo'shadi (proza uchun to'g'ri, UI
+	uchun halokatli — tugmalar zinapoyasimon siljib ketadi). `not-content` shu
+	avtomatik oraliqni butun daraxt bo'ylab o'chiradi.
+*/}
+<div class="simulyator not-content" data-blok={blok} data-holat="statik">
+	<header>
+		<h3>{sarlavha}</h3>
+		<p class="korsatma">{korsatma}</p>
+	</header>
+
+	{
+		fallbackBormi && (
+			<div class="fallback">
+				<slot name="fallback" />
+			</div>
+		)
+	}
+
+	<div class="maydon">
+		<slot />
+	</div>
+
+	{
+		boshqaruvBormi && (
+			<footer class="boshqaruv">
+				<slot name="boshqaruv" />
+			</footer>
+		)
+	}
+</div>
+
+<script>
+	/* JavaScript ishlayotganini bildiramiz: fallback yashiriladi, interaktiv
+	   maydon ko'rinadi. Bu bitta joyda — har simulyator o'zi takrorlamaydi. */
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach((el) => {
+		el.dataset.holat = 'tayyor';
+	});
+</script>
+
+<style>
+	.simulyator {
+		margin: 2rem 0;
+		border: 1px solid var(--blok-chegara);
+		border-radius: var(--sa-radius);
+		background: var(--sl-color-gray-7);
+		overflow: hidden;
+	}
+
+	header {
+		padding: 0.8rem 1.1rem;
+		background: var(--blok-fon);
+		border-bottom: 1px solid var(--blok-chegara);
+	}
+
+	h3 {
+		margin: 0;
+		font-size: 1rem;
+		color: var(--blok-rang);
+	}
+
+	.korsatma {
+		margin: 0.25rem 0 0 0;
+		font-size: 0.85rem;
+		line-height: 1.45;
+		color: var(--sl-color-gray-2);
+	}
+
+	.maydon {
+		padding: 1.1rem;
+		/* Ichidagi keng element (SVG sxema, jadval) sahifani emas,
+		   o'zini scroll qilsin */
+		overflow-x: auto;
+	}
+
+	.boshqaruv {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.75rem 1.1rem;
+		border-top: 1px solid var(--sl-color-gray-5);
+	}
+
+	.fallback {
+		padding: 1rem 1.1rem;
+		font-size: 0.9rem;
+		line-height: 1.55;
+		color: var(--sl-color-gray-2);
+	}
+
+	.fallback :global(p:first-child) {
+		margin-top: 0;
+	}
+
+	.fallback :global(p:last-child) {
+		margin-bottom: 0;
+	}
+
+	/* `not-content` Starlight'ning proza oraliqlarini ham o'chirdi — fallback
+	   ichidagi paragraflar uchun o'zimiz qaytaramiz */
+	.fallback :global(p + p) {
+		margin-top: 0.75rem;
+	}
+
+	/* JS yo'q: fallback ko'rinadi, interaktiv qism yashiringan */
+	.simulyator[data-holat='statik'] .maydon,
+	.simulyator[data-holat='statik'] .boshqaruv {
+		display: none;
+	}
+
+	.simulyator[data-holat='tayyor'] .fallback {
+		display: none;
+	}
+
+	/* Simulyator ichidagi barcha tugmalar bir xil ko'rinadi — har
+	   simulyator o'z tugma uslubini yozmasligi uchun */
+	.boshqaruv :global(button),
+	.maydon :global(button.sim-tugma) {
+		padding: 0.45rem 0.9rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-1);
+		font: inherit;
+		font-size: 0.875rem;
+		cursor: pointer;
+		transition: border-color 0.15s ease;
+	}
+
+	.boshqaruv :global(button:hover),
+	.maydon :global(button.sim-tugma:hover) {
+		border-color: var(--blok-rang);
+	}
+
+	.boshqaruv :global(button:focus-visible),
+	.maydon :global(button.sim-tugma:focus-visible) {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.simulyator[data-blok='1'] {
+		--blok-rang: var(--blok-1);
+		--blok-fon: var(--blok-1-fon);
+		--blok-chegara: var(--blok-1-chegara);
+	}
+	.simulyator[data-blok='2'] {
+		--blok-rang: var(--blok-2);
+		--blok-fon: var(--blok-2-fon);
+		--blok-chegara: var(--blok-2-chegara);
+	}
+	.simulyator[data-blok='3'] {
+		--blok-rang: var(--blok-3);
+		--blok-fon: var(--blok-3-fon);
+		--blok-chegara: var(--blok-3-chegara);
+	}
+	.simulyator[data-blok='4'] {
+		--blok-rang: var(--blok-4);
+		--blok-fon: var(--blok-4-fon);
+		--blok-chegara: var(--blok-4-chegara);
+	}
+	.simulyator[data-blok='5'] {
+		--blok-rang: var(--blok-5);
+		--blok-fon: var(--blok-5-fon);
+		--blok-chegara: var(--blok-5-chegara);
+	}
+</style>

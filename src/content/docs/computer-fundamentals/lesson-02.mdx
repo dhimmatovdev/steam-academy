@@ -1,0 +1,163 @@
+---
+title: '2-dars: Bit va ikkilik sanoq'
+description: "Nega kompyuter faqat 0 va 1 bilan ishlaydi. Bit, bayt va ikkilik–o'nlik–16-lik sanoq tizimlari orasidagi o'tish."
+sidebar:
+  label: '2-dars'
+  order: 2
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Sinov } from '@components';
+import BitLampalar from '../../../components/sim/BitLampalar.astro';
+import BinaryBlitz from '../../../components/sim/BinaryBlitz.astro';
+
+<Bloknoma blok={1} />
+
+## Nega bu muhim
+
+Telefoningizdagi rasm, ovoz, xabar va o'yin — hammasi bir xil narsadan yasalgan. Faqat ikki xil holat: **bor** va **yo'q**. Boshqa hech narsa.
+
+Bu darsdan keyin kompyuterning "tili"ni o'qiy boshlaysiz. Va nima uchun xotira 8, 16, 32, 64 kabi g'alati sonlarda o'lchanishi ham ma'lum bo'ladi.
+
+<Maqsad>
+- kompyuter nega o'nlik emas, **ikkilik** sanoqda ishlashini tushuntira olasiz
+- bit va bayt orasidagi farqni bilasiz
+- ikkilik sonni o'nlikka va o'nlik sonni ikkilikka o'gira olasiz
+- 16-lik sanoq nima uchun kerakligini aytib bera olasiz
+</Maqsad>
+
+## Nazariya
+
+### Nega ikki holat?
+
+Kompyuter ichida hamma narsa elektr signalidan iborat. Signalni o'lchashda eng ishonchli savol — bu "tok bormi yoki yo'qmi?".
+
+Agar biz o'nlik sanoqni ishlatmoqchi bo'lsak, apparat 10 xil kuchlanish darajasini bir-biridan ajratishi kerak bo'lardi. Kuchlanish esa harorat va shovqindan biroz o'zgarib turadi — 3 volt bilan 3.2 voltni farqlash juda qiyin va xatoga moyil.
+
+Ikki holatni farqlash esa oson: yoki tok o'tadi, yoki o'tmaydi. Shovqin bunga deyarli ta'sir qilmaydi.
+
+<Muhim turi="gap">
+	Ikkilik sanoq tanlangani matematik ustunlik uchun emas — **ishonchlilik** uchun. Ikki
+	holatni ajratish oson, o'nta holatni ajratish qiyin.
+</Muhim>
+
+### Bit va bayt
+
+<Atama soz="bit" eng="bit">
+	Ma'lumotning eng kichik bo'lagi. Faqat ikki qiymat oladi: 0 yoki 1. Nomi inglizcha
+	"binary digit" — ikkilik raqam — so'zlaridan qisqartirilgan.
+</Atama>
+
+Bitta bit juda kam narsa aytadi: ha yoki yo'q, bor yoki yo'q. Shu sababli bitlar guruhlab ishlatiladi.
+
+<Atama soz="bayt" eng="byte">
+	8 bitdan iborat guruh. Bitta bayt bilan 256 xil holat ifodalanadi (0 dan 255 gacha).
+</Atama>
+
+Nega aynan 8? Chunki 8 bit bilan lotin alifbosining barcha harflari, raqamlar va tinish belgilari uchun joy yetadi — bu tarixiy jihatdan qulay o'lcham bo'lib chiqdi va standart bo'lib qoldi.
+
+### Ikkilikdan o'nlikka
+
+Har bir bitning **o'rni** uning og'irligini belgilaydi. O'ngdan chapga qarab og'irliklar ikki barobar ortadi: 1, 2, 4, 8, 16, 32, 64, 128.
+
+O'nlik songa o'girish uchun 1 turgan bitlarning og'irliklarini qo'shish kifoya.
+
+Masalan `1011` sonini olamiz. Og'irliklar o'ngdan chapga 1, 2, 4, 8:
+
+`1011` = 8 + 0 + 2 + 1 = **11**
+
+O'nlik sanoqda ham xuddi shunday ishlaydi, faqat og'irliklar 10 barobar ortadi: 245 soni 200 + 40 + 5 degani. Farq faqat asosda — biri 2, ikkinchisi 10.
+
+### O'nlikdan ikkilikka
+
+Teskari yo'nalish uchun eng oson usul — **eng katta og'irlikdan** boshlash.
+
+Aytaylik, 100 sonini ikkilikka o'girmoqchisiz:
+
+1. 128 katta, sig'maydi → **0**
+2. 64 sig'adi, 100 − 64 = 36 → **1**
+3. 32 sig'adi, 36 − 32 = 4 → **1**
+4. 16 sig'maydi → **0**
+5. 8 sig'maydi → **0**
+6. 4 sig'adi, 4 − 4 = 0 → **1**
+7. 2 sig'maydi → **0**
+8. 1 sig'maydi → **0**
+
+Natija: `01100100`. Tekshirish oson — 64 + 32 + 4 = 100.
+
+### 16-lik sanoq — nega kerak
+
+`11010110` kabi satrni odam o'qishi ham, aytishi ham qiyin. Xato qilish juda oson.
+
+Shu sababli programmalar bitlarni ko'pincha **16-lik** sanoqda yozadi. Bunda 16 ta raqam ishlatiladi: 0–9, keyin A, B, C, D, E, F (ya'ni 10–15).
+
+<Atama soz="16-lik sanoq" eng="hexadecimal">
+	Asosi 16 bo'lgan sanoq tizimi. Har bir 16-lik raqam aynan **4 bitni** ifodalaydi, shu
+	sababli ikkilik bilan o'tish juda oson.
+</Atama>
+
+`11010110` sonini ikkiga bo'lamiz: `1101` va `0110`. Birinchisi 13 = **D**, ikkinchisi 6 = **6**. Natija: `0xD6`. Sakkiz belgi o'rniga ikki belgi.
+
+Rang kodlari (`#FF6B35`) va xotira manzillari aynan shu sababdan 16-likda yoziladi.
+
+## Sinab ko'r
+
+Sakkizta lampani bosib yoqing. Har bosishda o'nlik son qanday o'zgarishini kuzatib turing — bir necha urinishdan keyin naqshni o'zingiz payqaysiz.
+
+<BitLampalar />
+
+Endi tezlikni sinaymiz. 60 soniya ichida qancha son yasay olasiz?
+
+<BinaryBlitz />
+
+## Xulosa
+
+- Kompyuter ikkilik sanoqda ishlaydi, chunki **ikki holatni ajratish ishonchli**
+- **Bit** — 0 yoki 1. **Bayt** — 8 bit, 256 xil holat
+- Ikkilikdan o'nlikka: 1 turgan bitlarning og'irliklarini qo'shing
+- O'nlikdan ikkilikka: eng katta og'irlikdan boshlab ayirib boring
+- **16-lik sanoq** — bitlarni odam o'qiy oladigan qisqa shaklga keltirish usuli
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Nega kompyuterda o'nlik emas, ikkilik sanoq ishlatiladi?">
+	Apparat uchun ikki holatni ajratish ishonchli: tok bor yoki yo'q. O'nta kuchlanish
+	darajasini bir-biridan farqlash esa qiyin — harorat va shovqin qiymatlarni siljitadi va
+	xato ehtimoli juda oshadi.
+</Sinov>
+
+<Sinov raqam={2} savol="`10110` ikkilik soni o'nlikda qanchaga teng?">
+	Og'irliklar o'ngdan chapga: 1, 2, 4, 8, 16. Bitlar `1 0 1 1 0` → 16 + 4 + 2 = **22**.
+</Sinov>
+
+<Sinov raqam={3} savol="200 sonini 8 bitda ikkilik ko'rinishda yozing.">
+	Eng katta og'irlikdan boshlaymiz: 128 sig'adi (qoldi 72), 64 sig'adi (qoldi 8), 32 yo'q,
+	16 yo'q, 8 sig'adi (qoldi 0), 4 yo'q, 2 yo'q, 1 yo'q. Natija: `11001000`.
+	Tekshirish: 128 + 64 + 8 = 200.
+</Sinov>
+
+<Sinov raqam={4} savol="Bitta 16-lik raqam nechta bitni ifodalaydi va nega?">
+	Aynan **4 bitni**. 4 bit bilan 2⁴ = 16 xil holat yasash mumkin, 16-lik sanoqda ham
+	aynan 16 ta raqam bor (0–F). Shu mos kelish sababli o'tish juda oson: har 4 bitni
+	alohida bitta belgiga aylantirasiz.
+</Sinov>
+
+<Sinov raqam={5} savol="Bitta bayt bilan nechta turli holat ifodalanadi? Eng katta son qaysi?">
+	8 bit → 2⁸ = **256 xil holat**. Sanash 0 dan boshlanganligi uchun eng katta son
+	255 (`11111111`), 256 emas. Bu farq keyingi darsda muhim bo'ladi.
+</Sinov>
+
+<Amaliyot daqiqa={25} daraja="o'rta">
+	**Birinchi qism.** Quyidagi 10 sonni qo'lda ikkilik ko'rinishga o'giring (kalkulyator
+	ishlatmang, har qadamni yozib boring): 3, 7, 12, 20, 31, 45, 64, 100, 128, 255.
+
+	**Ikkinchi qism.** Barmoqlaringiz bilan **31 gacha** sanashni o'rganing. Bitta qo'lda
+	5 barmoq bor, har barmoqqa og'irlik beriladi: 1, 2, 4, 8, 16. Bukilgan barmoq — 0,
+	ochilgan — 1.
+
+	Sinfdoshingizga son aytib, uni barmoqda ko'rsatishini so'rang. Keyin o'rin almashtiring.
+
+	Topshiriladigan natija: 10 sonning yechimi qadamlari bilan va barmoq usulini
+	tushuntirgan qisqa izoh.
+</Amaliyot>
+
+<DarsTugadi dars={2} blok={1} />

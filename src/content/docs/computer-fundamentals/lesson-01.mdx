@@ -1,0 +1,165 @@
+---
+title: '1-dars: Kompyuter nima?'
+description: "Kompyuter — universal mashina. Algoritm, IPOS tsikli va abstraksiya tushunchalari bilan tanishish."
+sidebar:
+  label: '1-dars'
+  order: 1
+---
+
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Rasm, Sinov } from '@components';
+import AlgoritmMashinasi from '../../../components/sim/AlgoritmMashinasi.astro';
+
+<Bloknoma blok={1} />
+
+## Nega bu muhim
+
+Telefoningiz bir daqiqa oldin kamera edi, keyin xarita bo'ldi, hozir esa kitob. Bitta qurilma, lekin har marta boshqa narsa. Kir yuvish mashinasi hech qachon muzlatgichga aylanmaydi — nega telefon aylanadi?
+
+Shu savolga javob butun modulning kalitidir. Javobni bilib olsangiz, "kompyuter buzildi" degan gap o'rniga "aynan nima buzildi" deb o'ylay boshlaysiz.
+
+<Maqsad>
+- kompyuter nima uchun **universal mashina** deb atalishini tushuntira olasiz
+- algoritm nima ekanligini va nega u aniq bo'lishi kerakligini bilasiz
+- har qanday kompyuter bajaradigan to'rt bosqichni (IPOS) sanab bera olasiz
+- abstraksiya nima ekanligini o'z so'zlaringiz bilan aytib bera olasiz
+</Maqsad>
+
+## Nazariya
+
+### Kompyuter — universal mashina
+
+Odatdagi mashinalar bitta ish uchun yasaladi. Kir yuvish mashinasi kir yuvadi, mikser aralashtiradi, kalkulyator hisoblaydi. Ularning vazifasi metall va plastikka "yozilgan" — o'zgartirish uchun mashinani qayta yasash kerak.
+
+Kompyuter boshqacha ishlaydi. Uning vazifasi apparatga yozilmagan, balki **dasturga** yozilgan. Dasturni almashtirsangiz — mashinaning o'zi o'zgarmaydi, lekin u boshqa ish qila boshlaydi.
+
+Shu sababli bitta telefon kamera ham, xarita ham, kitob ham bo'la oladi. Aynan shu xususiyat uchun kompyuter **universal mashina** deb ataladi.
+
+<Muhim turi="gap">
+	Kompyuter — bu "hamma narsani qila oladigan" mashina emas. Bu **hozir nima qilishini
+	dastur aytadigan** mashina. Universallik ana shunda.
+</Muhim>
+
+<Rasm
+	src="computer-fundamentals/01-kompyuter-tizimi.png"
+	alt="Tizim bloki, monitor, klaviatura va sichqonchadan iborat kompyuter tizimi"
+	izoh="1.1-rasm. Kompyuter tizimi: bitta apparat, minglab turli vazifalar."
+/>
+
+### Algoritm: kompyuter tushunadigan yagona til
+
+Dastur — bu kompyuterga beriladigan buyruqlar ketma-ketligi. Bu ketma-ketlikning aniq va tugallanadigan shakli **algoritm** deb ataladi.
+
+<Atama soz="algoritm" eng="algorithm">
+	Muammoni yechishga olib boradigan, aniq belgilangan qadamlar ketma-ketligi. Har qadam
+	bir ma'noli bo'lishi va algoritm oxiri kelib to'xtashi shart.
+</Atama>
+
+Odam bilan gaplashganda noaniqlikka yo'l qo'yiladi: "choy damlab qo'y" deganda qanchalik quyuq, qancha shakar — buni odam o'zi to'ldiradi. Kompyuter to'ldirmaydi.
+
+U aytilgan narsani aytilgan tartibda bajaradi. Tartib xato bo'lsa, natija ham xato bo'ladi — lekin kompyuter buni sezmaydi va to'xtatmaydi.
+
+<Muhim turi="ogoh">
+	"Kompyuter xato qildi" degan gap deyarli har doim noto'g'ri. Kompyuter berilgan
+	buyruqni **aynan** bajaradi. Xato buyruqda bo'ladi — ya'ni odamda.
+</Muhim>
+
+### IPOS: har kompyuter bajaradigan to'rt ish
+
+Kalkulyator ham, noutbuk ham, bankomat ham, sun'iy yo'ldosh ham bir xil to'rt bosqichdan o'tadi. Bu bosqichlar birinchi harflari bilan **IPOS** deb ataladi.
+
+| Bosqich | Inglizcha | Nima bo'ladi | Misol |
+|---------|-----------|--------------|-------|
+| Kirish | Input | Ma'lumot kompyuterga tushadi | Klaviaturada yozdingiz |
+| Qayta ishlash | Processing | Ma'lumot ustida amal bajariladi | Protsessor hisoblaydi |
+| Chiqish | Output | Natija ko'rsatiladi | Ekranda harf paydo bo'ldi |
+| Saqlash | Storage | Ma'lumot keyinga qoldiriladi | Fayl diskka yozildi |
+
+Telefonda rasm olganingizda: linzadan yorug'lik tushadi (kirish), protsessor uni tozalaydi (qayta ishlash), ekranda ko'rsatadi (chiqish), galereyaga yozadi (saqlash).
+
+<Rasm
+	src="computer-fundamentals/01-ipos-tsikli.png"
+	alt="To'rt blok va ular orasidagi o'qlar: Kirish, Qayta ishlash, Chiqish, Saqlash"
+	izoh="1.2-rasm. IPOS tsikli — kompyuter ishining umumiy sxemasi."
+/>
+
+### Abstraksiya: nega siz tranzistorni o'ylamaysiz
+
+Telefonda video ko'rayotganingizda millionlab tranzistor ishlayapti. Lekin siz bu haqda o'ylamaysiz — siz faqat "Play" tugmasini bosasiz.
+
+<Atama soz="abstraksiya" eng="abstraction">
+	Murakkablikni yashirib, faqat kerakli qismini ko'rsatish usuli. Har daraja o'zidan
+	pastdagi darajaning tafsilotlarini yashiradi.
+</Atama>
+
+Kompyuter shunday darajalardan qurilgan minoraga o'xshaydi: eng pastda elektr, undan yuqorida tranzistor, keyin mantiqiy darvoza, protsessor, operatsion tizim, va eng yuqorida siz bosgan tugma.
+
+Bu modulda biz shu minoraning har qavatini pastdan yuqoriga qarab qo'lda quramiz.
+
+<Rasm
+	src="computer-fundamentals/01-qollanish-sohalari.png"
+	alt="Ta'lim, tibbiyot, bank, transport va ishlab chiqarish sohalarida kompyuterlar"
+	izoh="1.3-rasm. Bitta g'oya — universal mashina — o'nlab sohaga tarqaldi."
+/>
+
+## Sinab ko'r
+
+Robot juda itoatkor, lekin mutlaqo o'ylamaydi. Unga sandvich yasashni buyuring va nima bo'lishini ko'ring.
+
+<AlgoritmMashinasi />
+
+Tartibni ataylab buzib ham sinab ko'ring. Har xato tartibda robot **nima uchun** shunday qilganini o'zingizga tushuntirib bering — bu darsning eng muhim mashqi.
+
+## Xulosa
+
+- Kompyuter — universal mashina: uning vazifasi apparatda emas, **dasturda** yozilgan
+- Algoritm — aniq, bir ma'noli va tugallanadigan qadamlar ketma-ketligi
+- Har kompyuter to'rt bosqichdan o'tadi: **kirish → qayta ishlash → chiqish → saqlash**
+- Kompyuter o'ylamaydi: u buyruqni aynan bajaradi, xato buyruqni ham
+- Abstraksiya murakkablikni yashiradi — shu sababli tranzistorni bilmasdan telefon ishlatasiz
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Nega kir yuvish mashinasi universal mashina emas, telefon esa universal?">
+	Kir yuvish mashinasining vazifasi apparatiga qurilgan — uni o'zgartirish uchun mashinani
+	qayta yasash kerak. Telefonning vazifasi esa dasturda yozilgan: dasturni almashtirsangiz,
+	apparat o'zgarmasdan boshqa ish qila boshlaydi.
+</Sinov>
+
+<Sinov raqam={2} savol="«Choy damla» — bu algoritm bo'la oladimi? Javobingizni asoslang.">
+	Yo'q. Algoritm har qadami bir ma'noli bo'lishini talab qiladi, bu buyruqda esa noaniqlik
+	juda ko'p: qancha suv, qanday choy, qancha vaqt damlanadi. Odam bu bo'shliqlarni o'zi
+	to'ldiradi, kompyuter to'ldirmaydi.
+</Sinov>
+
+<Sinov raqam={3} savol="Bankomatdan pul olayotganingizda IPOS ning har bosqichi nimadan iborat?">
+	Kirish — kartani suqib PIN kodni kiritdingiz. Qayta ishlash — bankomat kodni tekshirib
+	hisobingizni ko'rdi. Chiqish — pul chiqdi va ekranda xabar ko'rindi. Saqlash — operatsiya
+	bank bazasiga yozildi.
+</Sinov>
+
+<Sinov raqam={4} savol="Dasturchi kodda xato qildi va programma noto'g'ri natija berdi. Kompyuter xato qildimi?">
+	Yo'q. Kompyuter berilgan buyruqni aynan bajardi — u buyruqning mantiqan noto'g'ri
+	ekanligini bilmaydi va tekshirmaydi. Xato algoritmda, ya'ni odamda.
+</Sinov>
+
+<Sinov raqam={5} savol="Abstraksiya kompyuterda foydali, lekin uning zarari ham bormi?">
+	Bor. Pastdagi darajani umuman bilmaslik muammo tug'diradi: programma nega sekin
+	ishlayotganini yoki nega xotira yetmayotganini tushunolmaysiz. Shu sababli dasturchi
+	pastdagi darajalarni ham bilishi kerak — aynan shu modul buni beradi.
+</Sinov>
+
+<Amaliyot daqiqa={20} daraja="oson">
+	Har kuni bajaradigan bir ishni tanlang: tishni yuvish, choy damlash, maktabga tayyorlanish
+	yoki velosipedga minish.
+
+	Shu ishni **10 qadamli algoritm** qilib daftarga yozing. Shartlar:
+
+	1. Har qadam bitta aniq harakat bo'lsin ("tayyorlan" emas, "sochiqni oling")
+	2. Hech qanday qadam tushib qolmasin
+	3. Yozib bo'lgach, qadamlardan **bittasining joyini almashtiring** va robot nima
+	   qilishini yozib qo'ying
+
+	Topshiriladigan natija: 10 qadamli ro'yxat va buzilgan tartibdagi kulgili natija tavsifi.
+</Amaliyot>
+
+<DarsTugadi dars={1} blok={1} />

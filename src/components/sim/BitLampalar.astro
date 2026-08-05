@@ -1,0 +1,256 @@
+---
+/**
+ * BitLampalar — 2-dars simulyatori.
+ *
+ * 8 ta lampa = 8 bit. O'quvchi lampani bosib yoqadi/o'chiradi va o'nlik son
+ * real vaqtda o'zgarishini ko'radi. Har lampa ostida uning "og'irligi"
+ * (128, 64, 32 ...) yozilgan.
+ *
+ * Pedagogik maqsad: ikkilik sanoq qoidasini yodlatish emas, o'quvchining
+ * o'zi kashf qilishi. 5–10 marta bosgandan keyin "har lampa oldingisidan
+ * ikki barobar" degan naqsh o'zi ko'rinadi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+/* Eng katta og'irlik chapda — odam sonni shunday o'qiydi */
+const BITLAR = [128, 64, 32, 16, 8, 4, 2, 1];
+---
+
+<Simulyator
+	sarlavha="Bit lampalar"
+	korsatma="Lampani bosib yoqing yoki o'chiring va son qanday o'zgarishini kuzatib turing."
+	blok={1}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda 8 ta lampa bor — har biri bitta bit. Yoqilgan lampalarning
+			og'irliklari qo'shilib o'nlik sonni beradi.
+		</p>
+		<p>
+			JavaScript'siz sinash: daftarga 128, 64, 32, 16, 8, 4, 2, 1 deb yozing. Har son
+			ustiga 1 yoki 0 qo'ying, so'ng 1 turgan sonlarni qo'shib chiqing.
+		</p>
+	</Fragment>
+
+	<div class="bl not-content">
+		<div class="lampalar">
+			{
+				BITLAR.map((ogirlik) => (
+					<div class="ustun">
+						<button
+							type="button"
+							class="lampa"
+							data-ogirlik={ogirlik}
+							aria-pressed="false"
+							aria-label={`${ogirlik} og'irlikdagi bit`}
+						>
+							<span class="shar" aria-hidden="true" />
+							<span class="bit" aria-hidden="true">0</span>
+						</button>
+						<span class="ogirlik">{ogirlik}</span>
+					</div>
+				))
+			}
+		</div>
+
+		<dl class="oqish">
+			<div>
+				<dt>Ikkilik</dt>
+				<dd class="qiymat ikkilik">00000000</dd>
+			</div>
+			<div>
+				<dt>O'nlik</dt>
+				<dd class="qiymat onlik">0</dd>
+			</div>
+			<div>
+				<dt>16-lik</dt>
+				<dd class="qiymat onaltilik">0x00</dd>
+			</div>
+		</dl>
+
+		<p class="hisob" aria-live="polite">Hech qaysi lampa yoqilmagan.</p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="hammasi">Hammasini yoqish</button>
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.bl');
+		if (!qutu) return;
+
+		const lampalar = [...qutu.querySelectorAll<HTMLButtonElement>('.lampa')];
+		const ikkilikEl = qutu.querySelector<HTMLElement>('.ikkilik')!;
+		const onlikEl = qutu.querySelector<HTMLElement>('.onlik')!;
+		const onaltilikEl = qutu.querySelector<HTMLElement>('.onaltilik')!;
+		const hisobEl = qutu.querySelector<HTMLElement>('.hisob')!;
+
+		function yoqilganmi(l: HTMLButtonElement) {
+			return l.getAttribute('aria-pressed') === 'true';
+		}
+
+		function yangila() {
+			const bitlar = lampalar.map((l) => (yoqilganmi(l) ? '1' : '0'));
+			const son = lampalar.reduce(
+				(jami, l) => jami + (yoqilganmi(l) ? Number(l.dataset.ogirlik) : 0),
+				0
+			);
+
+			ikkilikEl.textContent = bitlar.join('');
+			onlikEl.textContent = String(son);
+			onaltilikEl.textContent = '0x' + son.toString(16).toUpperCase().padStart(2, '0');
+
+			// Qo'shishni ochiq ko'rsatamiz: o'quvchi natijani emas, YO'LNI ko'rishi kerak
+			const yoqilgan = lampalar.filter(yoqilganmi).map((l) => l.dataset.ogirlik);
+			hisobEl.textContent =
+				yoqilgan.length === 0
+					? 'Hech qaysi lampa yoqilmagan.'
+					: `${yoqilgan.join(' + ')} = ${son}`;
+
+			lampalar.forEach((l, i) => {
+				l.querySelector('.bit')!.textContent = bitlar[i]!;
+			});
+		}
+
+		for (const l of lampalar) {
+			l.addEventListener('click', () => {
+				l.setAttribute('aria-pressed', String(!yoqilganmi(l)));
+				yangila();
+			});
+		}
+
+		qobiq.querySelector<HTMLButtonElement>('.hammasi')!.addEventListener('click', () => {
+			// 255 -- 8 bit bilan yozib bo'ladigan eng katta son. Bu 3-darsga ko'prik.
+			lampalar.forEach((l) => l.setAttribute('aria-pressed', 'true'));
+			yangila();
+		});
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			lampalar.forEach((l) => l.setAttribute('aria-pressed', 'false'));
+			yangila();
+		});
+
+		yangila();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.lampalar {
+		display: flex;
+		/* 360px da 8 ustun sig'ishi kerak: har biri ~2.6rem */
+		gap: 0.3rem;
+		justify-content: center;
+	}
+
+	.ustun {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
+		flex: 1 1 0;
+		min-width: 0;
+	}
+
+	.lampa {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.2rem;
+		width: 100%;
+		padding: 0.4rem 0.15rem;
+		margin: 0;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		cursor: pointer;
+	}
+
+	.lampa:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.shar {
+		width: 1.1rem;
+		height: 1.1rem;
+		border-radius: 50%;
+		border: 1px solid var(--sl-color-gray-4);
+		background: var(--sl-color-gray-6);
+	}
+
+	.bit {
+		font-family: var(--sl-font-mono);
+		font-size: 0.75rem;
+		font-weight: 700;
+		color: var(--sl-color-gray-4);
+	}
+
+	/* Yoqilgan holat: shar "nur sochadi" */
+	.lampa[aria-pressed='true'] {
+		border-color: var(--blok-2);
+	}
+
+	.lampa[aria-pressed='true'] .shar {
+		background: var(--blok-2);
+		border-color: var(--blok-2);
+		box-shadow: 0 0 10px 1px var(--blok-2);
+	}
+
+	.lampa[aria-pressed='true'] .bit {
+		color: var(--blok-2);
+	}
+
+	.ogirlik {
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.oqish {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem 1.5rem;
+		margin: 1.25rem 0 0 0;
+		padding-top: 1rem;
+		border-top: 1px solid var(--sl-color-gray-5);
+	}
+
+	.oqish dt {
+		margin: 0;
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.oqish dd {
+		margin: 0.15rem 0 0 0;
+	}
+
+	.qiymat {
+		font-family: var(--sl-font-mono);
+		font-size: 1.05rem;
+		font-weight: 700;
+		color: var(--sl-color-white);
+		/* Uzun ikkilik satr 360px da sindirilmasin, lekin sahifani ham cho'zmasin */
+		overflow-wrap: anywhere;
+	}
+
+	.onlik {
+		color: var(--blok-1);
+	}
+
+	.hisob {
+		margin: 0.9rem 0 0 0;
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+		overflow-wrap: anywhere;
+	}
+</style>

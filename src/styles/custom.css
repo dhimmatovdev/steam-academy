@@ -1,13 +1,19 @@
 /* ==========================================================================
-   STEAM Academy — custom Starlight theme
-   Signature concept: course modules rendered as "elements" in a periodic
-   table, tying the visual language directly to the STEAM/Science subject.
+   STEAM Academy — global dizayn tokenlari
+
+   Bu faylda FAQAT quyidagilar bo'ladi:
+     1. Rang va o'lcham tokenlari (dark + light)
+     2. Bosh sahifadagi "davriy jadval" gridi
+
+   Komponent uslublari har komponentning o'z <style> blokida turadi.
+   Sabab: scoped bo'ladi va faqat ishlatilgan sahifada yuklanadi.
+
+   QOIDA: tashqi shrift yoki CDN YUKLANMAYDI. Starlight'ning tizim shrift
+   stack'i ishlatiladi -- sekin internetda ham sahifa darhol ochiladi.
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap');
-
 :root {
-	/* Palette */
+	/* --- Asosiy palitra (tungi rejim) --- */
 	--sa-bg: #10152a;
 	--sa-bg-raised: #171d38;
 	--sa-card: #1a2140;
@@ -17,12 +23,44 @@
 	--sa-cyan: #5eead4;
 	--sa-amber: #fbbf24;
 
-	/* Fonts */
-	--sa-font-display: 'Space Grotesk', system-ui, sans-serif;
-	--sa-font-body: 'Inter', system-ui, sans-serif;
-	--sa-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+	/* --- Blok ranglari ---
+	   Har blok o'z rangiga ega: o'quvchi sahifaning qaysi qismida
+	   turganini rangdan biladi. Har rang uchun uch daraja:
+	     --blok-N          matn va chegara uchun (kontrast yuqori)
+	     --blok-N-fon      yumshoq fon (callout, badge)
+	     --blok-N-chegara  ko'rinadigan lekin shovqinsiz chegara       */
 
-	/* Starlight theme tokens — dark mode */
+	/* 1 — Hamma narsa bit (teal) */
+	--blok-1: #5eead4;
+	--blok-1-fon: #12312e;
+	--blok-1-chegara: #1f5d55;
+
+	/* 2 — Mantiqdan apparatga (amber) */
+	--blok-2: #fbbf24;
+	--blok-2-fon: #33270a;
+	--blok-2-chegara: #6b4f10;
+
+	/* 3 — Protsessor (violet) */
+	--blok-3: #c4b5fd;
+	--blok-3-fon: #241f43;
+	--blok-3-chegara: #453a7a;
+
+	/* 4 — Xotira, OS, fayl (sky) */
+	--blok-4: #7dd3fc;
+	--blok-4-fon: #10293b;
+	--blok-4-chegara: #1e4f70;
+
+	/* 5 — Tarmoq va xavfsizlik (rose) */
+	--blok-5: #fda4af;
+	--blok-5-fon: #3a1620;
+	--blok-5-chegara: #6e2b3a;
+
+	/* --- O'lcham va shakl --- */
+	--sa-radius: 10px;
+	--sa-radius-kichik: 6px;
+	--sa-oraliq: 1.5rem;
+
+	/* --- Starlight tokenlarini bosib o'tish (tungi rejim) --- */
 	--sl-color-accent-low: #1f3d3a;
 	--sl-color-accent: #2dd4bf;
 	--sl-color-accent-high: #99f6e9;
@@ -35,12 +73,10 @@
 	--sl-color-gray-6: #232a4a;
 	--sl-color-gray-7: #171d38;
 	--sl-color-black: #10152a;
-
-	--sl-font: var(--sa-font-body);
-	--sl-font-mono: var(--sa-font-mono);
 }
 
-/* Light mode gets a restrained, coherent counterpart */
+/* Kunduzgi rejim — bir xil xarakter, lekin oq qog'ozda o'qiladigan kontrast.
+   Blok ranglari to'qlashtirilgan: oq fonda teal/amber o'qilmay qoladi. */
 :root[data-theme='light'] {
 	--sa-bg: #f7f7f2;
 	--sa-bg-raised: #ffffff;
@@ -48,6 +84,28 @@
 	--sa-border: #e0e0d6;
 	--sa-text: #10152a;
 	--sa-text-muted: #5b6178;
+	--sa-cyan: #0f766e;
+	--sa-amber: #b45309;
+
+	--blok-1: #0f766e;
+	--blok-1-fon: #e6faf6;
+	--blok-1-chegara: #99e2d6;
+
+	--blok-2: #b45309;
+	--blok-2-fon: #fdf5e3;
+	--blok-2-chegara: #ecd08a;
+
+	--blok-3: #6d28d9;
+	--blok-3-fon: #f2edfe;
+	--blok-3-chegara: #cbbcf5;
+
+	--blok-4: #0369a1;
+	--blok-4-fon: #e8f4fc;
+	--blok-4-chegara: #a3d3ef;
+
+	--blok-5: #be123c;
+	--blok-5-fon: #fdecef;
+	--blok-5-chegara: #f4b6c2;
 
 	--sl-color-accent-low: #d4f5f0;
 	--sl-color-accent: #0f9d8f;
@@ -63,14 +121,17 @@
 	--sl-color-black: #ffffff;
 }
 
-/* Headings use the display face, everything else stays on body face */
-h1, h2, h3, h4, .hero h1, .hero .tagline {
-	font-family: var(--sa-font-display);
+/* Sarlavhalar biroz zichroq — shrift yuklamasdan, faqat harf oralig'i bilan */
+h1,
+h2,
+h3,
+h4 {
 	letter-spacing: -0.01em;
 }
 
 /* ==========================================================================
-   Periodic module grid — the signature element
+   Bosh sahifa: modullar "davriy jadval" gridi
+   Loyihaning imzo elementi — modul = element.
    ========================================================================== */
 
 .steam-grid-section {
@@ -78,7 +139,7 @@ h1, h2, h3, h4, .hero h1, .hero .tagline {
 }
 
 .steam-grid-eyebrow {
-	font-family: var(--sa-font-mono);
+	font-family: var(--sl-font-mono);
 	font-size: 0.8rem;
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
@@ -87,7 +148,6 @@ h1, h2, h3, h4, .hero h1, .hero .tagline {
 }
 
 .steam-grid-title {
-	font-family: var(--sa-font-display);
 	font-size: 1.9rem;
 	font-weight: 700;
 	margin: 0 0 2rem 0;
@@ -95,7 +155,8 @@ h1, h2, h3, h4, .hero h1, .hero .tagline {
 
 .steam-periodic-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	/* 360px ekranda ham 2 ustun sig'adi, gorizontal scroll bo'lmaydi */
+	grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
 	gap: 0.9rem;
 }
 
@@ -106,11 +167,14 @@ h1, h2, h3, h4, .hero h1, .hero .tagline {
 	padding: 0.7rem;
 	background: var(--sa-card);
 	border: 1px solid var(--sa-border);
-	border-radius: 10px;
+	border-radius: var(--sa-radius);
 	text-decoration: none;
 	color: var(--sa-text);
 	overflow: hidden;
-	transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+	transition:
+		transform 0.18s ease,
+		border-color 0.18s ease,
+		box-shadow 0.18s ease;
 }
 
 .steam-element:hover,
@@ -118,17 +182,22 @@ h1, h2, h3, h4, .hero h1, .hero .tagline {
 	transform: translateY(-4px);
 	border-color: var(--sa-cyan);
 	box-shadow: 0 8px 24px -8px rgba(94, 234, 212, 0.35);
-	outline: none;
+}
+
+/* Klaviatura bilan yurgan o'quvchi qayerdaligini ko'rishi shart */
+.steam-element:focus-visible {
+	outline: 2px solid var(--sl-color-accent);
+	outline-offset: 3px;
 }
 
 .steam-element .num {
-	font-family: var(--sa-font-mono);
+	font-family: var(--sl-font-mono);
 	font-size: 0.7rem;
 	color: var(--sa-text-muted);
 }
 
 .steam-element .symbol {
-	font-family: var(--sa-font-mono);
+	font-family: var(--sl-font-mono);
 	font-weight: 700;
 	font-size: 1.8rem;
 	line-height: 1;
@@ -136,7 +205,9 @@ h1, h2, h3, h4, .hero h1, .hero .tagline {
 	color: var(--sa-cyan);
 }
 
-.steam-element:nth-child(4n+1) .symbol { color: var(--sa-amber); }
+.steam-element:nth-child(4n + 1) .symbol {
+	color: var(--sa-amber);
+}
 
 .steam-element .name {
 	font-size: 0.72rem;
@@ -145,12 +216,8 @@ h1, h2, h3, h4, .hero h1, .hero .tagline {
 	line-height: 1.25;
 }
 
-@media (prefers-reduced-motion: reduce) {
-	.steam-element { transition: none; }
-}
-
 /* ==========================================================================
-   Quiet supporting row (kept deliberately plain next to the grid)
+   Bosh sahifadagi qo'shimcha qator — grid yonida ataylab sokin
    ========================================================================== */
 
 .steam-why-row {
@@ -171,4 +238,20 @@ h1, h2, h3, h4, .hero h1, .hero .tagline {
 	font-size: 0.9rem;
 	color: var(--sa-text-muted);
 	margin: 0;
+}
+
+/* ==========================================================================
+   Harakatni kamaytirish so'ralganda — barcha animatsiya o'chadi
+   (global qoida; komponentlar ham o'z ichida takrorlaydi)
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
 }

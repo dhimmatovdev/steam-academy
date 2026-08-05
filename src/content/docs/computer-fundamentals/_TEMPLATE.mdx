@@ -1,0 +1,104 @@
+---
+# Fayl nomi "_" bilan boshlanadi -> Astro bundan sahifa yasamaydi.
+# Yangi dars uchun nusxa oling: cp _TEMPLATE.mdx lesson-NN.mdx
+#
+# QOIDALAR: AGENTS.md -> "DARS YOZISH QOIDALARI". Ular buzilmaydi.
+
+title: 'N-dars: Mavzu nomi' # qo'shtirnoq MAJBURIY (ichida ":" bor)
+description: 'Bir gapda dars mazmuni. SEO uchun, 120 belgigacha.'
+sidebar:
+  label: 'N-dars'
+  order: N
+---
+
+{/* Import qatorlari. Ishlatilmagan komponentni ro'yxatdan olib tashlang. */}
+import { Amaliyot, Atama, Bloknoma, DarsTugadi, Maqsad, Muhim, Rasm, Simulyator, Sinov } from '@components';
+import { Aside, Card, CardGrid, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+{/* Blok raqami: 1-4 dars -> 1, 5-8 -> 2, 9-12 -> 3, 13-16 -> 4, 17-20 -> 5 */}
+<Bloknoma blok={1} />
+
+## Nega bu muhim
+
+{/* 2-3 gap. Real hayotdan ilgak. "Telefoningiz..." kabi o'quvchining
+    o'z dunyosidan boshlanadi. Nazariya bilan boshlanmaydi. */}
+
+<Maqsad>
+- birinchi ko'nikma
+- ikkinchi ko'nikma
+- uchinchi ko'nikma
+</Maqsad>
+
+## Nazariya
+
+{/* 3-5 kichik bo'lim (###). Har biri max 150 so'z, paragraf max 3 gap.
+    Har gapni alohida qatorga yozish TAQIQLANADI. */}
+
+### Birinchi tushuncha
+
+Matn shu yerda, normal paragraf ko'rinishida.
+
+<Atama soz="atama" eng="term">
+	Yangi atama birinchi uchraganda shu blok orqali beriladi.
+</Atama>
+
+### Ikkinchi tushuncha
+
+{/* Darsning BITTA katta g'oyasi. Har darsda faqat bitta "gap" bo'ladi. */}
+
+<Muhim turi="gap">
+	Darsning markaziy g'oyasi — bir-ikki gapda.
+</Muhim>
+
+<Rasm
+	src="computer-fundamentals/NN-nom.png"
+	alt="Rasmni ko'rmayotgan o'quvchi uchun tavsif — majburiy"
+	izoh="N.1-rasm. Rasm ostidagi izoh."
+/>
+
+## Sinab ko'r
+
+{/* INTERAKTIV SIMULYATOR SHU YERDA. Har darsda kamida bitta. */}
+
+<Simulyator sarlavha="Simulyator nomi" korsatma="Bir qatorli ko'rsatma." blok={1}>
+	<Fragment slot="fallback">
+		JavaScript ishlamasa ko'rinadigan izoh: simulyator nima ko'rsatadi va
+		o'quvchi buni qanday qo'lda sinab ko'rishi mumkin.
+	</Fragment>
+
+	{/* interaktiv maydon */}
+
+	<Fragment slot="boshqaruv">
+		<button type="button">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+## Xulosa
+
+{/* 3-5 punkt, qisqa. Yangi ma'lumot kiritilmaydi. */}
+
+- birinchi xulosa
+- ikkinchi xulosa
+- uchinchi xulosa
+
+## O'zingizni sinang
+
+{/* Kamida 5 savol. Javob <details> ichida yashiringan — o'quvchi
+    ochishdan oldin o'ylashi kerak. */}
+
+<Sinov raqam={1} savol="Birinchi savol?">Javob.</Sinov>
+
+<Sinov raqam={2} savol="Ikkinchi savol?">Javob.</Sinov>
+
+<Sinov raqam={3} savol="Uchinchi savol?">Javob.</Sinov>
+
+<Sinov raqam={4} savol="To'rtinchi savol?">Javob.</Sinov>
+
+<Sinov raqam={5} savol="Beshinchi savol?">Javob.</Sinov>
+
+<Amaliyot daqiqa={20} daraja="o'rta">
+	Uy vazifasi. Aniq, tekshiriladigan natija bilan: nima qilinadi va
+	o'qituvchiga nima topshiriladi.
+</Amaliyot>
+
+<DarsTugadi dars={1} blok={1} />

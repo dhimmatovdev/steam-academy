@@ -1,0 +1,353 @@
+---
+/**
+ * ModulProgress — modul index sahifasida turadigan progress paneli.
+ *
+ *   <ModulProgress modul="computer-fundamentals" jami={20} />
+ *
+ * Uchta narsani ko'rsatadi:
+ *   1. Nechta dars tugatilgan (progress bar)
+ *   2. Streak — ketma-ket necha kun o'qildi
+ *   3. Nishonlar — har blok tugaganda ochiladi
+ *
+ * Va bitta narsani ataylab QILMAYDI: hech narsani bloklamaydi. O'quvchi
+ * 1-darsni o'tmasdan 15-darsni ochishi mumkin. Progress — ko'zgu, qulf emas.
+ */
+import { NISHONLAR } from '../scripts/progress';
+
+interface Props {
+	modul?: string;
+	/** Moduldagi darslar soni */
+	jami: number;
+}
+
+const { modul = 'computer-fundamentals', jami } = Astro.props;
+---
+
+<section class="modul-progress not-content" data-modul={modul} data-jami={jami} data-holat="statik">
+	<p class="statik-izoh">
+		Progressni ko'rish uchun JavaScript kerak. Barcha {jami} dars quyidagi ro'yxatda ochiq turadi.
+	</p>
+
+	<div class="widget">
+		<header>
+			<h2>Sizning progressingiz</h2>
+			<button type="button" class="tozala">Progressni tozalash</button>
+		</header>
+
+		<div class="qatorlar">
+			<div class="darslar-blok">
+				<p class="hisob">
+					<strong class="tugatilgan">0</strong><span class="jami">/{jami} dars</span>
+				</p>
+				<div
+					class="chiziq"
+					role="progressbar"
+					aria-label="Tugatilgan darslar"
+					aria-valuemin="0"
+					aria-valuemax={jami}
+					aria-valuenow="0"
+				>
+					<div class="chiziq-toldi"></div>
+				</div>
+			</div>
+
+			<p class="streak">
+				<strong class="streak-son">0</strong>
+				<span class="streak-matn">kun ketma-ket</span>
+			</p>
+		</div>
+
+		<h3 class="nishon-sarlavha">Nishonlar</h3>
+		<ul class="nishonlar">
+			{
+				NISHONLAR.map((n) => (
+					<li class="nishon" data-id={n.id} data-blok={n.blok} data-ochilgan="yoq">
+						<span class="nishon-nom">{n.nom}</span>
+						<span class="nishon-izoh">{n.izoh}</span>
+						<span class="nishon-holat">{n.darslar[0]}–{n.darslar[n.darslar.length - 1]} darslar</span>
+					</li>
+				))
+			}
+		</ul>
+	</div>
+</section>
+
+<script>
+	import { HODISA, streak, tozala, tugatilganDarslar, NISHONLAR, oqish } from '../scripts/progress';
+
+	function ulash(qutu: HTMLElement) {
+		const modul = qutu.dataset.modul!;
+		const jami = Number(qutu.dataset.jami);
+
+		const tugatilganEl = qutu.querySelector<HTMLElement>('.tugatilgan')!;
+		const chiziq = qutu.querySelector<HTMLElement>('.chiziq')!;
+		const toldi = qutu.querySelector<HTMLElement>('.chiziq-toldi')!;
+		const streakSon = qutu.querySelector<HTMLElement>('.streak-son')!;
+		const streakMatn = qutu.querySelector<HTMLElement>('.streak-matn')!;
+		const tozalaTugma = qutu.querySelector<HTMLButtonElement>('.tozala')!;
+
+		function yangila() {
+			const tugatilgan = tugatilganDarslar(modul);
+			const soni = tugatilgan.length;
+
+			tugatilganEl.textContent = String(soni);
+			chiziq.setAttribute('aria-valuenow', String(soni));
+			toldi.style.setProperty('--ulush', `${jami > 0 ? (soni / jami) * 100 : 0}%`);
+
+			const s = streak();
+			streakSon.textContent = String(s.kunlar);
+			streakMatn.textContent = s.kunlar === 0 ? 'kun — bugun boshlang' : 'kun ketma-ket';
+
+			const ochilganlar = new Set(oqish().nishonlar);
+			for (const n of NISHONLAR) {
+				const el = qutu.querySelector<HTMLElement>(`.nishon[data-id="${n.id}"]`);
+				if (!el) continue;
+				const ochildi = ochilganlar.has(n.id);
+				el.dataset.ochilgan = ochildi ? 'ha' : 'yoq';
+				const holat = el.querySelector<HTMLElement>('.nishon-holat')!;
+				if (ochildi) {
+					holat.textContent = 'Ochildi';
+				} else {
+					const qoldi = n.darslar.filter((d) => !tugatilgan.includes(d)).length;
+					holat.textContent = `${qoldi} dars qoldi`;
+				}
+			}
+		}
+
+		tozalaTugma.addEventListener('click', () => {
+			// Sinf kompyuterida keyingi o'quvchi uchun. Tasdiq so'raymiz, lekin
+			// confirm() emas -- tugma ikki qadamli bo'ladi.
+			if (tozalaTugma.dataset.tasdiq === 'kutilmoqda') {
+				tozala();
+				delete tozalaTugma.dataset.tasdiq;
+				tozalaTugma.textContent = 'Progressni tozalash';
+				return;
+			}
+			tozalaTugma.dataset.tasdiq = 'kutilmoqda';
+			tozalaTugma.textContent = 'Aniqmi? Yana bosing';
+			setTimeout(() => {
+				if (tozalaTugma.dataset.tasdiq === 'kutilmoqda') {
+					delete tozalaTugma.dataset.tasdiq;
+					tozalaTugma.textContent = 'Progressni tozalash';
+				}
+			}, 4000);
+		});
+
+		document.addEventListener(HODISA, yangila);
+
+		yangila();
+		qutu.dataset.holat = 'tayyor';
+	}
+
+	document.querySelectorAll<HTMLElement>('.modul-progress').forEach(ulash);
+</script>
+
+<style>
+	.modul-progress {
+		margin: 2rem 0;
+	}
+
+	.modul-progress[data-holat='statik'] .widget {
+		display: none;
+	}
+
+	.modul-progress[data-holat='tayyor'] .statik-izoh {
+		display: none;
+	}
+
+	.statik-izoh {
+		margin: 0;
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.widget {
+		padding: 1.15rem 1.25rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius);
+		background: var(--sl-color-gray-7);
+	}
+
+	header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem 1rem;
+		margin-bottom: 1rem;
+	}
+
+	h2 {
+		margin: 0;
+		font-size: 1.05rem;
+	}
+
+	.tozala {
+		padding: 0.3rem 0.65rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: transparent;
+		color: var(--sl-color-gray-3);
+		font: inherit;
+		font-size: 0.75rem;
+		cursor: pointer;
+	}
+
+	.tozala:hover,
+	.tozala[data-tasdiq='kutilmoqda'] {
+		border-color: var(--blok-5);
+		color: var(--blok-5);
+	}
+
+	.tozala:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.qatorlar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: 1rem 2rem;
+	}
+
+	.darslar-blok {
+		flex: 1 1 12rem;
+	}
+
+	.hisob {
+		margin: 0 0 0.4rem 0;
+		font-family: var(--sl-font-mono);
+	}
+
+	.hisob .tugatilgan {
+		font-size: 1.5rem;
+		color: var(--sl-color-accent);
+	}
+
+	.hisob .jami {
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.chiziq {
+		height: 8px;
+		border-radius: 999px;
+		background: var(--sl-color-gray-6);
+		overflow: hidden;
+	}
+
+	.chiziq-toldi {
+		--ulush: 0%;
+		width: var(--ulush);
+		height: 100%;
+		border-radius: 999px;
+		background: var(--sl-color-accent);
+		transition: width 0.35s ease;
+	}
+
+	.streak {
+		display: flex;
+		align-items: baseline;
+		gap: 0.4rem;
+		margin: 0;
+		font-family: var(--sl-font-mono);
+	}
+
+	.streak-son {
+		font-size: 1.5rem;
+		color: var(--blok-2);
+	}
+
+	.streak-matn {
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.nishon-sarlavha {
+		margin: 1.5rem 0 0.75rem;
+		font-size: 0.9rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.nishonlar {
+		display: grid;
+		/* 360px da bitta ustun, kengroq ekranda avtomatik ko'payadi */
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+		gap: 0.6rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.nishon {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		padding: 0.6rem 0.8rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+	}
+
+	.nishon-nom {
+		font-weight: 600;
+		font-size: 0.9rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.nishon-izoh {
+		font-size: 0.78rem;
+		line-height: 1.4;
+		color: var(--sl-color-gray-4);
+	}
+
+	.nishon-holat {
+		margin-top: 0.2rem;
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--sl-color-gray-4);
+	}
+
+	/* Ochilgan nishon o'z blok rangiga bo'yaladi — yopiqlari kulrang qoladi.
+	   Farq ko'zga darhol tashlanishi kerak. */
+	.nishon[data-ochilgan='ha'] {
+		border-color: var(--n-rang);
+		background: var(--n-fon);
+	}
+
+	.nishon[data-ochilgan='ha'] .nishon-nom {
+		color: var(--n-rang);
+	}
+
+	.nishon[data-ochilgan='ha'] .nishon-izoh {
+		color: var(--sl-color-gray-2);
+	}
+
+	.nishon[data-ochilgan='ha'] .nishon-holat {
+		color: var(--n-rang);
+	}
+
+	.nishon[data-blok='1'] {
+		--n-rang: var(--blok-1);
+		--n-fon: var(--blok-1-fon);
+	}
+	.nishon[data-blok='2'] {
+		--n-rang: var(--blok-2);
+		--n-fon: var(--blok-2-fon);
+	}
+	.nishon[data-blok='3'] {
+		--n-rang: var(--blok-3);
+		--n-fon: var(--blok-3-fon);
+	}
+	.nishon[data-blok='4'] {
+		--n-rang: var(--blok-4);
+		--n-fon: var(--blok-4-fon);
+	}
+	.nishon[data-blok='5'] {
+		--n-rang: var(--blok-5);
+		--n-fon: var(--blok-5-fon);
+	}
+</style>

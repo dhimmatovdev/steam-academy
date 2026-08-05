@@ -1,0 +1,74 @@
+---
+title: Computer Fundamentals
+description: "Kompyuter qanday ishlaydi — bitdan protsessorgacha. 20 dars, 5 blok, har darsda ishlaydigan simulyator."
+sidebar:
+  label: Modul haqida
+  order: 0
+---
+
+import { ModulProgress, Muhim } from '@components';
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+Bu modul bitta savolga javob beradi: **telefoningiz ichida nima sodir bo'ladi?**
+
+Javobni yodlab olmaysiz. Siz uni **quraysiz** — ikkilik sanoqdan boshlab, mantiqiy darvozalar orqali, o'z protsessoringizni yig'ib chiqquningizcha.
+
+<Muhim turi="gap">
+	Kompyuterda sehr yo'q. Faqat ikkita holat bor — bor va yo'q, 1 va 0. Qolgan hammasi
+	(rasm, ovoz, o'yin, internet) shu ikkita holatning ustiga qurilgan minora.
+</Muhim>
+
+## Modul qanday tuzilgan
+
+20 dars, 5 blokka bo'lingan. Har blok o'z rangiga ega — dars ochganda yuqoridagi rangli chizig'idan qaysi blokda ekaningizni bilasiz.
+
+<CardGrid>
+	<Card title="1-blok · Hamma narsa bit">
+		Kompyuter nima, ikkilik sanoq, sonlarning chegarasi, matn va rasm qanday son bo'ladi.
+		**1–4 darslar**
+	</Card>
+	<Card title="2-blok · Mantiqdan apparatga">
+		Bul algebrasi, tranzistor, darvozalar, summator, xotira. Bu yerda apparatni qurishni
+		boshlaysiz. **5–8 darslar**
+	</Card>
+	<Card title="3-blok · Protsessor">
+		Fon Neyman arxitekturasi, mashina kodi, assembler va **o'z protsessoringizni yig'ish**.
+		**9–12 darslar**
+	</Card>
+	<Card title="4-blok · Xotira, OS va fayl">
+		Xotira ierarxiyasi, fayl tizimi, operatsion tizim, terminal. **13–16 darslar**
+	</Card>
+	<Card title="5-blok · Tarmoq va xavfsizlik">
+		Paketlar, internet, shifrlash va hisoblashning chegaralari. **17–20 darslar**
+	</Card>
+</CardGrid>
+
+## Har dars qanday kechadi
+
+Har dars bir xil tuzilishga ega — o'quvchi nimani kutishini biladi:
+
+1. **Nega bu muhim** — real hayotdan ilgak, 2–3 gap
+2. **Nazariya** — qisqa bo'limlar, har biri 150 so'zdan oshmaydi
+3. **Sinab ko'r** — brauzerda ishlaydigan simulyator. Yodlash emas, o'ynash
+4. **Xulosa** — 3–5 punkt
+5. **O'zingizni sinang** — 5 savol, javoblari yashiringan
+6. **Amaliy topshiriq** — uy vazifasi, vaqti ko'rsatilgan
+
+<Muhim turi="ogoh" sarlavha="Simulyatorni o'tkazib ketmang">
+	Nazariyani o'qib, "Sinab ko'r" bo'limini o'tkazib ketish eng keng tarqalgan xato.
+	Aynan simulyatorda tushunish tug'iladi — matnda esa faqat tanishish bo'ladi.
+</Muhim>
+
+## Kirish sharti
+
+Hech narsa. Bu modul noldan boshlanadi. Kompyuterni yoqib, brauzer ochishni bilsangiz — yetadi.
+
+Faqat 16-dars (Terminal) va 11-dars (protsessor yig'ish) uchun kompyuter oldida o'tirish kerak bo'ladi — telefonda bu ikkitasi qiyin.
+
+<ModulProgress modul="computer-fundamentals" jami={20} />
+
+## Modul yakunida
+
+Siz kompyuterni **ochib ko'rsatilganda tushunadigan** odam bo'lasiz: qaysi qism nima qilishini, nega tez yoki sekin ishlashini va programma qanday qilib elektr signaliga aylanishini tushuntirib bera olasiz.
+
+Bu bilim keyingi barcha modullarning poydevori: Python yozganda xotirada nima bo'layotganini, sayt qurganda tarmoq nima qilayotganini bilib turasiz.

@@ -1,0 +1,344 @@
+---
+/**
+ * PikselChizgich — 4-dars simulyatori.
+ *
+ * 8x8 katak. O'quvchi rang tanlab piksellarni bo'yaydi va shu bilan birga
+ * rasmning SON KO'RINISHINI ko'radi: har piksel uchta son (R, G, B).
+ *
+ * Pedagogik maqsad: "rasm ham son" degan g'oyani qo'lga tegadigan qilish.
+ * O'quvchi smaylik chizadi va yonida uning 192 sonini ko'radi.
+ *
+ * Nima uchun 8x8: 64 piksel — o'quvchi hammasini ko'z bilan qamrab oladi,
+ * lekin oddiy shakl chizishga yetadi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+const OLCHAM = 8;
+const KATAKLAR = Array.from({ length: OLCHAM * OLCHAM }, (_, i) => i);
+
+/* Palitra ataylab kichik: 6 rang. Ko'p rang tanlash dars maqsadini
+   chalg'itadi — bu rang tanlash mashqi emas, son ko'rish mashqi. */
+const PALITRA = [
+	{ nom: "O'chirish (oq)", r: 255, g: 255, b: 255 },
+	{ nom: 'Qora', r: 0, g: 0, b: 0 },
+	{ nom: 'Qizil', r: 220, g: 50, b: 50 },
+	{ nom: 'Yashil', r: 40, g: 180, b: 90 },
+	{ nom: "Ko'k", r: 50, g: 110, b: 230 },
+	{ nom: 'Sariq', r: 250, g: 200, b: 40 },
+];
+---
+
+<Simulyator
+	sarlavha="Piksel chizgich"
+	korsatma="Rang tanlab kataklarni bo'yang va o'ngdagi sonlar qanday o'zgarishini kuzating."
+	blok={1}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda 8×8 katakli rasm chizasiz. Har piksel uchta son bilan yoziladi:
+			qizil, yashil va ko'k miqdori (har biri 0–255).
+		</p>
+		<p>
+			JavaScript'siz sinash: daftarda 8×8 katak chizing, har katakni bo'yang va yoniga
+			uchta son yozib chiqing. 64 katak × 3 son = 192 son.
+		</p>
+	</Fragment>
+
+	<div class="pc not-content">
+		<div class="palitra" role="group" aria-label="Rang tanlash">
+			{
+				PALITRA.map((p, i) => (
+					<button
+						type="button"
+						class:list={['rang', { tanlangan: i === 1 }]}
+						data-r={p.r}
+						data-g={p.g}
+						data-b={p.b}
+						aria-pressed={i === 1 ? 'true' : 'false'}
+						aria-label={p.nom}
+						title={p.nom}
+					>
+						<span class="namuna" data-rang-index={i} aria-hidden="true" />
+					</button>
+				))
+			}
+		</div>
+
+		<div class="ish">
+			<div class="tor" role="group" aria-label="8 ga 8 piksel maydoni">
+				{
+					KATAKLAR.map((i) => (
+						<button
+							type="button"
+							class="piksel"
+							data-index={i}
+							aria-label={`Piksel ${Math.floor(i / OLCHAM) + 1}-qator, ${(i % OLCHAM) + 1}-ustun`}
+						/>
+					))
+				}
+			</div>
+
+			<div class="sonlar">
+				<p class="sonlar-sarlavha">Rasm sonlar ko'rinishida</p>
+				<pre class="sonlar-matn"></pre>
+			</div>
+		</div>
+
+		<dl class="hisob">
+			<div>
+				<dt>Piksellar</dt>
+				<dd class="qiymat">64</dd>
+			</div>
+			<div>
+				<dt>Sonlar</dt>
+				<dd class="qiymat">192</dd>
+			</div>
+			<div>
+				<dt>Hajmi</dt>
+				<dd class="qiymat">192 bayt</dd>
+			</div>
+		</dl>
+
+		<p class="izoh">
+			Telefon kamerasi 12 million piksel oladi — ya'ni 36 million son. Shuning uchun
+			rasmlar siqiladi.
+		</p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="smaylik">Smaylik chizib berish</button>
+		<button type="button" class="qayta">Tozalash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	const OLCHAM = 8;
+
+	/* Smaylik namunasi: 0 = oq, 1 = qora, 5 = sariq (palitra indekslari) */
+	const SMAYLIK = [
+		0, 0, 5, 5, 5, 5, 0, 0,
+		0, 5, 5, 5, 5, 5, 5, 0,
+		5, 5, 1, 5, 5, 1, 5, 5,
+		5, 5, 1, 5, 5, 1, 5, 5,
+		5, 5, 5, 5, 5, 5, 5, 5,
+		5, 5, 1, 1, 1, 1, 5, 5,
+		0, 5, 5, 1, 1, 5, 5, 0,
+		0, 0, 5, 5, 5, 5, 0, 0,
+	];
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.pc');
+		if (!qutu) return;
+
+		const ranglar = [...qutu.querySelectorAll<HTMLButtonElement>('.rang')];
+		const piksellar = [...qutu.querySelectorAll<HTMLButtonElement>('.piksel')];
+		const sonlarEl = qutu.querySelector<HTMLElement>('.sonlar-matn')!;
+
+		/** Har piksel holati: [r, g, b]. Boshlanishi — oq. */
+		const holat: [number, number, number][] = piksellar.map(() => [255, 255, 255]);
+		let tanlangan: [number, number, number] = [0, 0, 0];
+
+		function rangMatn(rgb: [number, number, number]) {
+			return `rgb(${rgb[0]} ${rgb[1]} ${rgb[2]})`;
+		}
+
+		function chizish() {
+			piksellar.forEach((p, i) => {
+				p.style.setProperty('--piksel-rang', rangMatn(holat[i]!));
+			});
+
+			/* Faqat birinchi ikki qatorni ko'rsatamiz: 192 sonning hammasi
+			   ekranni to'ldirib, g'oyani ko'mib qo'yadi. Maqsad — hajmni
+			   his qildirish, hammasini o'qitish emas. */
+			const qatorlar: string[] = [];
+			for (let q = 0; q < 2; q++) {
+				const bolaklar: string[] = [];
+				for (let u = 0; u < OLCHAM; u++) {
+					const [r, g, b] = holat[q * OLCHAM + u]!;
+					bolaklar.push(`${r},${g},${b}`);
+				}
+				qatorlar.push(`${q + 1}-qator: ` + bolaklar.join('  '));
+			}
+			qatorlar.push('…');
+			qatorlar.push(`8-qator: shu tarzda davom etadi (jami 192 son)`);
+			sonlarEl.textContent = qatorlar.join('\n');
+		}
+
+		// Palitra namunalarini bo'yash (inline style JS orqali — .mdx da emas)
+		for (const r of ranglar) {
+			const namuna = r.querySelector<HTMLElement>('.namuna')!;
+			namuna.style.setProperty(
+				'--namuna-rang',
+				`rgb(${r.dataset.r} ${r.dataset.g} ${r.dataset.b})`
+			);
+			r.addEventListener('click', () => {
+				tanlangan = [Number(r.dataset.r), Number(r.dataset.g), Number(r.dataset.b)];
+				for (const b of ranglar) {
+					const bu = b === r;
+					b.classList.toggle('tanlangan', bu);
+					b.setAttribute('aria-pressed', String(bu));
+				}
+			});
+		}
+
+		piksellar.forEach((p, i) => {
+			p.addEventListener('click', () => {
+				holat[i] = [...tanlangan] as [number, number, number];
+				chizish();
+			});
+		});
+
+		qobiq.querySelector<HTMLButtonElement>('.smaylik')!.addEventListener('click', () => {
+			SMAYLIK.forEach((paletIndex, i) => {
+				const r = ranglar[paletIndex]!;
+				holat[i] = [Number(r.dataset.r), Number(r.dataset.g), Number(r.dataset.b)];
+			});
+			chizish();
+		});
+
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => {
+			holat.forEach((_, i) => (holat[i] = [255, 255, 255]));
+			chizish();
+		});
+
+		chizish();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.palitra {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		margin-bottom: 1rem;
+	}
+
+	.rang {
+		margin: 0;
+		padding: 0.2rem;
+		border: 2px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		cursor: pointer;
+		line-height: 0;
+	}
+
+	.rang:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.rang.tanlangan {
+		border-color: var(--blok-1);
+	}
+
+	.namuna {
+		display: block;
+		width: 1.5rem;
+		height: 1.5rem;
+		border-radius: 3px;
+		background: var(--namuna-rang, #fff);
+		/* Oq rang oq fonda ko'rinmay qolmasin */
+		box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.25);
+	}
+
+	.ish {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1.25rem;
+		align-items: flex-start;
+	}
+
+	.tor {
+		display: grid;
+		grid-template-columns: repeat(8, 1fr);
+		gap: 2px;
+		/* 360px ekranda ham sig'adi, kattaroq ekranda 18rem dan oshmaydi */
+		flex: 1 1 15rem;
+		max-width: 18rem;
+		padding: 3px;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-gray-5);
+	}
+
+	.piksel {
+		aspect-ratio: 1 / 1;
+		margin: 0;
+		padding: 0;
+		border: none;
+		border-radius: 1px;
+		background: var(--piksel-rang, #fff);
+		cursor: pointer;
+	}
+
+	.piksel:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 1px;
+		z-index: 1;
+	}
+
+	.sonlar {
+		flex: 1 1 14rem;
+		min-width: 0;
+	}
+
+	.sonlar-sarlavha {
+		margin: 0 0 0.4rem 0;
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.sonlar-matn {
+		margin: 0;
+		padding: 0.6rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		font-family: var(--sl-font-mono);
+		font-size: 0.62rem;
+		line-height: 1.6;
+		color: var(--sl-color-gray-2);
+		/* Uzun sonlar qatori sahifani emas, o'zini scroll qilsin */
+		overflow-x: auto;
+	}
+
+	.hisob {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem 1.75rem;
+		margin: 1.2rem 0 0 0;
+		padding-top: 1rem;
+		border-top: 1px solid var(--sl-color-gray-5);
+	}
+
+	.hisob dt {
+		margin: 0;
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.hisob dd {
+		margin: 0.15rem 0 0 0;
+	}
+
+	.qiymat {
+		font-family: var(--sl-font-mono);
+		font-size: 1.1rem;
+		font-weight: 700;
+		color: var(--blok-1);
+	}
+
+	.izoh {
+		margin: 0.9rem 0 0 0;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-3);
+	}
+</style>

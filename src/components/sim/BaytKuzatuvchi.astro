@@ -1,0 +1,277 @@
+---
+/**
+ * BaytKuzatuvchi — 4-dars simulyatori.
+ *
+ * O'quvchi matn yozadi va har belgining xotirada nechta bayt egallayotganini
+ * ko'radi. Aynan o'zbek tilida bu juda kuchli ishlaydi: `o'` va `g'`
+ * harflaridagi tutuq belgisi alohida bayt talab qiladi.
+ *
+ * Pedagogik maqsad: "harf = 1 bayt" degan keng tarqalgan xato tushunchani
+ * sindirish. O'quvchi o'z ismini yozib buni o'zi ko'radi.
+ *
+ * Hisoblash `TextEncoder` bilan — brauzerning haqiqiy UTF-8 kodlovchisi.
+ */
+import Simulyator from '../Simulyator.astro';
+---
+
+<Simulyator
+	sarlavha="Bayt kuzatuvchi"
+	korsatma="Matn yozing va har belgi nechta bayt egallayotganini ko'ring."
+	blok={1}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyator yozgan matningizni baytlarga ajratib ko'rsatadi. Lotin harflari 1 bayt,
+			o'zbek tilidagi tutuq belgisi va kirill harflari 2 bayt egallaydi.
+		</p>
+		<p>
+			JavaScript'siz sinash: ismingizni yozib, har harf uchun UTF-8 jadvalidan kod
+			toping. `A` = 65, `a` = 97 dan boshlanadi.
+		</p>
+	</Fragment>
+
+	<div class="bk not-content">
+		<label>
+			<span>Matn</span>
+			<input type="text" class="kirish" value="Salom, o'zbek tili!" maxlength="40" />
+		</label>
+
+		<dl class="hisob">
+			<div>
+				<dt>Belgilar</dt>
+				<dd class="qiymat belgilar">0</dd>
+			</div>
+			<div>
+				<dt>Baytlar</dt>
+				<dd class="qiymat baytlar">0</dd>
+			</div>
+			<div>
+				<dt>Bitlar</dt>
+				<dd class="qiymat bitlar">0</dd>
+			</div>
+		</dl>
+
+		<ul class="belgi-royxat"></ul>
+
+		<p class="xulosa" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="namuna-uz">O'zbekcha misol</button>
+		<button type="button" class="namuna-lotin">Faqat lotin</button>
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	const BOSHLANGICH = "Salom, o'zbek tili!";
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.bk');
+		if (!qutu) return;
+
+		const kirishEl = qutu.querySelector<HTMLInputElement>('.kirish')!;
+		const belgilarEl = qutu.querySelector<HTMLElement>('.belgilar')!;
+		const baytlarEl = qutu.querySelector<HTMLElement>('.baytlar')!;
+		const bitlarEl = qutu.querySelector<HTMLElement>('.bitlar')!;
+		const royxatEl = qutu.querySelector<HTMLUListElement>('.belgi-royxat')!;
+		const xulosaEl = qutu.querySelector<HTMLElement>('.xulosa')!;
+
+		const kodlovchi = new TextEncoder();
+
+		function yangila() {
+			const matn = kirishEl.value;
+
+			/* `[...matn]` emas, Intl.Segmenter ham emas — bu yerda ataylab
+			   kod nuqtalari bo'yicha yuramiz, chunki dars aynan shu haqda:
+			   bitta "harf" bir nechta kod nuqtasi bo'lishi mumkin. */
+			const belgilar = [...matn];
+			const jamiBayt = kodlovchi.encode(matn).length;
+
+			belgilarEl.textContent = String(belgilar.length);
+			baytlarEl.textContent = String(jamiBayt);
+			bitlarEl.textContent = String(jamiBayt * 8);
+
+			royxatEl.innerHTML = '';
+			let kopBaytliBormi = false;
+
+			for (const belgi of belgilar) {
+				const baytlar = [...kodlovchi.encode(belgi)];
+				if (baytlar.length > 1) kopBaytliBormi = true;
+
+				const li = document.createElement('li');
+				li.className = 'belgi';
+				li.dataset.kop = baytlar.length > 1 ? 'ha' : 'yoq';
+
+				const bosh = document.createElement('span');
+				bosh.className = 'belgi-bosh';
+				// Bo'shliqni ko'rinadigan qilamiz, aks holda katak bo'sh ko'rinadi
+				bosh.textContent = belgi === ' ' ? '␣' : belgi;
+
+				const kod = document.createElement('span');
+				kod.className = 'belgi-kod';
+				kod.textContent = 'U+' + belgi.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0');
+
+				const bayt = document.createElement('span');
+				bayt.className = 'belgi-bayt';
+				bayt.textContent = baytlar.map((b) => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+
+				const soni = document.createElement('span');
+				soni.className = 'belgi-soni';
+				soni.textContent = `${baytlar.length} bayt`;
+
+				li.append(bosh, kod, bayt, soni);
+				royxatEl.append(li);
+			}
+
+			if (belgilar.length === 0) {
+				xulosaEl.textContent = 'Matn kiriting.';
+			} else if (kopBaytliBormi) {
+				xulosaEl.textContent = `${belgilar.length} belgi, lekin ${jamiBayt} bayt. Sariq bilan belgilangan belgilar bittadan ko'p bayt talab qiladi.`;
+			} else {
+				xulosaEl.textContent = `${belgilar.length} belgi = ${jamiBayt} bayt. Bu matnda har belgi aynan 1 bayt.`;
+			}
+		}
+
+		kirishEl.addEventListener('input', yangila);
+
+		function ornat(v: string) {
+			kirishEl.value = v;
+			yangila();
+		}
+
+		qobiq
+			.querySelector<HTMLButtonElement>('.namuna-uz')!
+			.addEventListener('click', () => ornat("O'zbekiston, g'alaba, ma'no"));
+		qobiq
+			.querySelector<HTMLButtonElement>('.namuna-lotin')!
+			.addEventListener('click', () => ornat('Salom dunyo'));
+		qobiq
+			.querySelector<HTMLButtonElement>('.qayta')!
+			.addEventListener('click', () => ornat(BOSHLANGICH));
+
+		yangila();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	label {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	label span {
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.kirish {
+		width: 100%;
+		padding: 0.5rem 0.7rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-white);
+		font-size: 1rem;
+	}
+
+	.kirish:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 1px;
+	}
+
+	.hisob {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem 1.75rem;
+		margin: 1.1rem 0 0 0;
+	}
+
+	.hisob dt {
+		margin: 0;
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.hisob dd {
+		margin: 0.15rem 0 0 0;
+	}
+
+	.qiymat {
+		font-family: var(--sl-font-mono);
+		font-size: 1.15rem;
+		font-weight: 700;
+		color: var(--sl-color-white);
+	}
+
+	.baytlar {
+		color: var(--blok-1);
+	}
+
+	.belgi-royxat {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		margin: 1.1rem 0 0 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.belgi {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.1rem;
+		min-width: 3.6rem;
+		padding: 0.4rem 0.3rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+	}
+
+	/* Bir baytdan ko'p joy egallagan belgilar ajralib turadi — darsning
+	   asosiy kashfiyoti aynan shu */
+	.belgi[data-kop='ha'] {
+		border-color: var(--blok-2);
+		background: var(--blok-2-fon);
+	}
+
+	.belgi-bosh {
+		font-size: 1.15rem;
+		line-height: 1.1;
+		color: var(--sl-color-white);
+	}
+
+	.belgi-kod,
+	.belgi-bayt,
+	.belgi-soni {
+		font-family: var(--sl-font-mono);
+		font-size: 0.6rem;
+		line-height: 1.3;
+		color: var(--sl-color-gray-3);
+		text-align: center;
+	}
+
+	.belgi-bayt {
+		color: var(--sl-color-gray-2);
+	}
+
+	.belgi[data-kop='ha'] .belgi-soni {
+		color: var(--blok-2);
+	}
+
+	.xulosa {
+		margin: 1rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+</style>

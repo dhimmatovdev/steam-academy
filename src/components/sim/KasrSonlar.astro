@@ -1,0 +1,326 @@
+---
+/**
+ * KasrSonlar — 3-dars simulyatori.
+ *
+ * O'quvchi kasr son kiritadi va uning kompyuterda AYNAN qanday saqlanganini
+ * ko'radi. `0.1 + 0.2` nega `0.30000000000000004` berishi shu yerda ochiladi.
+ *
+ * Pedagogik maqsad: bu "kompyuterning xatosi" emas, ikkilik kasrning
+ * matematik cheklovi. 1/3 ni o'nlikda aniq yozib bo'lmaganidek (0.333...),
+ * 0.1 ni ikkilikda aniq yozib bo'lmaydi.
+ *
+ * Hisoblash brauzerning o'z `double` arifmetikasi bilan bajariladi —
+ * ya'ni o'quvchi soxta emas, haqiqiy natijani ko'radi.
+ */
+import Simulyator from '../Simulyator.astro';
+---
+
+<Simulyator
+	sarlavha="Kasr sonlar qaerda buziladi"
+	korsatma="Ikki kasr son kiritib qo'shing va natijaning to'liq yozuvini ko'ring."
+	blok={1}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyator kasr sonlarni qo'shib, natijaning to'liq yozuvini ko'rsatadi.
+			`0.1 + 0.2` aniq `0.3` bermaydi.
+		</p>
+		<p>
+			JavaScript'siz sinash: kalkulyator ilovasini ochib 0.1 + 0.2 ni hisoblang, keyin
+			natijadan 0.3 ni ayiring. Ko'p kalkulyatorlarda javob nol chiqmaydi.
+		</p>
+	</Fragment>
+
+	<div class="ks not-content">
+		<div class="kirish">
+			<label>
+				<span>Birinchi son</span>
+				<input type="number" class="a" value="0.1" step="0.1" inputmode="decimal" />
+			</label>
+			<span class="amal" aria-hidden="true">+</span>
+			<label>
+				<span>Ikkinchi son</span>
+				<input type="number" class="b" value="0.2" step="0.1" inputmode="decimal" />
+			</label>
+		</div>
+
+		<dl class="natija">
+			<div>
+				<dt>Kutilgan natija</dt>
+				<dd class="qiymat kutilgan">0.3</dd>
+			</div>
+			<div>
+				<dt>Kompyuter bergan natija</dt>
+				<dd class="qiymat haqiqiy">0.30000000000000004</dd>
+			</div>
+			<div>
+				<dt>Farq</dt>
+				<dd class="qiymat farq">0.00000000000000004</dd>
+			</div>
+		</dl>
+
+		<p class="hukm" role="status" aria-live="polite"></p>
+
+		<details class="chuqur">
+			<summary>Nega shunday? Ikkilik kasrni ko'rish</summary>
+			<div class="chuqur-ichi">
+				<p class="tushuntirish"></p>
+				<p class="bitlar-satr"></p>
+			</div>
+		</details>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="mashhur">0.1 + 0.2</button>
+		<button type="button" class="butun">0.5 + 0.25</button>
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.ks');
+		if (!qutu) return;
+
+		const aEl = qutu.querySelector<HTMLInputElement>('.a')!;
+		const bEl = qutu.querySelector<HTMLInputElement>('.b')!;
+		const kutilganEl = qutu.querySelector<HTMLElement>('.kutilgan')!;
+		const haqiqiyEl = qutu.querySelector<HTMLElement>('.haqiqiy')!;
+		const farqEl = qutu.querySelector<HTMLElement>('.farq')!;
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+		const tushuntirishEl = qutu.querySelector<HTMLElement>('.tushuntirish')!;
+		const bitlarEl = qutu.querySelector<HTMLElement>('.bitlar-satr')!;
+
+		/**
+		 * Kasr sonning ikkilik yozuvini qo'lda ochib beradi.
+		 * Usul: kasr qismni 2 ga ko'paytirib butun qismni olib boramiz.
+		 * `chegara` dan keyin to'xtaymiz — takrorlanuvchi kasr cheksiz davom etadi.
+		 */
+		function ikkilikKasr(x: number, chegara = 24): { satr: string; tugadimi: boolean } {
+			const ishora = x < 0 ? '-' : '';
+			x = Math.abs(x);
+			const butun = Math.floor(x);
+			let kasr = x - butun;
+			let natija = '';
+			let i = 0;
+			while (kasr > 0 && i < chegara) {
+				kasr *= 2;
+				if (kasr >= 1) {
+					natija += '1';
+					kasr -= 1;
+				} else {
+					natija += '0';
+				}
+				i++;
+			}
+			return {
+				satr: `${ishora}${butun.toString(2)}.${natija || '0'}`,
+				tugadimi: kasr === 0,
+			};
+		}
+
+		function yangila() {
+			const a = Number(aEl.value);
+			const b = Number(bEl.value);
+
+			if (!Number.isFinite(a) || !Number.isFinite(b)) {
+				hukmEl.textContent = 'Iltimos, ikki son kiriting.';
+				return;
+			}
+
+			// Haqiqiy natija — brauzerning double arifmetikasi
+			const haqiqiy = a + b;
+
+			/* Kutilgan natija: aynan shu qo'shishni o'nlik kasr sifatida bajaramiz.
+			   Butun sonlarga o'tkazib qo'shamiz — bu odam qog'ozda qiladigan ish. */
+			const kasrUzunligi = Math.max(
+				(String(aEl.value).split('.')[1] ?? '').length,
+				(String(bEl.value).split('.')[1] ?? '').length
+			);
+			const kolay = 10 ** kasrUzunligi;
+			const kutilgan = (Math.round(a * kolay) + Math.round(b * kolay)) / kolay;
+
+			kutilganEl.textContent = String(kutilgan);
+			// toPrecision(20) yashirin raqamlarni ham ochib beradi
+			haqiqiyEl.textContent = haqiqiy.toPrecision(20).replace(/0+$/, '');
+
+			const farq = Math.abs(haqiqiy - kutilgan);
+			farqEl.textContent = farq === 0 ? '0' : farq.toExponential(2);
+
+			if (farq === 0) {
+				qutu.dataset.holat = 'aniq';
+				hukmEl.textContent =
+					'Bu ikki son ikkilikda aniq yozilgan — shuning uchun natija ham aniq chiqdi.';
+			} else {
+				qutu.dataset.holat = 'nomukammal';
+				hukmEl.textContent =
+					'Natija kutilganidan farq qiladi. Bu kompyuterning xatosi emas — ikkilik kasrning cheklovi.';
+			}
+
+			const ka = ikkilikKasr(a);
+			const kb = ikkilikKasr(b);
+			tushuntirishEl.textContent = ka.tugadimi
+				? `${a} soni ikkilikda aniq yoziladi: ${ka.satr}`
+				: `${a} soni ikkilikda TUGAMAYDI: ${ka.satr}… (kesib olinadi)`;
+			bitlarEl.textContent = kb.tugadimi
+				? `${b} soni ikkilikda aniq yoziladi: ${kb.satr}`
+				: `${b} soni ikkilikda TUGAMAYDI: ${kb.satr}… (kesib olinadi)`;
+		}
+
+		aEl.addEventListener('input', yangila);
+		bEl.addEventListener('input', yangila);
+
+		function ornat(a: string, b: string) {
+			aEl.value = a;
+			bEl.value = b;
+			yangila();
+		}
+
+		qobiq
+			.querySelector<HTMLButtonElement>('.mashhur')!
+			.addEventListener('click', () => ornat('0.1', '0.2'));
+		qobiq
+			.querySelector<HTMLButtonElement>('.butun')!
+			.addEventListener('click', () => ornat('0.5', '0.25'));
+		qobiq
+			.querySelector<HTMLButtonElement>('.qayta')!
+			.addEventListener('click', () => ornat('0.1', '0.2'));
+
+		yangila();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.kirish {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: 0.6rem;
+	}
+
+	label {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		flex: 1 1 8rem;
+		min-width: 0;
+	}
+
+	label span {
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-3);
+	}
+
+	input {
+		width: 100%;
+		padding: 0.45rem 0.6rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-white);
+		font-family: var(--sl-font-mono);
+		font-size: 1rem;
+	}
+
+	input:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 1px;
+	}
+
+	.amal {
+		padding-bottom: 0.55rem;
+		font-family: var(--sl-font-mono);
+		font-size: 1.2rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.natija {
+		display: flex;
+		flex-direction: column;
+		gap: 0.7rem;
+		margin: 1.2rem 0 0 0;
+		padding-top: 1rem;
+		border-top: 1px solid var(--sl-color-gray-5);
+	}
+
+	.natija dt {
+		margin: 0;
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.natija dd {
+		margin: 0.15rem 0 0 0;
+	}
+
+	.qiymat {
+		font-family: var(--sl-font-mono);
+		font-size: 1rem;
+		font-weight: 700;
+		color: var(--sl-color-white);
+		/* Uzun son 360px ekranda sahifani cho'zmasin */
+		overflow-wrap: anywhere;
+	}
+
+	.kutilgan {
+		color: var(--blok-1);
+	}
+
+	.ks[data-holat='nomukammal'] .haqiqiy {
+		color: var(--blok-2);
+	}
+
+	.hukm {
+		margin: 1rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	.chuqur {
+		margin-top: 0.5rem;
+	}
+
+	summary {
+		display: inline-block;
+		padding: 0.3rem 0.7rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		font-size: 0.8rem;
+		color: var(--sl-color-gray-2);
+		cursor: pointer;
+		list-style: none;
+		user-select: none;
+	}
+
+	summary::-webkit-details-marker {
+		display: none;
+	}
+
+	summary:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.chuqur-ichi {
+		margin-top: 0.7rem;
+		padding-left: 0.85rem;
+		border-left: 2px solid var(--blok-1);
+	}
+
+	.chuqur-ichi p {
+		margin: 0.3rem 0;
+		font-family: var(--sl-font-mono);
+		font-size: 0.8rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+		overflow-wrap: anywhere;
+	}
+</style>

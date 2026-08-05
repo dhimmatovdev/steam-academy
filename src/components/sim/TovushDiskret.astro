@@ -1,0 +1,264 @@
+---
+/**
+ * TovushDiskret — 4-dars simulyatori.
+ *
+ * Silliq tovush to'lqini SVG'da chiziladi. Slider bilan namuna olish
+ * chastotasi o'zgartiriladi va o'quvchi ko'radi: namuna kam bo'lsa
+ * kompyuter saqlagan shakl asl to'lqinga o'xshamay qoladi.
+ *
+ * Pedagogik maqsad: diskretlash g'oyasi. Analog dunyo uzluksiz, xotira esa
+ * faqat alohida sonlarni saqlaydi. Sifat — namuna soniga bog'liq.
+ *
+ * Ovoz CHIQARILMAYDI: sinf sharoitida kutilmagan ovoz chalg'itadi.
+ * Bu yerda maqsad ko'rish, eshitish emas.
+ */
+import Simulyator from '../Simulyator.astro';
+---
+
+<Simulyator
+	sarlavha="Tovushni sonlarga aylantirish"
+	korsatma="Slayderni suring: namuna soni kamayganda saqlangan shakl asl to'lqindan uzoqlashadi."
+	blok={1}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyator tovush to'lqinini ko'rsatadi va uni necha marta "o'lchab" saqlash
+			mumkinligini o'zgartirishga imkon beradi.
+		</p>
+		<p>
+			JavaScript'siz sinash: daftarga silliq to'lqin chizing. Keyin uni 4 joyda o'lchab
+			nuqta qo'ying va nuqtalarni chiziq bilan tutashtiring. Shakl asl to'lqinga
+			o'xshamaydi. 16 nuqta bilan takrorlang.
+		</p>
+	</Fragment>
+
+	<div class="td not-content">
+		<svg viewBox="0 0 320 120" class="grafik" role="img" aria-label="Tovush to'lqini va namuna nuqtalari">
+			<line x1="0" y1="60" x2="320" y2="60" class="oq" />
+			<path class="asl" d="" />
+			<path class="saqlangan" d="" />
+			<g class="nuqtalar"></g>
+		</svg>
+
+		<label class="slayder">
+			<span class="slayder-nom">
+				Namuna soni: <strong class="soni">16</strong>
+			</span>
+			<input type="range" class="range" min="2" max="64" step="1" value="16" />
+		</label>
+
+		<dl class="hisob">
+			<div>
+				<dt>Sekundiga namuna</dt>
+				<dd class="qiymat chastota">16 Hz</dd>
+			</div>
+			<div>
+				<dt>Bir daqiqa uchun</dt>
+				<dd class="qiymat hajm">960 son</dd>
+			</div>
+		</dl>
+
+		<p class="hukm" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="past">Juda kam (4)</button>
+		<button type="button" class="cd">CD sifati nisbati</button>
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	const KENGLIK = 320;
+	const BALANDLIK = 120;
+	const MARKAZ = 60;
+	const AMPLITUDA = 42;
+
+	/** Ataylab murakkabroq to'lqin: bitta sinus juda "oson" ko'rinadi. */
+	function toLqin(t: number): number {
+		return Math.sin(t * Math.PI * 2) * 0.7 + Math.sin(t * Math.PI * 6) * 0.3;
+	}
+
+	function ulash(qobiq: HTMLElement) {
+		const qutu = qobiq.querySelector<HTMLElement>('.td');
+		if (!qutu) return;
+
+		const aslEl = qutu.querySelector<SVGPathElement>('.asl')!;
+		const saqlanganEl = qutu.querySelector<SVGPathElement>('.saqlangan')!;
+		const nuqtalarEl = qutu.querySelector<SVGGElement>('.nuqtalar')!;
+		const rangeEl = qutu.querySelector<HTMLInputElement>('.range')!;
+		const soniEl = qutu.querySelector<HTMLElement>('.soni')!;
+		const chastotaEl = qutu.querySelector<HTMLElement>('.chastota')!;
+		const hajmEl = qutu.querySelector<HTMLElement>('.hajm')!;
+		const hukmEl = qutu.querySelector<HTMLElement>('.hukm')!;
+
+		// Asl to'lqin bir marta chiziladi — u o'zgarmaydi
+		const aslNuqtalar: string[] = [];
+		for (let x = 0; x <= KENGLIK; x += 2) {
+			const y = MARKAZ - toLqin(x / KENGLIK) * AMPLITUDA;
+			aslNuqtalar.push(`${x},${y.toFixed(1)}`);
+		}
+		aslEl.setAttribute('d', 'M' + aslNuqtalar.join(' L'));
+
+		function yangila() {
+			const soni = Number(rangeEl.value);
+			soniEl.textContent = String(soni);
+			chastotaEl.textContent = `${soni} Hz`;
+			hajmEl.textContent = `${soni * 60} son`;
+
+			const nuqtalar: string[] = [];
+			nuqtalarEl.innerHTML = '';
+
+			for (let i = 0; i <= soni; i++) {
+				const t = i / soni;
+				const x = t * KENGLIK;
+				const y = MARKAZ - toLqin(t) * AMPLITUDA;
+				nuqtalar.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+
+				const nuqta = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+				nuqta.setAttribute('cx', x.toFixed(1));
+				nuqta.setAttribute('cy', y.toFixed(1));
+				nuqta.setAttribute('r', soni > 40 ? '1.5' : '2.5');
+				nuqta.setAttribute('class', 'nuqta');
+				nuqtalarEl.append(nuqta);
+			}
+
+			saqlanganEl.setAttribute('d', 'M' + nuqtalar.join(' L'));
+
+			if (soni <= 6) {
+				qutu.dataset.sifat = 'yomon';
+				hukmEl.textContent =
+					'Namuna juda kam. Saqlangan shakl asl to’lqinga umuman o’xshamaydi — ovoz buzilib chiqadi.';
+			} else if (soni <= 20) {
+				qutu.dataset.sifat = 'ortacha';
+				hukmEl.textContent =
+					'Shakl tanib olinadi, lekin tafsilotlar yo’qolgan. Ovoz "quvurdan kelayotgandek" eshitiladi.';
+			} else {
+				qutu.dataset.sifat = 'yaxshi';
+				hukmEl.textContent =
+					'Namuna yetarli — saqlangan shakl asl to’lqin ustiga tushdi. Xotira esa ko’proq ketadi.';
+			}
+		}
+
+		rangeEl.addEventListener('input', yangila);
+
+		function ornat(v: number) {
+			rangeEl.value = String(v);
+			yangila();
+		}
+
+		qobiq.querySelector<HTMLButtonElement>('.past')!.addEventListener('click', () => ornat(4));
+		qobiq.querySelector<HTMLButtonElement>('.cd')!.addEventListener('click', () => ornat(64));
+		qobiq.querySelector<HTMLButtonElement>('.qayta')!.addEventListener('click', () => ornat(16));
+
+		yangila();
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach(ulash);
+</script>
+
+<style>
+	.grafik {
+		display: block;
+		width: 100%;
+		height: auto;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+	}
+
+	.oq {
+		stroke: var(--sl-color-gray-5);
+		stroke-width: 1;
+	}
+
+	/* Asl to'lqin — sokin, fonda */
+	.asl {
+		fill: none;
+		stroke: var(--sl-color-gray-4);
+		stroke-width: 1.5;
+	}
+
+	/* Kompyuter saqlagan shakl — asosiy diqqat markazi */
+	.saqlangan {
+		fill: none;
+		stroke: var(--blok-1);
+		stroke-width: 2;
+		stroke-linejoin: round;
+	}
+
+	.nuqta {
+		fill: var(--blok-2);
+	}
+
+	.td[data-sifat='yomon'] .saqlangan {
+		stroke: var(--blok-5);
+	}
+
+	.slayder {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		margin-top: 1rem;
+	}
+
+	.slayder-nom {
+		font-size: 0.8rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.slayder-nom strong {
+		font-family: var(--sl-font-mono);
+		color: var(--blok-1);
+	}
+
+	.range {
+		width: 100%;
+		/* Barmoq bilan surish uchun yetarli baland nishon */
+		height: 1.75rem;
+		accent-color: var(--sl-color-accent);
+	}
+
+	.range:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.hisob {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem 1.75rem;
+		margin: 1rem 0 0 0;
+	}
+
+	.hisob dt {
+		margin: 0;
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.hisob dd {
+		margin: 0.15rem 0 0 0;
+	}
+
+	.qiymat {
+		font-family: var(--sl-font-mono);
+		font-size: 1.05rem;
+		font-weight: 700;
+		color: var(--sl-color-white);
+	}
+
+	.hukm {
+		margin: 0.9rem 0 0 0;
+		min-height: 2.6em;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	.td[data-sifat='yomon'] .hukm {
+		color: var(--blok-5);
+	}
+</style>
