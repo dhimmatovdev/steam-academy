@@ -1,5 +1,5 @@
 ---
-title: 2-dars: Kompyuterlarning yaratilish tarixi
+title: "2-dars: Kompyuterlarning yaratilish tarixi"
 description: Kompyuterlarning yaratilish tarixi va rivojlanish bosqichlari bilan tanishamiz.
 sidebar:
   label: 2-dars
