@@ -1,0 +1,225 @@
+---
+/**
+ * Kod — Python kod bloki: qator raqamlari, nusxalash tugmasi va
+ * yengil sintaksis bo'yoqlash (build vaqtida, brauzerga JS yubormaydi).
+ *
+ *   <Kod kod={`ism = input("Ismingiz? ")\nprint("Salom,", ism)`} />
+ *
+ * Nega Starlight'ning ``` bloki emas: MDX ichidagi kod fence'lari boshqa
+ * komponent (KodBashorat, Xato) ichiga prop sifatida kira olmaydi. Bitta
+ * komponent — hamma joyda bir xil ko'rinish.
+ *
+ * Bo'yoqlash ataylab sodda: kalit so'z, satr, son, izoh. Bu darslik,
+ * IDE emas — o'quvchi rangga emas, kodga qarasin.
+ */
+interface Props {
+	/** Kod matni. MDX'da backtick-template orqali beriladi. */
+	kod: string;
+	/** Blok tepasidagi yorliq. Berilmasa "Python" */
+	sarlavha?: string;
+	/** Ajratib ko'rsatiladigan qator raqamlari (1 dan boshlab) */
+	qatorlar?: number[];
+}
+
+const { kod, sarlavha = 'Python', qatorlar = [] } = Astro.props;
+
+/* Bosh/oxirgi bo'sh qatorlarni olib tashlaymiz — MDX template literal'da
+   birinchi qator ko'pincha bo'sh keladi */
+const toza = kod.replace(/^\n+/, '').replace(/\s+$/, '');
+const qatorRoyxati = toza.split('\n');
+
+const KALIT = new Set([
+	'False', 'None', 'True', 'and', 'as', 'assert', 'break', 'class', 'continue',
+	'def', 'del', 'elif', 'else', 'except', 'finally', 'for', 'from', 'global',
+	'if', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass',
+	'raise', 'return', 'try', 'while', 'with', 'yield',
+]);
+
+const ICHKI = new Set([
+	'print', 'input', 'int', 'float', 'str', 'bool', 'len', 'range', 'type',
+	'id', 'open', 'sum', 'min', 'max', 'sorted', 'round', 'abs', 'enumerate',
+	'zip', 'list', 'dict', 'set', 'tuple', 'append', 'split', 'join', 'strip',
+	'upper', 'lower', 'keys', 'values', 'items', 'get', 'read', 'write',
+	'readlines', 'add', 'remove', 'pop', 'count', 'index', 'isdigit', 'replace',
+]);
+
+function qoch(matn: string): string {
+	return matn.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/** Bitta qatorni HTML span'larga ajratadi. Uch qo'shtirnoqli ko'p qatorli
+ *  satrlar qo'llanmaydi — ular shunchaki bo'yoqsiz chiqadi, bu xato emas. */
+function tokenlash(qator: string): string {
+	const re =
+		/(#.*$)|([fFrRbB]?"(?:[^"\\]|\\.)*"|[fFrRbB]?'(?:[^'\\]|\\.)*')|(\b\d+(?:\.\d+)?\b)|(\b[A-Za-z_][A-Za-z0-9_]*\b)/g;
+	let natija = '';
+	let oxirgi = 0;
+	let m: RegExpExecArray | null;
+	while ((m = re.exec(qator))) {
+		natija += qoch(qator.slice(oxirgi, m.index));
+		if (m[1]) natija += `<span class="t-izoh">${qoch(m[1])}</span>`;
+		else if (m[2]) natija += `<span class="t-satr">${qoch(m[2])}</span>`;
+		else if (m[3]) natija += `<span class="t-son">${m[3]}</span>`;
+		else if (m[4]) {
+			if (KALIT.has(m[4])) natija += `<span class="t-kalit">${m[4]}</span>`;
+			else if (ICHKI.has(m[4])) natija += `<span class="t-ichki">${m[4]}</span>`;
+			else natija += m[4];
+		}
+		oxirgi = m.index + m[0].length;
+	}
+	natija += qoch(qator.slice(oxirgi));
+	return natija === '' ? ' ' : natija;
+}
+
+const ajratilganlar = new Set(qatorlar);
+---
+
+<figure class="kod not-content" data-holat="statik" data-kod={toza}>
+	<figcaption class="bosh">
+		<span class="til">{sarlavha}</span>
+		<button type="button" class="nusxa">Nusxalash</button>
+	</figcaption>
+	<pre tabindex="0"><code>{qatorRoyxati.map((q, i) => (
+		<span class="qator" data-ajratilgan={ajratilganlar.has(i + 1) ? 'ha' : undefined}><span class="raqam" aria-hidden="true">{i + 1}</span><span class="matn" set:html={tokenlash(q)} /></span>
+	))}</code></pre>
+</figure>
+
+<script>
+	document.querySelectorAll<HTMLElement>('.kod').forEach((blok) => {
+		const tugma = blok.querySelector<HTMLButtonElement>('.nusxa');
+		if (!tugma) return;
+
+		tugma.addEventListener('click', async () => {
+			try {
+				await navigator.clipboard.writeText(blok.dataset.kod ?? '');
+				tugma.textContent = 'Nusxalandi';
+			} catch {
+				tugma.textContent = 'Nusxalanmadi';
+			}
+			tugma.disabled = true;
+			setTimeout(() => {
+				tugma.textContent = 'Nusxalash';
+				tugma.disabled = false;
+			}, 1600);
+		});
+
+		blok.dataset.holat = 'tayyor';
+	});
+</script>
+
+<style>
+	.kod {
+		margin: 1.25rem 0;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-gray-6);
+		overflow: hidden;
+	}
+
+	.bosh {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		margin: 0;
+		padding: 0.35rem 0.75rem;
+		border-bottom: 1px solid var(--sl-color-gray-5);
+		background: var(--sl-color-gray-7);
+	}
+
+	.til {
+		font-family: var(--sl-font-mono);
+		font-size: 0.72rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-3);
+	}
+
+	.nusxa {
+		padding: 0.15rem 0.55rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: transparent;
+		color: var(--sl-color-gray-3);
+		font: inherit;
+		font-size: 0.72rem;
+		cursor: pointer;
+	}
+
+	.nusxa:hover {
+		border-color: var(--sl-color-accent);
+		color: var(--sl-color-white);
+	}
+
+	.nusxa:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	/* JS ishlamasa nusxalash tugmasi ko'rsatilmaydi — bosilmaydigan tugma
+	   yo'q tugmadan yomonroq */
+	.kod[data-holat='statik'] .nusxa {
+		display: none;
+	}
+
+	pre {
+		margin: 0;
+		padding: 0.6rem 0;
+		/* Uzun qator sahifani emas, o'zini scroll qilsin (360px qoidasi) */
+		overflow-x: auto;
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		line-height: 1.65;
+		tab-size: 4;
+		background: transparent;
+	}
+
+	pre:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: -2px;
+	}
+
+	.qator {
+		display: block;
+		padding: 0 0.85rem 0 0;
+		white-space: pre;
+	}
+
+	.qator[data-ajratilgan='ha'] {
+		background: var(--sl-color-accent-low);
+		box-shadow: inset 3px 0 0 var(--sl-color-accent);
+	}
+
+	.raqam {
+		display: inline-block;
+		width: 2.2rem;
+		padding-right: 0.85rem;
+		text-align: right;
+		color: var(--sl-color-gray-4);
+		user-select: none;
+	}
+
+	/* set:html bilan kiritilgan span'lar Astro scoped klass olmaydi —
+	   shu sababli :global, chegara sifatida shablondagi .matn ishlatiladi */
+	.matn :global(.t-kalit) {
+		color: var(--sa-cyan);
+		font-weight: 600;
+	}
+
+	.matn :global(.t-ichki) {
+		color: var(--blok-4);
+	}
+
+	.matn :global(.t-satr) {
+		color: var(--sa-amber);
+	}
+
+	.matn :global(.t-son) {
+		color: var(--blok-3);
+	}
+
+	.matn :global(.t-izoh) {
+		color: var(--sl-color-gray-4);
+		font-style: italic;
+	}
+</style>

@@ -1,0 +1,450 @@
+---
+/**
+ * RobotKarel — Python Basic 1-dars simulyatori.
+ *
+ * Panjarada robot. O'quvchi buyruqlar ketma-ketligini tuzadi (Oldinga,
+ * Chapga buril, O'ngga buril) va ishga tushiradi. Sintaksis yo'q — faqat
+ * programmalashning mohiyati: kompyuter buyruqlarni YOZILGAN TARTIBDA,
+ * so'zsiz bajaradi. Devorga urilsa — to'xtaydi va sabab ko'rsatiladi.
+ *
+ * Pedagogik maqsad: "kompyuter siz nazarda tutganingizni emas,
+ * yozganingizni bajaradi" — birinchi darsning markaziy g'oyasi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+/* Maydon: 6 ustun × 4 qator. Robot (0,3) da sharqqa qaraydi,
+   bayroq (5,3) da, orada devor bor — to'g'ri yo'l aylanib o'tadi. */
+const USTUN = 6;
+const QATOR = 4;
+const KATAK = 40;
+const CHET = 12;
+const DEVORLAR = [
+	[2, 3],
+	[2, 2],
+];
+const BAYROQ = [5, 3];
+
+const KENGLIK = USTUN * KATAK + CHET * 2;
+const BALANDLIK = QATOR * KATAK + CHET * 2;
+
+const kataklar = Array.from({ length: USTUN * QATOR }, (_, i) => ({
+	x: CHET + (i % USTUN) * KATAK,
+	y: CHET + Math.floor(i / USTUN) * KATAK,
+}));
+---
+
+<Simulyator
+	sarlavha="Robot Karel"
+	korsatma="Buyruqlar ro'yxatini tuzing va robotni bayroqqa yetkazing. Klaviatura: Enter — bajar, → — bitta qadam."
+	blok={1}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda panjara ustida robot bor. Siz unga "Oldinga", "Chapga buril",
+			"O'ngga buril" buyruqlaridan ro'yxat tuzasiz — robot ularni yozilgan tartibda
+			bajaradi. Devorga urilsa, programma o'sha yerda to'xtaydi.
+		</p>
+		<p>
+			JavaScript'siz sinash: katak qog'ozga 6×4 maydon chizing, robotni chap pastki
+			burchakka qo'ying va do'stingizga faqat shu uch buyruq bilan yo'l ayting —
+			do'stingiz esa ataylab "aqlsiz" bo'lib, faqat aytilganini bajarsin.
+		</p>
+	</Fragment>
+
+	<div class="robot-karel not-content" tabindex="0" data-devorlar={JSON.stringify(DEVORLAR)} data-bayroq={JSON.stringify(BAYROQ)}>
+		<div class="taxta">
+			<svg
+				viewBox={`0 0 ${KENGLIK} ${BALANDLIK}`}
+				width={KENGLIK}
+				height={BALANDLIK}
+				role="img"
+				aria-label="Robot maydoni: 6 ga 4 panjara, robot chap pastda, bayroq o'ng pastda, o'rtada devor"
+			>
+				{kataklar.map((k) => <rect class="katak" x={k.x} y={k.y} width={KATAK} height={KATAK} />)}
+				{DEVORLAR.map(([ux, uy]) => (
+					<rect class="devor" x={CHET + ux! * KATAK + 3} y={CHET + uy! * KATAK + 3} width={KATAK - 6} height={KATAK - 6} rx="4" />
+				))}
+				<g class="bayroq" transform={`translate(${CHET + BAYROQ[0]! * KATAK}, ${CHET + BAYROQ[1]! * KATAK})`}>
+					<line x1="14" y1="8" x2="14" y2="32" />
+					<polygon points="14,8 30,13 14,18" />
+				</g>
+				<g class="robot">
+					<circle r="13" class="tana"></circle>
+					<polygon points="-6,-8 10,0 -6,8" class="burun"></polygon>
+				</g>
+			</svg>
+		</div>
+
+		<div class="panel">
+			<p class="holat" role="status" aria-live="polite">
+				Buyruqlarni qo'shing, keyin «Bajar» tugmasini bosing.
+			</p>
+
+			<div class="harakatlar">
+				<button type="button" class="sim-tugma qoshish" data-buyruq="oldinga">Oldinga</button>
+				<button type="button" class="sim-tugma qoshish" data-buyruq="chap">Chapga buril</button>
+				<button type="button" class="sim-tugma qoshish" data-buyruq="ong">O'ngga buril</button>
+			</div>
+
+			<div class="ijro">
+				<button type="button" class="sim-tugma bajar">Bajar</button>
+				<button type="button" class="sim-tugma qadam">Bitta qadam</button>
+				<button type="button" class="sim-tugma ochir">Oxirgisini o'chirish</button>
+			</div>
+
+			<ol class="dastur" aria-label="Sizning programmangiz"></ol>
+		</div>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	/* Ildiz — .simulyator: «Qayta boshlash» tugmasi qobiq footer'ida turadi,
+	   .robot-karel ichida emas. */
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach((qobiq) => {
+		const quti = qobiq.querySelector<HTMLElement>('.robot-karel');
+		if (!quti) return;
+
+		const USTUN = 6;
+		const QATOR = 4;
+		const KATAK = 40;
+		const CHET = 12;
+		const BOSH = { x: 0, y: 3, yon: 0 }; // yon: 0=sharq 1=janub 2=g'arb 3=shimol
+		const MAKS_BUYRUQ = 30;
+
+		const devorlar = new Set(
+			(JSON.parse(quti.dataset.devorlar!) as number[][]).map(([x, y]) => `${x},${y}`)
+		);
+		const [bayroqX, bayroqY] = JSON.parse(quti.dataset.bayroq!) as [number, number];
+
+		const robotEl = quti.querySelector<SVGGElement>('.robot')!;
+		const holatEl = quti.querySelector<HTMLElement>('.holat')!;
+		const dasturEl = quti.querySelector<HTMLOListElement>('.dastur')!;
+		const qaytaTugma = qobiq.querySelector<HTMLButtonElement>('.qayta')!;
+
+		const NOMLAR: Record<string, string> = {
+			oldinga: 'Oldinga',
+			chap: 'Chapga buril',
+			ong: "O'ngga buril",
+		};
+		const QADAM_YON = [
+			{ dx: 1, dy: 0 },
+			{ dx: 0, dy: 1 },
+			{ dx: -1, dy: 0 },
+			{ dx: 0, dy: -1 },
+		];
+
+		let buyruqlar: string[] = [];
+		let robot = { ...BOSH };
+		let indeks = 0; // navbatdagi buyruq
+		let jarayon: ReturnType<typeof setInterval> | null = null;
+		let tugadi = false; // muvaffaqiyat yoki xato — qayta ishga tushirilguncha
+
+		const sokinHarakat = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+		function chiz() {
+			const px = CHET + robot.x * KATAK + KATAK / 2;
+			const py = CHET + robot.y * KATAK + KATAK / 2;
+			robotEl.style.transform = `translate(${px}px, ${py}px) rotate(${robot.yon * 90}deg)`;
+		}
+
+		function xabar(matn: string, turi: '' | 'xato' | 'zafar' = '') {
+			holatEl.textContent = matn;
+			if (turi) quti.dataset.natija = turi;
+			else delete quti.dataset.natija;
+		}
+
+		function royxatYangila() {
+			dasturEl.querySelectorAll('li').forEach((li, i) => {
+				if (i < indeks) li.dataset.holat = 'bajarildi';
+				else if (i === indeks && !tugadi) li.dataset.holat = 'navbatda';
+				else delete li.dataset.holat;
+			});
+		}
+
+		function toxtat() {
+			if (jarayon !== null) {
+				clearInterval(jarayon);
+				jarayon = null;
+			}
+		}
+
+		function robotniBoshiga() {
+			toxtat();
+			robot = { ...BOSH };
+			indeks = 0;
+			tugadi = false;
+			dasturEl.querySelectorAll('li').forEach((li) => {
+				delete li.dataset.holat;
+				delete li.dataset.xato;
+			});
+			chiz();
+		}
+
+		function buyruqQosh(buyruq: string) {
+			if (buyruqlar.length >= MAKS_BUYRUQ) {
+				xabar(`Programma ${MAKS_BUYRUQ} buyruqdan oshmasin — qisqaroq yo'l izlang.`);
+				return;
+			}
+			if (tugadi || indeks > 0) robotniBoshiga();
+			buyruqlar.push(buyruq);
+			const li = document.createElement('li');
+			li.textContent = NOMLAR[buyruq]!;
+			dasturEl.append(li);
+			xabar(`Programmada ${buyruqlar.length} ta buyruq. Tayyor bo'lsa — «Bajar».`);
+		}
+
+		/** Bitta buyruqni bajaradi. Davom etish mumkin bo'lsa true qaytaradi. */
+		function bittaQadam(): boolean {
+			if (tugadi) return false;
+			if (buyruqlar.length === 0) {
+				xabar("Programma bo'sh — avval buyruq qo'shing.");
+				return false;
+			}
+			if (indeks >= buyruqlar.length) {
+				tugadi = true;
+				xabar("Programma tugadi, lekin robot bayroqqa yetmadi. Buyruqlarni qayta ko'rib chiqing.", 'xato');
+				royxatYangila();
+				return false;
+			}
+
+			const buyruq = buyruqlar[indeks]!;
+
+			if (buyruq === 'chap') robot.yon = (robot.yon + 3) % 4;
+			else if (buyruq === 'ong') robot.yon = (robot.yon + 1) % 4;
+			else {
+				const { dx, dy } = QADAM_YON[robot.yon]!;
+				const yx = robot.x + dx;
+				const yy = robot.y + dy;
+				const chetga = yx < 0 || yx >= USTUN || yy < 0 || yy >= QATOR;
+				if (chetga || devorlar.has(`${yx},${yy}`)) {
+					tugadi = true;
+					const li = dasturEl.querySelectorAll('li')[indeks];
+					if (li) li.dataset.xato = 'ha';
+					xabar(
+						`${indeks + 1}-buyruqda robot ${chetga ? 'maydon chetiga' : 'devorga'} urildi. ` +
+							"Robot aybdor emas — u faqat yozilganini bajardi.",
+						'xato'
+					);
+					royxatYangila();
+					return false;
+				}
+				robot.x = yx;
+				robot.y = yy;
+			}
+
+			indeks += 1;
+			chiz();
+			royxatYangila();
+
+			if (robot.x === bayroqX && robot.y === bayroqY) {
+				tugadi = true;
+				xabar(`Robot bayroqqa yetdi! Programmangiz ${indeks} ta buyruqda ishladi.`, 'zafar');
+				return false;
+			}
+
+			if (indeks >= buyruqlar.length) {
+				tugadi = true;
+				xabar("Programma tugadi, lekin robot bayroqqa yetmadi. Buyruqlarni qayta ko'rib chiqing.", 'xato');
+				return false;
+			}
+			return true;
+		}
+
+		function bajar() {
+			toxtat();
+			robotniBoshiga();
+			if (buyruqlar.length === 0) {
+				xabar("Programma bo'sh — avval buyruq qo'shing.");
+				return;
+			}
+			xabar('Bajarilmoqda...');
+			if (sokinHarakat.matches) {
+				while (bittaQadam()) {
+					/* animatsiyasiz — bir zumda oxirigacha */
+				}
+				return;
+			}
+			jarayon = setInterval(() => {
+				if (!bittaQadam()) toxtat();
+			}, 380);
+		}
+
+		quti.querySelectorAll<HTMLButtonElement>('.qoshish').forEach((tugma) => {
+			tugma.addEventListener('click', () => buyruqQosh(tugma.dataset.buyruq!));
+		});
+
+		quti.querySelector<HTMLButtonElement>('.bajar')!.addEventListener('click', bajar);
+
+		quti.querySelector<HTMLButtonElement>('.qadam')!.addEventListener('click', () => {
+			toxtat();
+			if (tugadi) robotniBoshiga();
+			bittaQadam();
+		});
+
+		quti.querySelector<HTMLButtonElement>('.ochir')!.addEventListener('click', () => {
+			if (buyruqlar.length === 0) return;
+			robotniBoshiga();
+			buyruqlar.pop();
+			dasturEl.lastElementChild?.remove();
+			xabar(`Oxirgi buyruq o'chirildi. Programmada ${buyruqlar.length} ta buyruq qoldi.`);
+		});
+
+		qaytaTugma.addEventListener('click', () => {
+			robotniBoshiga();
+			buyruqlar = [];
+			dasturEl.replaceChildren();
+			xabar("Buyruqlarni qo'shing, keyin «Bajar» tugmasini bosing.");
+		});
+
+		/* Klaviatura: Enter — bajar, → — bitta qadam (tugmalar ustida emas,
+		   maydonning o'zida turganda) */
+		quti.addEventListener('keydown', (e) => {
+			if (e.target instanceof HTMLButtonElement) return;
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				bajar();
+			} else if (e.key === 'ArrowRight') {
+				e.preventDefault();
+				toxtat();
+				if (tugadi) robotniBoshiga();
+				bittaQadam();
+			}
+		});
+
+		chiz();
+	});
+</script>
+
+<style>
+	.robot-karel {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem 1.5rem;
+		align-items: flex-start;
+	}
+
+	.robot-karel:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 4px;
+		border-radius: var(--sa-radius-kichik);
+	}
+
+	.taxta {
+		flex: 0 1 auto;
+		max-width: 100%;
+	}
+
+	svg {
+		display: block;
+		max-width: 100%;
+		height: auto;
+	}
+
+	.katak {
+		fill: var(--sl-color-black);
+		stroke: var(--sl-color-gray-5);
+		stroke-width: 1;
+	}
+
+	.devor {
+		fill: var(--sl-color-gray-4);
+	}
+
+	.bayroq line {
+		stroke: var(--blok-5);
+		stroke-width: 2.5;
+		stroke-linecap: round;
+	}
+
+	.bayroq polygon {
+		fill: var(--blok-5);
+	}
+
+	.robot {
+		transition: transform 0.3s ease;
+	}
+
+	.robot .tana {
+		fill: var(--blok-1-fon);
+		stroke: var(--blok-1);
+		stroke-width: 2;
+	}
+
+	.robot .burun {
+		fill: var(--blok-1);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.robot {
+			transition: none;
+		}
+	}
+
+	.panel {
+		flex: 1 1 15rem;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.7rem;
+	}
+
+	.holat {
+		margin: 0;
+		min-height: 2.6em;
+		font-size: 0.9rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-2);
+	}
+
+	.robot-karel[data-natija='xato'] .holat {
+		color: var(--blok-5);
+		font-weight: 600;
+	}
+
+	.robot-karel[data-natija='zafar'] .holat {
+		color: var(--blok-1);
+		font-weight: 600;
+	}
+
+	.harakatlar,
+	.ijro {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+
+	.ijro {
+		padding-top: 0.2rem;
+		border-top: 1px dashed var(--sl-color-gray-5);
+	}
+
+	.dastur {
+		margin: 0;
+		padding: 0 0 0 1.6rem;
+		font-family: var(--sl-font-mono);
+		font-size: 0.82rem;
+		line-height: 1.9;
+		color: var(--sl-color-gray-2);
+	}
+
+	/* Ro'yxat elementlari JS bilan yasaladi — scoped klass olmaydi,
+	   shu sababli :global, chegara — shablondagi .dastur */
+	.dastur :global(li[data-holat='navbatda']) {
+		color: var(--sl-color-accent);
+		font-weight: 700;
+	}
+
+	.dastur :global(li[data-holat='bajarildi']) {
+		color: var(--sl-color-gray-4);
+	}
+
+	.dastur :global(li[data-xato='ha']) {
+		color: var(--blok-5);
+		font-weight: 700;
+		text-decoration: line-through;
+	}
+</style>

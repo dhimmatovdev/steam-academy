@@ -1,0 +1,307 @@
+---
+/**
+ * KodBashorat — darslikning asosiy o'quv mexanizmi.
+ *
+ * O'quvchi kodni O'QIYDI, natijani YOZADI, keyin tekshiradi. Bashorat
+ * bilan natija farq qilgan joy — aynan o'rganish sodir bo'ladigan joy.
+ *
+ *   <KodBashorat
+ *     kod={`print(2 + 3)`}
+ *     javob={`5`}
+ *     izoh="Interpretator qo'shtirnoqsiz ifodani hisoblaydi."
+ *   />
+ *
+ * JS o'chirilgan bo'lsa: javob <details> ichida — mexanizm zaiflashadi,
+ * lekin dars o'qilaverdi (progressive enhancement).
+ */
+import Kod from './Kod.astro';
+
+interface Props {
+	/** Ko'rsatiladigan kod */
+	kod: string;
+	/** Kutilgan chiqish — terminaldagi ko'rinishida, qatorma-qator */
+	javob: string;
+	/** Natija ochilganda beriladigan izoh: NEGA aynan shunday */
+	izoh?: string;
+	/** Kod blokining yorlig'ini almashtirish */
+	sarlavha?: string;
+}
+
+const { kod, javob, izoh, sarlavha = 'Bashorat qiling' } = Astro.props;
+const tozaJavob = javob.replace(/^\n+/, '').replace(/\s+$/, '');
+---
+
+<section class="kod-bashorat" data-holat="statik">
+	<p class="yorliq not-content">
+		<span class="belgi" aria-hidden="true">?</span>
+		Avval o'ylang: bu kod nima chiqaradi? Ishga tushirishdan oldin yozing.
+	</p>
+
+	<Kod kod={kod} sarlavha={sarlavha} />
+
+	<div class="ish not-content">
+		<label class="maydon-yorliq">
+			Sizning bashoratingiz
+			<textarea
+				class="bashorat-maydon"
+				rows="2"
+				spellcheck="false"
+				autocomplete="off"
+				placeholder="Natijani shu yerga yozing..."></textarea>
+		</label>
+		<button type="button" class="tekshir">Tekshirish</button>
+	</div>
+
+	<div class="natija not-content" hidden>
+		<p class="baho" role="status" aria-live="polite"></p>
+		<p class="natija-yorliq">Haqiqiy natija:</p>
+		<pre class="javob-matn">{tozaJavob}</pre>
+		{izoh && <p class="izoh">{izoh}</p>}
+	</div>
+
+	{/* JS ishlamasa: javob oddiy <details> ichida ochiladi */}
+	<details class="statik-javob">
+		<summary>Javobni ko'rish</summary>
+		<pre class="javob-matn">{tozaJavob}</pre>
+		{izoh && <p class="izoh">{izoh}</p>}
+	</details>
+</section>
+
+<script>
+	function normallash(matn: string): string {
+		return matn
+			.replace(/\r/g, '')
+			.split('\n')
+			.map((q) => q.trimEnd())
+			.join('\n')
+			.trim();
+	}
+
+	document.querySelectorAll<HTMLElement>('.kod-bashorat').forEach((quti) => {
+		const maydon = quti.querySelector<HTMLTextAreaElement>('.bashorat-maydon')!;
+		const tugma = quti.querySelector<HTMLButtonElement>('.tekshir')!;
+		const natija = quti.querySelector<HTMLElement>('.natija')!;
+		const baho = quti.querySelector<HTMLElement>('.baho')!;
+		const togriJavob = normallash(quti.querySelector<HTMLElement>('.natija .javob-matn')!.textContent ?? '');
+
+		const javobBolaklari = [
+			quti.querySelector<HTMLElement>('.natija-yorliq')!,
+			quti.querySelector<HTMLElement>('.natija .javob-matn')!,
+			...quti.querySelectorAll<HTMLElement>('.natija .izoh'),
+		];
+
+		tugma.addEventListener('click', () => {
+			const yozilgan = normallash(maydon.value);
+			natija.hidden = false;
+
+			if (yozilgan === '') {
+				// Javob ochilmaydi: bashoratsiz ko'rilgan javob hech narsa o'rgatmaydi
+				baho.textContent = 'Avval bashoratingizni yozing — bu darsning eng muhim qadami.';
+				quti.dataset.baho = 'bosh';
+				javobBolaklari.forEach((el) => (el.hidden = true));
+				return;
+			}
+
+			javobBolaklari.forEach((el) => (el.hidden = false));
+
+			if (yozilgan === togriJavob) {
+				baho.textContent = "Bashoratingiz to'g'ri chiqdi.";
+				quti.dataset.baho = 'togri';
+			} else {
+				baho.textContent = "Bashoratingiz haqiqiy natijadan farq qiladi — farqni toping, o'rganish shu yerda.";
+				quti.dataset.baho = 'farq';
+			}
+			natija.hidden = false;
+		});
+
+		quti.dataset.holat = 'tayyor';
+	});
+</script>
+
+<style>
+	.kod-bashorat {
+		margin: 1.75rem 0;
+		padding: 1rem 1.1rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-left: 4px solid var(--sl-color-accent);
+		border-radius: var(--sa-radius);
+		background: var(--sl-color-gray-7);
+	}
+
+	.yorliq {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+		margin: 0 0 0.75rem 0;
+		font-weight: 600;
+		font-size: 0.95rem;
+		color: var(--sl-color-white);
+	}
+
+	.belgi {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.35rem;
+		height: 1.35rem;
+		border-radius: 50%;
+		background: var(--sl-color-accent-low);
+		color: var(--sl-color-accent);
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+	}
+
+	.ish {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: 0.75rem;
+		margin-top: 0.85rem;
+	}
+
+	.maydon-yorliq {
+		flex: 1 1 14rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		font-size: 0.82rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.bashorat-maydon {
+		width: 100%;
+		padding: 0.5rem 0.7rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-white);
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		line-height: 1.5;
+		resize: vertical;
+	}
+
+	.bashorat-maydon:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 1px;
+	}
+
+	.tekshir {
+		padding: 0.5rem 1rem;
+		border: 1px solid var(--sl-color-accent);
+		border-radius: var(--sa-radius-kichik);
+		background: transparent;
+		color: var(--sl-color-accent);
+		font: inherit;
+		font-size: 0.875rem;
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	.tekshir:hover {
+		background: var(--sl-color-accent-low);
+	}
+
+	.tekshir:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.natija {
+		margin-top: 0.85rem;
+		padding: 0.75rem 0.9rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+	}
+
+	.baho {
+		margin: 0 0 0.5rem 0;
+		font-size: 0.9rem;
+		font-weight: 600;
+	}
+
+	.kod-bashorat[data-baho='togri'] .baho {
+		color: var(--blok-1);
+	}
+
+	.kod-bashorat[data-baho='farq'] .baho {
+		color: var(--blok-2);
+	}
+
+	.kod-bashorat[data-baho='bosh'] .baho {
+		color: var(--sl-color-gray-2);
+		margin-bottom: 0;
+	}
+
+	.natija-yorliq {
+		margin: 0 0 0.3rem 0;
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.07em;
+		color: var(--sl-color-gray-4);
+	}
+
+	.javob-matn {
+		margin: 0;
+		padding: 0.5rem 0.7rem;
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-gray-6);
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+		line-height: 1.6;
+		overflow-x: auto;
+	}
+
+	.izoh {
+		margin: 0.6rem 0 0 0;
+		font-size: 0.9rem;
+		line-height: 1.55;
+		color: var(--sl-color-gray-2);
+	}
+
+	/* JS holatlari: tayyor bo'lganda interaktiv qism, aks holda <details> */
+	.kod-bashorat[data-holat='statik'] .ish,
+	.kod-bashorat[data-holat='statik'] .natija {
+		display: none;
+	}
+
+	.kod-bashorat[data-holat='tayyor'] .statik-javob {
+		display: none;
+	}
+
+	.statik-javob {
+		margin-top: 0.85rem;
+	}
+
+	.statik-javob summary {
+		display: inline-block;
+		padding: 0.3rem 0.7rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-2);
+		cursor: pointer;
+		list-style: none;
+		user-select: none;
+	}
+
+	.statik-javob summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.statik-javob summary:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.statik-javob[open] summary {
+		margin-bottom: 0.6rem;
+		border-color: var(--sl-color-accent);
+	}
+
+	.statik-javob .izoh {
+		margin-top: 0.5rem;
+	}
+</style>

@@ -1,0 +1,238 @@
+---
+/**
+ * Qatlam — uch qatlamli topshiriq: bitta dars, uch chuqurlik.
+ *
+ *   <Qatlam>
+ *     <Fragment slot="asos">5–7-sinf topshirig'i</Fragment>
+ *     <Fragment slot="mustahkam">8–9-sinf topshirig'i</Fragment>
+ *     <Fragment slot="chuqur">10–11-sinf topshirig'i</Fragment>
+ *   </Qatlam>
+ *
+ * O'qituvchi sinfga qarab tanlaydi; tanlov localStorage'da eslab
+ * qolinadi (bir sinf — bir daraja, har darsda qayta bosilmaydi).
+ *
+ * JS o'chirilgan bo'lsa: uch qatlam ketma-ket, har biri o'z sarlavhasi
+ * bilan ochiq ko'rinadi. Tab — bezak, kontent emas.
+ */
+const TABLAR = [
+	{ id: 'asos', nom: 'Asos', sinf: '5–7-sinf', izoh: "Vizual va aniq ko'rsatmali" },
+	{ id: 'mustahkam', nom: 'Mustahkam', sinf: '8–9-sinf', izoh: "Matnli masala, o'zingiz tuzasiz" },
+	{ id: 'chuqur', nom: 'Chuqur', sinf: '10–11-sinf', izoh: 'Algoritmik, chegara holatlari bilan' },
+] as const;
+
+/* Bir sahifada bitta Qatlam bo'ladi, lekin id to'qnashuvidan himoya uchun
+   qisqa tasodifiy suffiks (build vaqtida hosil bo'ladi) */
+const uid = Math.random().toString(36).slice(2, 8);
+---
+
+<section class="qatlam" data-holat="statik">
+	<header class="not-content">
+		<p class="sarlavha">Topshiriq — darajangizni tanlang</p>
+		<div class="tablar" role="tablist" aria-label="Topshiriq darajasi">
+			{
+				TABLAR.map((t, i) => (
+					<button
+						type="button"
+						role="tab"
+						id={`tab-${uid}-${t.id}`}
+						aria-controls={`panel-${uid}-${t.id}`}
+						aria-selected={i === 0 ? 'true' : 'false'}
+						tabindex={i === 0 ? 0 : -1}
+						data-tab={t.id}
+					>
+						<span class="tab-nom">{t.nom}</span>
+						<span class="tab-sinf">{t.sinf}</span>
+					</button>
+				))
+			}
+		</div>
+	</header>
+
+	{
+		TABLAR.map((t, i) => (
+			<div
+				class="panel"
+				role="tabpanel"
+				id={`panel-${uid}-${t.id}`}
+				aria-labelledby={`tab-${uid}-${t.id}`}
+				data-tab={t.id}
+				data-faol={i === 0 ? 'ha' : 'yoq'}
+				tabindex="0"
+			>
+				<p class="panel-yorliq">
+					{t.nom} · {t.sinf} — {t.izoh}
+				</p>
+				<div class="panel-ichi">
+					<slot name={t.id} />
+				</div>
+			</div>
+		))
+	}
+</section>
+
+<script>
+	const KALIT = 'steam:qatlam:daraja';
+
+	document.querySelectorAll<HTMLElement>('.qatlam').forEach((quti) => {
+		const tablar = [...quti.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+		const panellar = [...quti.querySelectorAll<HTMLElement>('[role="tabpanel"]')];
+
+		function tanla(id: string, fokus: boolean) {
+			tablar.forEach((t) => {
+				const faol = t.dataset.tab === id;
+				t.setAttribute('aria-selected', String(faol));
+				t.tabIndex = faol ? 0 : -1;
+				if (faol && fokus) t.focus();
+			});
+			panellar.forEach((p) => {
+				p.dataset.faol = p.dataset.tab === id ? 'ha' : 'yoq';
+			});
+			try {
+				localStorage.setItem(KALIT, id);
+			} catch {
+				/* private rejim — tanlov shunchaki eslab qolinmaydi */
+			}
+		}
+
+		tablar.forEach((tab, i) => {
+			tab.addEventListener('click', () => tanla(tab.dataset.tab!, false));
+			tab.addEventListener('keydown', (e) => {
+				let yangi = -1;
+				if (e.key === 'ArrowRight') yangi = (i + 1) % tablar.length;
+				else if (e.key === 'ArrowLeft') yangi = (i - 1 + tablar.length) % tablar.length;
+				else if (e.key === 'Home') yangi = 0;
+				else if (e.key === 'End') yangi = tablar.length - 1;
+				if (yangi >= 0) {
+					e.preventDefault();
+					tanla(tablar[yangi]!.dataset.tab!, true);
+				}
+			});
+		});
+
+		// Oldingi darsda tanlangan daraja shu darsda ham ochiq tursin
+		try {
+			const saqlangan = localStorage.getItem(KALIT);
+			if (saqlangan && tablar.some((t) => t.dataset.tab === saqlangan)) {
+				tanla(saqlangan, false);
+			}
+		} catch {
+			/* jim */
+		}
+
+		quti.dataset.holat = 'tayyor';
+	});
+</script>
+
+<style>
+	.qatlam {
+		margin: 2rem 0;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius);
+		background: var(--sl-color-gray-7);
+		overflow: hidden;
+	}
+
+	header {
+		padding: 0.8rem 1.1rem 0;
+	}
+
+	.sarlavha {
+		margin: 0 0 0.6rem 0;
+		font-weight: 600;
+		font-size: 0.95rem;
+		color: var(--sl-color-white);
+	}
+
+	.tablar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+
+	[role='tab'] {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.1rem;
+		padding: 0.45rem 0.8rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-bottom: none;
+		border-radius: var(--sa-radius-kichik) var(--sa-radius-kichik) 0 0;
+		background: transparent;
+		font: inherit;
+		cursor: pointer;
+	}
+
+	[role='tab']:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: -2px;
+	}
+
+	.tab-nom {
+		font-weight: 600;
+		font-size: 0.875rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.tab-sinf {
+		font-family: var(--sl-font-mono);
+		font-size: 0.68rem;
+		color: var(--sl-color-gray-4);
+	}
+
+	[role='tab'][aria-selected='true'] {
+		background: var(--sl-color-gray-6);
+		border-color: var(--sl-color-accent);
+	}
+
+	[role='tab'][aria-selected='true'] .tab-nom {
+		color: var(--sl-color-accent);
+	}
+
+	.panel {
+		padding: 1rem 1.1rem;
+		border-top: 1px solid var(--sl-color-gray-5);
+	}
+
+	.panel:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: -2px;
+	}
+
+	.panel-yorliq {
+		margin: 0 0 0.6rem 0;
+		font-family: var(--sl-font-mono);
+		font-size: 0.72rem;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--sl-color-gray-4);
+	}
+
+	.panel-ichi {
+		margin-top: 0;
+		font-size: 0.98rem;
+		line-height: 1.65;
+	}
+
+	.panel-ichi :global(p:first-child) {
+		margin-top: 0;
+	}
+
+	.panel-ichi :global(p:last-child) {
+		margin-bottom: 0;
+	}
+
+	/* JS bor: faqat tanlangan panel ko'rinadi, yorliq ortiqcha (tab'da bor) */
+	.qatlam[data-holat='tayyor'] .panel[data-faol='yoq'] {
+		display: none;
+	}
+
+	.qatlam[data-holat='tayyor'] .panel-yorliq {
+		display: none;
+	}
+
+	/* JS yo'q: tablar bezak bo'lib qoladi — yashiramiz, uch panel ochiq */
+	.qatlam[data-holat='statik'] .tablar {
+		display: none;
+	}
+</style>

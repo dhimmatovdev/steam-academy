@@ -1,0 +1,177 @@
+---
+/**
+ * Xato — ataylab buzuq kod, uning traceback'i va tuzatish yo'li.
+ *
+ *   <Xato
+ *     kod={`print("Salom)`}
+ *     traceback={`  File "salom.py", line 1\n    print("Salom)\n          ^\nSyntaxError: unterminated string literal`}
+ *     sabab="Qo'shtirnoq ochildi, lekin yopilmadi."
+ *   >
+ *     Tuzatilgan varianti va qo'shimcha izoh — slot ichida.
+ *   </Xato>
+ *
+ * Pedagogika: xato — darsning dushmani emas, materiali. O'quvchi
+ * traceback'ni o'qishga birinchi darsdan o'rganadi. Sabab va tuzatish
+ * <details> ichida — avval o'zi topishga urinadi.
+ */
+import Kod from './Kod.astro';
+
+interface Props {
+	/** Buzuq kod */
+	kod: string;
+	/** Python chiqargan xato matni, qisqartirilgan bo'lishi mumkin */
+	traceback: string;
+	/** Xatoning sababi — bir-ikki gap */
+	sabab: string;
+}
+
+const { kod, traceback, sabab } = Astro.props;
+const tozaTraceback = traceback.replace(/^\n+/, '').replace(/\s+$/, '');
+const tuzatishBormi = Astro.slots.has('default');
+---
+
+<section class="xato-blok not-content">
+	<p class="yorliq">
+		<span class="belgi" aria-hidden="true">×</span>
+		Bu kod ataylab buzuq — xatoni toping
+	</p>
+
+	<Kod kod={kod} sarlavha="Buzuq kod" />
+
+	<p class="traceback-yorliq">Python shunday javob beradi:</p>
+	<pre class="traceback">{tozaTraceback}</pre>
+
+	<details>
+		<summary>Sababi va tuzatish</summary>
+		<div class="ichi">
+			<p class="sabab">{sabab}</p>
+			{tuzatishBormi && <div class="tuzatish"><slot /></div>}
+		</div>
+	</details>
+</section>
+
+<style>
+	.xato-blok {
+		margin: 1.75rem 0;
+		padding: 1rem 1.1rem;
+		border: 1px solid var(--blok-5-chegara);
+		border-left: 4px solid var(--blok-5);
+		border-radius: var(--sa-radius);
+		background: var(--blok-5-fon);
+	}
+
+	.yorliq {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+		margin: 0 0 0.75rem 0;
+		font-weight: 600;
+		font-size: 0.95rem;
+		color: var(--blok-5);
+	}
+
+	.belgi {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.35rem;
+		height: 1.35rem;
+		border-radius: 50%;
+		border: 1px solid var(--blok-5);
+		font-family: var(--sl-font-mono);
+		font-size: 0.9rem;
+		line-height: 1;
+	}
+
+	.traceback-yorliq {
+		margin: 0.85rem 0 0.3rem 0;
+		font-size: 0.82rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.traceback {
+		margin: 0;
+		padding: 0.6rem 0.8rem;
+		border: 1px solid var(--blok-5-chegara);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--blok-5);
+		font-family: var(--sl-font-mono);
+		font-size: 0.8rem;
+		line-height: 1.6;
+		white-space: pre;
+		overflow-x: auto;
+	}
+
+	details {
+		margin-top: 0.85rem;
+	}
+
+	summary {
+		display: inline-block;
+		padding: 0.3rem 0.7rem;
+		border: 1px solid var(--blok-5-chegara);
+		border-radius: var(--sa-radius-kichik);
+		font-size: 0.85rem;
+		color: var(--sl-color-gray-2);
+		cursor: pointer;
+		list-style: none;
+		user-select: none;
+	}
+
+	summary::-webkit-details-marker {
+		display: none;
+	}
+
+	summary::before {
+		content: '→ ';
+		color: var(--blok-5);
+	}
+
+	summary:hover {
+		border-color: var(--blok-5);
+		color: var(--sl-color-white);
+	}
+
+	summary:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	details[open] summary {
+		margin-bottom: 0.6rem;
+		border-color: var(--blok-5);
+	}
+
+	details[open] summary::before {
+		content: '↓ ';
+	}
+
+	.ichi {
+		padding-left: 0.85rem;
+		border-left: 2px solid var(--blok-5);
+	}
+
+	.sabab {
+		margin: 0;
+		font-size: 0.95rem;
+		line-height: 1.6;
+		color: var(--sl-color-white);
+	}
+
+	/* not-content proza oraliqlarini o'chirdi — slot ichidagilarga qaytaramiz */
+	.tuzatish {
+		margin-top: 0.6rem;
+		font-size: 0.95rem;
+		line-height: 1.6;
+	}
+
+	.tuzatish :global(p) {
+		margin: 0.6rem 0 0 0;
+	}
+
+	.tuzatish :global(p:first-child) {
+		margin-top: 0;
+	}
+</style>

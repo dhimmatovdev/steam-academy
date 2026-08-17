@@ -9,19 +9,30 @@
 interface Props {
 	/** 1..5 */
 	blok: 1 | 2 | 3 | 4 | 5;
+	/** Qaysi modul bloklari. Berilmasa — Computer Fundamentals */
+	modul?: 'computer-fundamentals' | 'python-basic';
 }
 
-const { blok } = Astro.props;
+const { blok, modul = 'computer-fundamentals' } = Astro.props;
 
-const BLOKLAR: Record<number, { nom: string; darslar: string }> = {
-	1: { nom: 'Hamma narsa bit', darslar: '1–4 darslar' },
-	2: { nom: 'Mantiqdan apparatga', darslar: '5–8 darslar' },
-	3: { nom: 'Protsessor', darslar: '9–12 darslar' },
-	4: { nom: "Xotira, OS va fayl", darslar: '13–16 darslar' },
-	5: { nom: 'Tarmoq, xavfsizlik, chegaralar', darslar: '17–20 darslar' },
+const BLOKLAR: Record<string, Record<number, { nom: string; darslar: string }>> = {
+	'computer-fundamentals': {
+		1: { nom: 'Hamma narsa bit', darslar: '1–4 darslar' },
+		2: { nom: 'Mantiqdan apparatga', darslar: '5–8 darslar' },
+		3: { nom: 'Protsessor', darslar: '9–12 darslar' },
+		4: { nom: "Xotira, OS va fayl", darslar: '13–16 darslar' },
+		5: { nom: 'Tarmoq, xavfsizlik, chegaralar', darslar: '17–20 darslar' },
+	},
+	'python-basic': {
+		1: { nom: 'Mashina buyruqni qanday tushunadi', darslar: '1–4 darslar' },
+		2: { nom: 'Qarorlar va takrorlash', darslar: '5–8 darslar' },
+		3: { nom: "Ma'lumotni saqlash", darslar: '9–12 darslar' },
+		4: { nom: "O'z buyruqlaringizni yasash", darslar: '13–16 darslar' },
+		5: { nom: 'Haqiqiy programma', darslar: '17–20 darslar' },
+	},
 };
 
-const ma = BLOKLAR[blok]!;
+const ma = BLOKLAR[modul]![blok]!;
 ---
 
 <p class="bloknoma" data-blok={blok}>

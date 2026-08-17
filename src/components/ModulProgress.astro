@@ -12,7 +12,7 @@
  * Va bitta narsani ataylab QILMAYDI: hech narsani bloklamaydi. O'quvchi
  * 1-darsni o'tmasdan 15-darsni ochishi mumkin. Progress — ko'zgu, qulf emas.
  */
-import { NISHONLAR } from '../scripts/progress';
+import { modulNishonlari } from '../scripts/progress';
 
 interface Props {
 	modul?: string;
@@ -21,6 +21,7 @@ interface Props {
 }
 
 const { modul = 'computer-fundamentals', jami } = Astro.props;
+const nishonRoyxati = modulNishonlari(modul);
 ---
 
 <section class="modul-progress not-content" data-modul={modul} data-jami={jami} data-holat="statik">
@@ -60,7 +61,7 @@ const { modul = 'computer-fundamentals', jami } = Astro.props;
 		<h3 class="nishon-sarlavha">Nishonlar</h3>
 		<ul class="nishonlar">
 			{
-				NISHONLAR.map((n) => (
+				nishonRoyxati.map((n) => (
 					<li class="nishon" data-id={n.id} data-blok={n.blok} data-ochilgan="yoq">
 						<span class="nishon-nom">{n.nom}</span>
 						<span class="nishon-izoh">{n.izoh}</span>
@@ -73,11 +74,12 @@ const { modul = 'computer-fundamentals', jami } = Astro.props;
 </section>
 
 <script>
-	import { HODISA, streak, tozala, tugatilganDarslar, NISHONLAR, oqish } from '../scripts/progress';
+	import { HODISA, streak, tozala, tugatilganDarslar, modulNishonlari, oqish } from '../scripts/progress';
 
 	function ulash(qutu: HTMLElement) {
 		const modul = qutu.dataset.modul!;
 		const jami = Number(qutu.dataset.jami);
+		const nishonRoyxati = modulNishonlari(modul);
 
 		const tugatilganEl = qutu.querySelector<HTMLElement>('.tugatilgan')!;
 		const chiziq = qutu.querySelector<HTMLElement>('.chiziq')!;
@@ -99,7 +101,7 @@ const { modul = 'computer-fundamentals', jami } = Astro.props;
 			streakMatn.textContent = s.kunlar === 0 ? 'kun — bugun boshlang' : 'kun ketma-ket';
 
 			const ochilganlar = new Set(oqish().nishonlar);
-			for (const n of NISHONLAR) {
+			for (const n of nishonRoyxati) {
 				const el = qutu.querySelector<HTMLElement>(`.nishon[data-id="${n.id}"]`);
 				if (!el) continue;
 				const ochildi = ochilganlar.has(n.id);

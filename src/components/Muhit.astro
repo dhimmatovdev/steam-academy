@@ -1,0 +1,150 @@
+---
+/**
+ * Muhit — muhit sozlash darsining bitta qadami.
+ *
+ *   <Muhit qadam={2} sarlavha="Python o'rnatish" tizim="windows">
+ *     Ko'rsatmalar, skrinshot (<Rasm>), buyruqlar...
+ *     <Fragment slot="tekshir">
+ *       Terminalda `python --version` yozing — versiya raqami chiqsa, tayyor.
+ *     </Fragment>
+ *   </Muhit>
+ *
+ * Har qadamda "Ishlaganini qanday bilaman" bo'limi majburiy: o'quvchi
+ * keyingi qadamga o'tishdan oldin hozirgisi ishlaganiga ishonch hosil
+ * qiladi. Sozlashda eng katta vaqt yo'qotish — 3 qadam oldingi xatoni
+ * 3 qadam keyin qidirish.
+ */
+interface Props {
+	/** Qadam raqami, 1 dan boshlab */
+	qadam: number;
+	/** Qadam nomi */
+	sarlavha: string;
+	/** Qaysi tizimga tegishli. Berilmasa — hammasiga */
+	tizim?: 'windows' | 'macos' | 'linux';
+}
+
+const { qadam, sarlavha, tizim } = Astro.props;
+
+const TIZIM_NOMI = { windows: 'Windows', macos: 'macOS', linux: 'Linux' } as const;
+const tekshirBormi = Astro.slots.has('tekshir');
+---
+
+<section class="muhit-qadam">
+	<header class="not-content">
+		<span class="raqam" aria-hidden="true">{qadam}</span>
+		<h3 class="nom">{qadam}-qadam. {sarlavha}</h3>
+		{tizim && <span class="tizim">{TIZIM_NOMI[tizim]}</span>}
+	</header>
+
+	<div class="ichi">
+		<slot />
+	</div>
+
+	{
+		tekshirBormi && (
+			<div class="tekshir">
+				<p class="tekshir-yorliq">Ishlaganini qanday bilaman</p>
+				<div class="tekshir-ichi">
+					<slot name="tekshir" />
+				</div>
+			</div>
+		)
+	}
+</section>
+
+<style>
+	.muhit-qadam {
+		margin: 1.75rem 0;
+		padding: 1rem 1.1rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius);
+		background: var(--sl-color-gray-7);
+	}
+
+	header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.6rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.raqam {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.7rem;
+		height: 1.7rem;
+		border-radius: 50%;
+		background: var(--blok-1-fon);
+		border: 1px solid var(--blok-1-chegara);
+		color: var(--blok-1);
+		font-family: var(--sl-font-mono);
+		font-weight: 700;
+		font-size: 0.85rem;
+	}
+
+	.nom {
+		margin: 0;
+		font-size: 1.05rem;
+		color: var(--sl-color-white);
+	}
+
+	.tizim {
+		padding: 0.1rem 0.55rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 999px;
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	/* Kichik ekranda raqam belgisi ortiqcha — sarlavhada baribir raqam bor */
+	@media (max-width: 26rem) {
+		.raqam {
+			display: none;
+		}
+	}
+
+	.ichi {
+		font-size: 0.98rem;
+		line-height: 1.65;
+	}
+
+	.ichi :global(p:first-child) {
+		margin-top: 0;
+	}
+
+	.tekshir {
+		margin-top: 1rem;
+		padding: 0.7rem 0.9rem;
+		border: 1px solid var(--blok-1-chegara);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--blok-1-fon);
+	}
+
+	.tekshir-yorliq {
+		margin: 0 0 0.35rem 0;
+		font-family: var(--sl-font-mono);
+		font-size: 0.72rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--blok-1);
+	}
+
+	.tekshir-ichi {
+		margin-top: 0;
+		font-size: 0.92rem;
+		line-height: 1.6;
+	}
+
+	.tekshir-ichi :global(p:first-child) {
+		margin-top: 0;
+	}
+
+	.tekshir-ichi :global(p:last-child) {
+		margin-bottom: 0;
+	}
+</style>

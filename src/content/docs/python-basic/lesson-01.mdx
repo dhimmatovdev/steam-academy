@@ -1,0 +1,162 @@
+---
+title: '1-dars: Programma va interpretator'
+description: "Programma — kompyuterga yozilgan buyruqlar matni. Interpretator uni qatorma-qator o'qib bajaradi."
+sidebar:
+  label: '1-dars'
+  order: 1
+---
+
+import { AIOgoh, Atama, Bloknoma, DarsTugadi, Hayotda, KodBashorat, Maqsad, Muhim, Qatlam, Sinov, Xato } from '@components';
+import RobotKarel from '../../../components/sim/RobotKarel.astro';
+
+<Bloknoma blok={1} modul="python-basic" />
+
+<Hayotda soha="Kundalik hayot">
+	Bankomat kartani tekshiradi, summani so'raydi, pulni sanaydi va chek chiqaradi — har
+	safar aynan shu tartibda. Lift tugma bosilgan qavatlarni eslab qoladi va yo'l-yo'lakay
+	to'xtab o'tadi. Ikkalasining ichida ham bir xil narsa ishlaydi: kimdir oldindan yozib
+	qo'ygan buyruqlar ro'yxati.
+</Hayotda>
+
+<Maqsad>
+- programma nima ekanini o'z so'zingiz bilan aytib bera olasiz
+- interpretator kodni qanday bajarishini qadam-qadam ko'rsatasiz
+- birinchi Python programmangizni yozib, xatosini o'qiysiz
+</Maqsad>
+
+## Nazariya
+
+### Programma — oddiy matn
+
+Siz yozadigan kod — sehrli narsa emas, oddiy matn fayli. Osh retsepti qog'ozda qanday
+tursa, programma ham `.py` faylida shunday turadi. Farqi bitta: retseptni odam o'qiydi
+va "bir chimdim tuz"ni o'zi chamalaydi, programmani esa mashina o'qiydi — unga chamalash
+berilmagan.
+
+<Atama soz="programma" eng="program">
+	Kompyuter bajarishi uchun yozilgan buyruqlar ketma-ketligi. Python'da bu oddiy
+	matn fayli bo'lib, nomi `.py` bilan tugaydi.
+</Atama>
+
+### Interpretator — qatorma-qator bajaruvchi
+
+Kompyuterning o'zi Python tilini tushunmaydi — u faqat [protsessor buyruqlarini](/computer-fundamentals/lesson-09/)
+bajaradi. O'rtada tarjimon turadi: interpretator faylingizni birinchi qatordan boshlab
+o'qiydi va har qatorni darhol bajaradi. Xato uchragan joyda to'xtaydi va qaysi qatorda
+nima yoqmaganini aytadi.
+
+<Atama soz="interpretator" eng="interpreter">
+	Kod matnini qatorma-qator o'qib, har qatorni darhol bajaradigan programma.
+	Siz `python salom.py` deb yozganingizda aynan u ishga tushadi.
+</Atama>
+
+### Kompyuter tushunmaydi — bajaradi
+
+Odam "uch marta oldinga yur" desangiz, devor oldida o'zi to'xtaydi. Kompyuter
+to'xtamaydi: yozilgan bo'lsa — bajaradi, devorga urilsa — bu sizning xatoingiz.
+Shu qat'iylik aslida kuch: mashina hech narsani "o'zicha tushunib" buzmaydi.
+
+<Muhim turi="gap">
+	Kompyuter siz nazarda tutganingizni emas, siz yozganingizni bajaradi.
+	Programmalash — niyatni aniq buyruqlarga aylantirish san'ati.
+</Muhim>
+
+## Bashorat qiling
+
+Kod ishga tushirilishidan oldin natijani yozish — bu darslikdagi asosiy odat.
+Bashoratingiz natijadan farq qilsa, xursand bo'ling: o'rganish aynan shu yerda boshlanadi.
+
+<KodBashorat
+	kod={`print("Salom, dunyo!")
+print("Men Python o'rganyapman")`}
+	javob={`Salom, dunyo!
+Men Python o'rganyapman`}
+	izoh="Interpretator qatorlarni yuqoridan pastga bajaradi: avval birinchi print, keyin ikkinchisi. Har print o'z matnini alohida qatorga chiqaradi."
+/>
+
+<KodBashorat
+	kod={`print(2 + 3)
+print("2 + 3")`}
+	javob={`5
+2 + 3`}
+	izoh="Qo'shtirnoqsiz 2 + 3 — hisoblanadigan ifoda, interpretator uni 5 ga aylantiradi. Qo'shtirnoq ichidagi 2 + 3 esa oddiy matn: interpretator matn ichiga qaramaydi."
+/>
+
+## Sinab ko'r
+
+Python yozishdan oldin programmalashning o'zagini his qiling: quyidagi robot faqat
+uch buyruqni biladi va ularni yozilgan tartibda, so'zsiz bajaradi.
+
+<RobotKarel />
+
+Robot devorga urilganda "aqlsizligi" uchun emas, programma xato bo'lgani uchun to'xtadi.
+Python ham xuddi shunday ishlaydi — faqat buyruqlari boshqa.
+
+## Xatoni toping
+
+<Xato
+	kod={`print("Salom)`}
+	traceback={`  File "salom.py", line 1
+    print("Salom)
+          ^
+SyntaxError: unterminated string literal (detected at line 1)`}
+	sabab="Qo'shtirnoq ochildi, lekin yopilmadi. Interpretator matn qayerda tugashini bilolmay qoldi va ishni boshlamasdanoq to'xtadi."
+>
+	To'g'risi: `print("Salom")`. Traceback'dagi `^` belgisi xato taxminan qayerdaligini
+	ko'rsatadi — unga qarashni birinchi darsdan odat qiling.
+</Xato>
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Programma bilan osh retseptining o'xshash va farqli tomoni nimada?">
+	Ikkalasi ham buyruqlar ketma-ketligi. Farqi: retseptni odam o'qiydi va noaniq joyni
+	o'zi to'ldiradi, programmani mashina bajaradi — unda noaniqlikka o'rin yo'q.
+</Sinov>
+
+<Sinov raqam={2} savol="Interpretator nima qiladi va qachon to'xtaydi?">
+	Kod faylini birinchi qatordan boshlab o'qiydi va har qatorni darhol bajaradi.
+	Xato uchragan qatorda to'xtab, xato xabarini chiqaradi.
+</Sinov>
+
+<Sinov raqam={3} savol="print(4 + 5) bilan print(&quot;4 + 5&quot;) nimasi bilan farq qiladi?">
+	Birinchisi ifodani hisoblab <code>9</code> chiqaradi. Ikkinchisida qo'shtirnoq bor —
+	bu matn, interpretator uni hisoblamaydi va ekranga <code>4 + 5</code> deb yozadi.
+</Sinov>
+
+<Sinov raqam={4} savol="Robot Karel simulyatorida robot devorga urilib to'xtadi. Ayb kimda?">
+	Programmada. Robot faqat yozilgan buyruqlarni bajardi — kompyuter siz nazarda
+	tutganingizni emas, yozganingizni bajaradi.
+</Sinov>
+
+<Sinov raqam={5} savol="Python fayli qanday kengaytma bilan tugaydi va uni qaysi buyruq ishga tushiradi?">
+	Fayl <code>.py</code> bilan tugaydi, masalan <code>salom.py</code>. Terminalda
+	<code>python salom.py</code> deb yozilsa, interpretator uni bajaradi.
+</Sinov>
+
+## Topshiriq
+
+<Qatlam>
+	<Fragment slot="asos">
+		VS Code'da `men.py` fayli yarating va o'zingiz haqingizda uch qator chiqaring:
+		ismingiz, yoshingiz, sevimli mashg'ulotingiz — har biri alohida `print` bilan.
+		Keyin qog'ozda: Robot Karel'dagi uch buyruq bilan uydan maktabgacha "programma"
+		yozing (10–15 buyruq yetadi) va uni sinfdoshingizga "robot bo'lib" bajartiring.
+	</Fragment>
+	<Fragment slot="mustahkam">
+		To'rtta `print` qatoridan iborat programma yozing: choy damlash tartibi. Keyin
+		qatorlarni ataylab aralashtirib ishga tushiring va natijani solishtiring —
+		tartib nega muhimligini bir gapda yozib keling. Bonus: `print` bilan
+		yulduzchalardan 4 qatorli kichik shakl chizing.
+	</Fragment>
+	<Fragment slot="chuqur">
+		Uch qatorli programma yozing, ikkinchi qatorida ataylab xato qiling (masalan,
+		yopilmagan qo'shtirnoq). Ishga tushirishdan OLDIN yozib qo'ying: birinchi qator
+		bajariladimi? Tekshiring va kuzatganingizni tushuntiring. Qo'shimcha savol:
+		interpretator kompilyatordan nimasi bilan farq qilishini bir paragrafda yozing —
+		bu farq 17-darsdagi xato tuzatishda asqotadi.
+	</Fragment>
+</Qatlam>
+
+<AIOgoh />
+
+<DarsTugadi dars={1} blok={1} modul="python-basic" />

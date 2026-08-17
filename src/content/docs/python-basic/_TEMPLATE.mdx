@@ -1,0 +1,103 @@
+---
+# Fayl nomi "_" bilan boshlanadi -> Astro bundan sahifa yasamaydi.
+# Yangi dars uchun nusxa oling: cp _TEMPLATE.mdx lesson-NN.mdx
+#
+# QOIDALAR: CLAUDE.md -> "DARS YOZISH QOIDALARI" + VAZIFA-python-basic.md.
+# Python Basic tartibi CF'dan FARQ QILADI:
+#   Hayotda -> Maqsad -> nazariya -> KodBashorat -> simulyator -> Xato ->
+#   Sinov x5 -> Qatlam -> AIOgoh -> DarsTugadi
+
+title: 'N-dars: Mavzu nomi' # qo'shtirnoq MAJBURIY (ichida ":" bor)
+description: 'Bir gapda dars mazmuni. SEO uchun, 120 belgigacha.'
+sidebar:
+  label: 'N-dars'
+  order: N
+---
+
+{/* Ishlatilmagan komponentni ro'yxatdan olib tashlang. */}
+import { AIOgoh, Amaliyot, Atama, Bloknoma, DarsTugadi, Hayotda, Kod, KodBashorat, Maqsad, Muhim, Qatlam, Sinov, Xato } from '@components';
+
+{/* Blok raqami: 1-4 dars -> 1, 5-8 -> 2, 9-12 -> 3, 13-16 -> 4, 17-20 -> 5 */}
+<Bloknoma blok={1} modul="python-basic" />
+
+<Hayotda soha="Soha nomi">
+	Aniq, mahalliy misol: do'kon hisobi, sinf jurnali, transport... "Programmalash
+	muhim" degan gap YOZILMAYDI — misol o'zi ko'rsatadi.
+</Hayotda>
+
+<Maqsad>
+- birinchi ko'nikma
+- ikkinchi ko'nikma
+- uchinchi ko'nikma
+</Maqsad>
+
+## Nazariya
+
+{/* 3-5 kichik bo'lim (###). Har biri max 150 so'z, paragraf max 3 gap.
+    CF moduliga ilmoq bo'lsa — havola bilan: [CF 8-dars](/computer-fundamentals/lesson-08/) */}
+
+### Birinchi tushuncha
+
+Matn shu yerda, normal paragraf ko'rinishida.
+
+<Atama soz="atama" eng="term">
+	Yangi atama birinchi uchraganda shu blok orqali beriladi.
+</Atama>
+
+<Muhim turi="gap">
+	Darsning markaziy g'oyasi — bir-ikki gapda.
+</Muhim>
+
+## Bashorat qiling
+
+{/* MAJBURIY: kod ko'rsatilishidan oldin o'quvchi natijani yozadi. */}
+
+<KodBashorat
+	kod={`print("Salom")`}
+	javob={`Salom`}
+	izoh="Nega aynan shunday — bir-ikki gap."
+/>
+
+## Sinab ko'r
+
+{/* Simulyator: src/components/sim/NomI.astro, shu yerda chaqiriladi */}
+
+## Xatoni toping
+
+<Xato
+	kod={`print("Salom)`}
+	traceback={`SyntaxError: unterminated string literal`}
+	sabab="Xatoning sababi bir-ikki gapda."
+>
+	Tuzatilgan variant va izoh (ixtiyoriy slot).
+</Xato>
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Birinchi savol?">Javob.</Sinov>
+
+<Sinov raqam={2} savol="Ikkinchi savol?">Javob.</Sinov>
+
+<Sinov raqam={3} savol="Uchinchi savol?">Javob.</Sinov>
+
+<Sinov raqam={4} savol="To'rtinchi savol?">Javob.</Sinov>
+
+<Sinov raqam={5} savol="Beshinchi savol?">Javob.</Sinov>
+
+## Topshiriq
+
+<Qatlam>
+	<Fragment slot="asos">
+		5–7-sinf: vizual, kichik son, aniq ko'rsatma.
+	</Fragment>
+	<Fragment slot="mustahkam">
+		8–9-sinf: matnli masala, o'zi tuzadi.
+	</Fragment>
+	<Fragment slot="chuqur">
+		10–11-sinf: algoritmik, chegara holatlari, samaradorlik savoli.
+	</Fragment>
+</Qatlam>
+
+<AIOgoh />
+
+<DarsTugadi dars={1} blok={1} modul="python-basic" />

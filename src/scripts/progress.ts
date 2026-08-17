@@ -56,8 +56,10 @@ export interface Nishon {
 	darslar: number[];
 }
 
-/** Computer Fundamentals moduli nishonlari — har blok tugaganda bittasi ochiladi. */
-export const NISHONLAR: Nishon[] = [
+/** Computer Fundamentals moduli nishonlari — har blok tugaganda bittasi ochiladi.
+ *  Eslatma: id'lar modullar orasida UNIKAL bo'lishi shart — hammasi bitta
+ *  `nishonlar` ro'yxatida saqlanadi. */
+const CF_NISHONLAR: Nishon[] = [
 	{
 		id: 'bit-ustasi',
 		nom: 'Bit Ustasi',
@@ -94,6 +96,58 @@ export const NISHONLAR: Nishon[] = [
 		darslar: [17, 18, 19, 20],
 	},
 ];
+
+/** Python Basic moduli nishonlari. */
+const PY_NISHONLAR: Nishon[] = [
+	{
+		id: 'py-birinchi-programma',
+		nom: 'Birinchi Programma',
+		izoh: "Interpretator, o'zgaruvchi va turlarni egalladingiz",
+		blok: 1,
+		darslar: [1, 2, 3, 4],
+	},
+	{
+		id: 'py-sikl-ustasi',
+		nom: 'Sikl Ustasi',
+		izoh: 'Shart va takrorlashni boshqara oldingiz',
+		blok: 2,
+		darslar: [5, 6, 7, 8],
+	},
+	{
+		id: 'py-malumot-memori',
+		nom: "Ma'lumot Me'mori",
+		izoh: "Ro'yxat, satr va lug'atda ma'lumot saqladingiz",
+		blok: 3,
+		darslar: [9, 10, 11, 12],
+	},
+	{
+		id: 'py-funksiya-quruvchi',
+		nom: 'Funksiya Quruvchi',
+		izoh: "O'z buyruqlaringizni yasab, modulga joyladingiz",
+		blok: 4,
+		darslar: [13, 14, 15, 16],
+	},
+	{
+		id: 'py-haqiqiy-dasturchi',
+		nom: 'Haqiqiy Dasturchi',
+		izoh: "Xato tuzatib, fayl o'qib, test yozib loyiha topshirdingiz",
+		blok: 5,
+		darslar: [17, 18, 19, 20],
+	},
+];
+
+/** Har modulning o'z nishon ro'yxati. Yangi modul qo'shilsa — shu yerga. */
+export const MODUL_NISHONLARI: Record<string, Nishon[]> = {
+	'computer-fundamentals': CF_NISHONLAR,
+	'python-basic': PY_NISHONLAR,
+};
+
+export function modulNishonlari(modul: string): Nishon[] {
+	return MODUL_NISHONLARI[modul] ?? [];
+}
+
+/** Orqaga moslik: eski nom CF ro'yxatiga ishora qiladi. */
+export const NISHONLAR = CF_NISHONLAR;
 
 /* ------------------------------------------------------------------ */
 /* O'qish / yozish                                                     */
@@ -179,10 +233,9 @@ function streakYangila(p: Progress): Progress {
 
 /** Tugatilgan darslarga qarab yangi ochilgan nishonlarni qo'shadi. */
 function nishonlarYangila(p: Progress, modul: string): string[] {
-	if (modul !== 'computer-fundamentals') return [];
 	const tugatilgan = new Set(p.darslar[modul] ?? []);
 	const yangi: string[] = [];
-	for (const n of NISHONLAR) {
+	for (const n of modulNishonlari(modul)) {
 		const ochildi = n.darslar.every((d) => tugatilgan.has(d));
 		if (ochildi && !p.nishonlar.includes(n.id)) {
 			p.nishonlar.push(n.id);
@@ -212,7 +265,7 @@ export function darsBelgila(modul: string, dars: number, tugadi: boolean): Nisho
 	}
 
 	yozish(p);
-	return NISHONLAR.filter((n) => yangi.includes(n.id));
+	return modulNishonlari(modul).filter((n) => yangi.includes(n.id));
 }
 
 /** Kichik nishon: interaktiv topshiriq bajarilganda chaqiriladi. */
