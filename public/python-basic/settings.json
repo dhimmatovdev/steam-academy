@@ -1,0 +1,29 @@
+{
+	// STEAM Academy — maktab kompyuteri uchun tayyor VS Code sozlamalari.
+	// O'rnatish: Ctrl+Shift+P -> "Preferences: Open User Settings (JSON)" ->
+	// shu faylning ichini to'liq ko'chirib qo'ying va saqlang.
+
+	// Tab emas, 4 ta bo'shliq — Python'da IndentationError'ning oldini oladi
+	"editor.insertSpaces": true,
+	"editor.tabSize": 4,
+	"editor.detectIndentation": false,
+
+	// Format on Save o'chirilgan: kod "o'z-o'zidan o'zgarishi"
+	// boshlovchini chalg'itadi
+	"editor.formatOnSave": false,
+
+	// Fayl o'zi saqlanadi — o'quvchi "saqlashni unutdim" deb vaqt yo'qotmaydi
+	"files.autoSave": "afterDelay",
+	"files.autoSaveDelay": 1000,
+
+	// Proyektor uchun kattaroq shrift
+	"editor.fontSize": 16,
+	"terminal.integrated.fontSize": 16,
+
+	// Boshlovchiga kerak bo'lmagan shovqinni kamaytiramiz
+	"editor.minimap.enabled": false,
+	"workbench.startupEditor": "none",
+
+	// Python fayli ishga tushirilganda terminal fokus oladi
+	"python.terminal.executeInFileDir": true
+}

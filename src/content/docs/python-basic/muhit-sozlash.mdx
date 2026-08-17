@@ -1,0 +1,224 @@
+---
+title: '0-dars: VS Code muhitini sozlash'
+description: "Python va VS Code'ni o'rnatish, birinchi programmani ishga tushirish va eng ko'p uchraydigan muammolarning yechimi."
+sidebar:
+  label: '0-dars'
+  order: 0
+---
+
+import { Atama, DarsTugadi, Hayotda, Kod, Muhim, Muhit, Sinov } from '@components';
+import { Aside } from '@astrojs/starlight/components';
+
+<Hayotda soha="Ustaxona">
+	Duradgor ishni stol yig'ishdan emas, asboblarni joylashdan boshlaydi: arra o'tkirmi,
+	stol tekismi. Dasturchi ham shunday — kod yozishdan oldin muhit sozlanadi. Bu dars
+	bir marta o'tiladi, lekin sozlangan muhit sizga yillar xizmat qiladi.
+</Hayotda>
+
+Bu dars boshqalardan uzunroq — shoshilmang, har qadamdan keyin **"Ishlaganini qanday
+bilaman"** qismini bajaring. Qadam ishlamasa, keyingisiga o'tmang: 3 qadam oldingi
+xatoni 3 qadam keyin qidirish eng katta vaqt yo'qotish.
+
+<Aside type="tip" title="O'qituvchi uchun">
+	Bu darsga kamida 2 soat ajrating: 25 o'quvchining 25 xil kompyuteri bo'ladi.
+	Tipik muammolar va yechimlari alohida sahifada: [Muhit muammolari jadvali](/oqituvchi/muhit-muammolar/).
+</Aside>
+
+## Nega aynan VS Code
+
+Python kodini istalgan matn muharririda yozish mumkin — hatto Bloknotda. Lekin VS Code
+bitta oynada uchta narsani beradi: bir necha faylli loyiha, xatoni qadam-qadam
+kuzatadigan sozlagich va terminal. Bepul, o'zbek maktablaridagi zaif kompyuterlarda
+ham ishlaydi.
+
+<Atama soz="sozlagich" eng="debugger">
+	Programmani istalgan qatorda to'xtatib, o'zgaruvchilar ichini ko'rsatadigan vosita.
+	17-darsda asosiy qurolingiz bo'ladi.
+</Atama>
+
+<Muhim turi="gap">
+	Muhit bir marta TO'G'RI sozlansa, keyingi 20 dars faqat kod haqida bo'ladi.
+	Chala sozlangan muhit esa har darsda 15 daqiqa o'g'irlaydi.
+</Muhim>
+
+## O'rnatish
+
+<Muhit qadam={1} sarlavha="Python o'rnatish" tizim="windows">
+	[python.org/downloads](https://www.python.org/downloads/) sahifasidan **Download Python**
+	tugmasini bosing va yuklangan faylni ishga tushiring.
+
+	O'rnatish oynasining **eng pastida** `Add Python to PATH` katagi bor — uni
+	**majburiy belgilang**, keyin `Install Now` bosing. Bu katak belgilanmasa, kompyuter
+	`python` so'zini tanimaydi — bu 0-darsdagi xatolarning yarmi.
+
+	Maktab kompyuterida administrator paroli bo'lmasa: `Install Now` o'rniga
+	`Customize installation` → `Install for me only` yo'lini tanlang.
+
+	<Fragment slot="tekshir">
+		`Win+R` bosing, `cmd` yozib Enter'ni bosing. Ochilgan qora oynada
+		`python --version` deb yozing. `Python 3.12.x` kabi versiya chiqsa — tayyor.
+		`'python' is not recognized` chiqsa — PATH belgilanmagan, qaytadan o'rnating.
+	</Fragment>
+</Muhit>
+
+<Muhit qadam={2} sarlavha="VS Code o'rnatish">
+	[code.visualstudio.com](https://code.visualstudio.com/) sahifasidan yuklab oling va
+	o'rnating. Barcha savollarga standart javob yetadi, faqat `Add "Open with Code"`
+	kataklarini belgilash keyinroq qulaylik beradi.
+
+	<Fragment slot="tekshir">
+		VS Code ochiladi va chap tomonda beshta belgi ustuni (Explorer, Search...) ko'rinadi.
+	</Fragment>
+</Muhit>
+
+<Muhit qadam={3} sarlavha="Python kengaytmasini o'rnatish">
+	VS Code'da chapdagi to'rt kvadratcha belgisini (Extensions) bosing yoki `Ctrl+Shift+X`.
+	Qidiruvga `Python` yozing, **Microsoft** chiqargan birinchi natijani tanlab `Install`
+	bosing.
+
+	Sinf interneti sekin bo'lsa: o'qituvchi kengaytmaning `.vsix` faylini oldindan yuklab,
+	USB orqali tarqatadi — Extensions panelidagi `...` menyusida `Install from VSIX` bor.
+
+	<Fragment slot="tekshir">
+		`.py` fayl ochilganda pastki o'ng burchakda `Python 3.12.x` yozuvi va o'ng
+		yuqorida uchburchak `Run` tugmasi paydo bo'ladi.
+	</Fragment>
+</Muhit>
+
+## Loyiha bilan ishlash
+
+<Muhit qadam={4} sarlavha="Papka ochish — fayl emas">
+	VS Code'da alohida fayl emas, **papka** ochiladi: `File → Open Folder`. Ish stolida
+	`python_mashqlar` degan papka yarating va uni oching. Bundan keyin barcha darslar
+	shu papkada yashaydi.
+
+	Papka nomida faqat lotin harflari, raqam va pastki chiziq bo'lsin: `dars_01` —
+	to'g'ri, `1-дарс (янги)` — keyin boshog'riq.
+
+	<Fragment slot="tekshir">
+		Chap paneldagi Explorer'da papkangiz nomi katta harflarda ko'rinadi va sichqoncha
+		olib borilganda yangi fayl yaratish belgilari chiqadi.
+	</Fragment>
+</Muhit>
+
+<Muhit qadam={5} sarlavha="Interpretator tanlash">
+	`Ctrl+Shift+P` bosing — buyruqlar paleti ochiladi. `Python: Select Interpreter` deb
+	yozing va ro'yxatdan 1-qadamda o'rnatgan Python'ni tanlang (odatda `Python 3.12.x 64-bit`).
+
+	Kompyuterda bir nechta Python bo'lsa, VS Code "noto'g'risini" tanlab olishi mumkin —
+	kod ishlaydi-yu, o'rnatilgan kutubxona topilmaydi. O'shanda birinchi shu yerga qaytng.
+
+	<Fragment slot="tekshir">
+		Oynaning pastki o'ng burchagida tanlangan versiya yozuvi turadi.
+	</Fragment>
+</Muhit>
+
+<Muhit qadam={6} sarlavha="Birinchi programma">
+	Explorer'da papkangiz yonidagi yangi fayl belgisini bosing va `salom.py` deb nomlang.
+	Ichiga yozing:
+
+	<Kod kod={`print("Salom, STEAM Academy!")`} sarlavha="salom.py" />
+
+	O'ng yuqoridagi uchburchak `Run` tugmasini bosing.
+
+	<Fragment slot="tekshir">
+		Pastda terminal ochilib, oxirgi qatorida `Salom, STEAM Academy!` yozuvi chiqadi.
+		Tabriklaymiz — siz endi dasturchisiz.
+	</Fragment>
+</Muhit>
+
+<Muhit qadam={7} sarlavha="Terminal bilan tanishish">
+	<code>Ctrl+&#96;</code> (Ctrl va klaviatura chap yuqoridagi backtick) terminalni
+	ochadi-yopadi. `Run` tugmasi
+	aslida shu terminalda bitta buyruq bajaradi. O'zingiz ham qila olasiz: terminalga
+	`python salom.py` deb yozing va Enter bosing.
+
+	Bu [CF 16-darsdagi terminal](/computer-fundamentals/lesson-16/) bilan bir xil dunyo —
+	u yerda mashq qilgan buyruqlaringiz shu yerda ishlaydi.
+
+	<Fragment slot="tekshir">
+		`python salom.py` xuddi Run tugmasidek `Salom, STEAM Academy!` chiqaradi.
+	</Fragment>
+</Muhit>
+
+## Kuchli qurollar
+
+<Muhit qadam={8} sarlavha="Debugger bilan birinchi tanishuv">
+	`salom.py` ga yana ikki qator qo'shing, jami uch `print` bo'lsin. Birinchi qator
+	raqamining **chap tomonini** bosing — qizil nuqta paydo bo'ladi.
+
+	<Atama soz="to'xtash nuqtasi" eng="breakpoint">
+		Programma shu qatorga yetganda to'xtab, sizning buyrug'ingizni kutadi.
+	</Atama>
+
+	Endi `F5` bosing (`Python File` ni tanlang). Programma qizil nuqtada to'xtaydi, chapda
+	`Variables` paneli ochiladi. `F10` (`Step Over`) har bosilganda bitta qator bajaradi.
+	To'liq quvvatini 17-darsda ishlatasiz — hozircha shu tanishuv yetadi.
+
+	<Fragment slot="tekshir">
+		F10 bosgan sayin terminalda qatorlar bittalab paydo bo'ladi va sariq strelka
+		keyingi qatorga o'tadi.
+	</Fragment>
+</Muhit>
+
+<Muhit qadam={9} sarlavha="Fayl nomlash qoidalari">
+	Uchta qattiq qoida, uchalasi ham "programma ishlamayapti" degan sirli muammolardan
+	saqlaydi:
+
+	1. Faqat lotin harf, raqam, pastki chiziq: `hisob_1.py`. Kirill va bo'shliq — yo'q.
+	2. Har doim `.py` kengaytmasi bilan tugasin.
+	3. Faylni **hech qachon** `input.py`, `random.py`, `turtle.py` deb nomlamang —
+	   bu nomlar Python kutubxonalariniki, faylingiz ularni "bosib qoladi" va eng
+	   g'alati xatolar chiqadi.
+
+	<Fragment slot="tekshir">
+		Papkangizdagi barcha fayllar shu uch qoidaga mos — birortasida kirill, bo'shliq
+		yoki kutubxona nomi yo'q.
+	</Fragment>
+</Muhit>
+
+<Muhit qadam={10} sarlavha="Tayyor sozlamalarni yuklash">
+	Sinf uchun tekshirilgan sozlamalar to'plamini tayyorlab qo'ydik:
+	<a href="/python-basic/settings.json" target="_blank" rel="noopener">settings.json faylini oching</a>
+	va ichidagini to'liq nusxalang. VS Code'da `Ctrl+Shift+P` →
+	`Preferences: Open User Settings (JSON)` → ochilgan faylga qo'yib saqlang.
+
+	Bu sozlamalar: 4 bo'shliqli otstup (IndentationError'dan saqlaydi), avtosaqlash,
+	o'chirilgan avtoformat va proyektor uchun kattaroq shrift.
+
+	<Fragment slot="tekshir">
+		Yangi qator boshida `Tab` bossangiz kursor 4 bo'shliq siljiydi va fayl bir
+		soniyadan keyin o'zi saqlanadi (sarlavhada dumaloq belgi turmaydi).
+	</Fragment>
+</Muhit>
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Python o'rnatishda qaysi katakni belgilamaslik eng ko'p muammoga olib keladi?">
+	<code>Add Python to PATH</code>. Belgilanmasa terminal <code>python</code> buyrug'ini
+	tanimaydi va hech narsa ishga tushmaydi.
+</Sinov>
+
+<Sinov raqam={2} savol="VS Code'da nega alohida fayl emas, papka ochiladi?">
+	Loyiha bir nechta fayldan iborat bo'ladi. Papka ochilganda VS Code interpretator,
+	terminal va debugger'ni shu loyihaga bog'laydi.
+</Sinov>
+
+<Sinov raqam={3} savol="Kod ishlaydi, lekin o'rnatilgan kutubxona topilmayapti. Birinchi nimani tekshirasiz?">
+	Interpretatorni: <code>Ctrl+Shift+P</code> → <code>Python: Select Interpreter</code>.
+	Ehtimol VS Code boshqa Python nusxasini tanlab olgan.
+</Sinov>
+
+<Sinov raqam={4} savol="Faylni random.py deb nomlasangiz nima bo'ladi?">
+	Sizning faylingiz Python'ning <code>random</code> kutubxonasini "bosib qoladi" —
+	<code>import random</code> endi kutubxona o'rniga sizning faylingizni ochadi va
+	tushunarsiz xatolar boshlanadi.
+</Sinov>
+
+<Sinov raqam={5} savol="Breakpoint nima va F10 nima qiladi?">
+	Breakpoint — programma to'xtaydigan belgilangan qator. <code>F10</code> (Step Over)
+	esa to'xtagan joydan bitta qator oldinga yuradi — o'zgaruvchilar qanday
+	o'zgarayotganini kuzatish mumkin.
+</Sinov>
+
+<DarsTugadi dars={0} blok={1} modul="python-basic" />

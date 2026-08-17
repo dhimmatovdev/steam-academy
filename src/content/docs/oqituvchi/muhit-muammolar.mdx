@@ -1,0 +1,50 @@
+---
+title: "Muhit muammolari jadvali — o'qituvchi uchun"
+description: "0-darsda (VS Code sozlash) eng ko'p uchraydigan muammolar, sabablari va tezkor yechimlari."
+sidebar:
+  hidden: true
+---
+
+Bu sahifa o'quvchilar uchun emas — 0-darsni olib boradigan o'qituvchi uchun.
+Darsdan **bir kun oldin** o'qib chiqing va "Oldindan tayyorgarlik" bo'limini bajaring:
+sinfda muammo chiqqanda qidirishga vaqt bo'lmaydi.
+
+## Oldindan tayyorgarlik
+
+1. Python o'rnatish faylini (`python.org` dan) va VS Code o'rnatish faylini USB'ga
+   yuklab qo'ying — sinf interneti 25 kompyuterga bir vaqtda yetmaydi.
+2. Python kengaytmasining `.vsix` faylini ham yuklab oling: [marketplace.visualstudio.com](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+   sahifasida `Download Extension` havolasi bor.
+3. IT mas'ulidan antivirus istisnolarini oldindan so'rang (quyidagi jadvalga qarang).
+4. [Tayyor settings.json](/python-basic/settings.json) faylini ham USB'ga oling.
+
+## Muammolar jadvali
+
+| Belgi | Sabab | Yechim |
+|-------|-------|--------|
+| `python` buyrug'i topilmadi (`is not recognized`) | O'rnatishda `Add Python to PATH` belgilanmagan | Qayta o'rnatib katakni belgilash. Tezkor vaqtinchalik yechim: `python` o'rniga `py` buyrug'ini sinash |
+| `python` yozilganda Microsoft Store ochiladi | Windows'ning bo'sh `python` yorlig'i ishga tushyapti | `python.org` versiyasini o'rnatish; `Settings → Apps → App execution aliases` da `python.exe` va `python3.exe` ni o'chirish |
+| `Run` (uchburchak) tugmasi yo'q | Python kengaytmasi o'rnatilmagan yoki hali yuklanyapti | Kengaytmani o'rnatish, VS Code'ni to'liq yopib qayta ochish |
+| Kod ishlaydi, lekin `import` xato beradi | VS Code boshqa interpretatorni tanlagan | `Ctrl+Shift+P` → `Python: Select Interpreter` → to'g'ri versiyani tanlash |
+| Sinfda internet sekin, kengaytma yuklanmaydi | 25 kompyuter bir kanalda | Oldindan yuklangan `.vsix` faylni USB orqali tarqatish: Extensions paneli → `...` → `Install from VSIX` |
+| Administrator paroli so'rayapti | Maktab kompyuterida cheklangan hisob | Python'ni `Customize installation` → `Install for me only` bilan o'rnatish; VS Code'ning `User Installer` versiyasi ham admin so'ramaydi |
+| Antivirus o'rnatishni bloklayapti | Maktab antivirusi noma'lum `.exe` ni to'xtatadi | Darsdan oldin IT bilan `python.org` va VS Code fayllariga istisno qo'shish |
+| Hammada birdan `IndentationError` | Tab va bo'shluq aralashgan (ayniqsa koddan nusxa olganda) | [Tayyor settings.json](/python-basic/settings.json) ni qo'llash: `"editor.insertSpaces": true`, `"editor.tabSize": 4` |
+| Terminalda kirill harflar krakozyabra | Terminal kodirovkasi | Ko'pincha e'tibor bermasa ham bo'ladi — darslikdagi barcha misollar lotin. Zarur bo'lsa: terminalga `chcp 65001` |
+| `salom.py` ishlaydi, `input()` yozilgan kod "osilib qoladi" | Programma foydalanuvchi kiritishini kutyapti — bu xato emas | Terminalni bosib javob yozish kerakligini ko'rsatish. Bu 4-darsda alohida o'tiladi |
+
+## Vaqt taqsimoti (2 soat)
+
+| Daqiqa | Qadam |
+|--------|-------|
+| 0–10 | Kirish: nega muhit, nega VS Code |
+| 10–35 | 1–2-qadam: Python + VS Code o'rnatish (USB'dan) |
+| 35–50 | 3–5-qadam: kengaytma, papka, interpretator |
+| 50–70 | 6–7-qadam: birinchi programma + terminal. **Har o'quvchida ishlashi shart** |
+| 70–90 | 8-qadam: debugger bilan tanishuv |
+| 90–105 | 9–10-qadam: nomlash qoidalari, settings.json |
+| 105–120 | Zaxira: ulgurmagan kompyuterlarga yordam, sinov savollari |
+
+Eng muhim nazorat nuqtasi — 70-daqiqa: shu paytgacha **har bir** o'quvchi
+`Salom, STEAM Academy!` ni o'z ekranida ko'rgan bo'lishi kerak. Ko'rmaganlar bilan
+zaxira vaqtda ishlanadi, dars davom etaveradi.
