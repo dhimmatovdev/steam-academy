@@ -1,0 +1,171 @@
+---
+title: "2-dars: O'zgaruvchi — yorliq, quti emas"
+description: "O'zgaruvchi qiymatni ichida saqlamaydi — obyektga osilgan yorliq. id() bilan isbotlaymiz."
+sidebar:
+  label: '2-dars'
+  order: 2
+---
+
+import { AIOgoh, Atama, Bloknoma, DarsTugadi, Hayotda, Kod, KodBashorat, Maqsad, Muhim, Qatlam, Sinov, Xato } from '@components';
+import XotiraSurati from '../../../components/sim/XotiraSurati.astro';
+
+<Bloknoma blok={1} modul="python-basic" />
+
+<Hayotda soha="Savdo">
+	Do'kon narxini oshirmoqchisiz. Programmada narx 12 joyda yozilgan bo'lsa, 12 joyni
+	qo'lda tuzatasiz va bittasini albatta unutasiz. O'zgaruvchi ishlatilgan bo'lsa —
+	bitta qatorni o'zgartirasiz, qolgan 11 joy o'zi to'g'rilanadi.
+</Hayotda>
+
+<Maqsad>
+- o'zgaruvchini to'g'ri nomlab, qiymat bog'lashni bilasiz
+- `a = b` nima qilishini (va nima QILMASLIGINI) tushuntirasiz
+- `id()` yordamida ikki nom bitta obyektga qarayotganini isbotlaysiz
+</Maqsad>
+
+## Nazariya
+
+### Yorliq metaforasi
+
+Ko'p kitobda o'zgaruvchi "quti" deb tushuntiriladi: qiymat quti ichida yotadi.
+Bu metafora Python'da **noto'g'ri** va keyinroq katta chalkashlik keltiradi.
+Python'da o'zgaruvchi — obyektga osilgan **yorliq**, chamadonga bog'langan nom kartochkasi.
+
+<Atama soz="o'zgaruvchi" eng="variable">
+	Xotiradagi obyektga berilgan nom. Obyekt xotirada yashaydi, nom esa unga
+	ishora qiladi. Bitta obyektga bir nechta nom osilishi mumkin.
+</Atama>
+
+### Bog'lash chapdan o'ngga emas
+
+`narx = 5000` qatorini o'ng tomondan o'qing: avval 5000 obyekti yasaladi, keyin unga
+`narx` yorlig'i osiladi. Shu sababli `narx = narx + 1000` sirli emas: o'ng tomon
+hisoblanadi (6000 chiqadi), keyin yorliq **yangi** obyektga ko'chadi.
+
+<Kod
+	kod={`narx = 5000
+chegirma = narx      # yangi son yasalmadi, ikkinchi yorliq osildi
+print(id(narx))      # 140251...
+print(id(chegirma))  # aynan shu raqam!`}
+	sarlavha="narx.py"
+/>
+
+`id()` obyektning xotiradagi manzilini beradi — bu
+[CF 13-darsdagi xotira manzili](/computer-fundamentals/lesson-13/) bilan aynan bir
+narsa. Manzillar teng bo'lsa, ikki nom **bitta** obyektga qarayapti.
+
+<Muhim turi="gap">
+	`a = b` qiymatni ko'chirmaydi — ikkinchi nomni xuddi shu obyektga bog'laydi.
+	Sonlar uchun bu xavfsiz, lekin 9-darsda ro'yxatlarda bu qoida katta ahamiyat kasb etadi.
+</Muhim>
+
+### Nomlash qoidalari
+
+Nom harf yoki pastki chiziq bilan boshlanadi, ichida raqam bo'lishi mumkin, bo'shliq
+bo'lmaydi. Katta-kichik harf farqlanadi: `narx` va `Narx` — ikki xil nom.
+
+Yaxshi nom kodni izohsiz tushunarli qiladi: `n` emas `narx`, `x` emas `oquvchi_soni`.
+Kirill harf ishlatilmaydi, `print` yoki `input` kabi tayyor nomlar band qilinmaydi.
+
+## Bashorat qiling
+
+<KodBashorat
+	kod={`a = 10
+b = a
+a = 20
+print(a, b)`}
+	javob={`20 10`}
+	izoh="b = a bajarilganda b 10 obyektiga bog'landi. Keyin a boshqa obyektga ko'chdi, lekin b hech qayoqqa ketmadi — u hamon 10 ga qarab turadi."
+/>
+
+<KodBashorat
+	kod={`son = 7
+son = son * 2
+son = son + 1
+print(son)`}
+	javob={`15`}
+	izoh="Har qatorda o'ng tomon avval hisoblanadi: 7*2=14, keyin 14+1=15. Yorliq har marta yangi obyektga ko'chadi."
+/>
+
+## Sinab ko'r
+
+Kodni qadam-qadam bajarib, xotirada aynan nima o'zgarayotganini kuzating. Ikki yorliq
+bitta obyektga qaragan qadamga alohida e'tibor bering.
+
+<XotiraSurati />
+
+## Xatoni toping
+
+<Xato
+	kod={`jami = soni * narx
+soni = 3
+narx = 1500
+print(jami)`}
+	traceback={`Traceback (most recent call last):
+  File "hisob.py", line 1, in <module>
+    jami = soni * narx
+NameError: name 'soni' is not defined`}
+	sabab="Birinchi qatorda `soni` hali mavjud emas. Interpretator qatorlarni yuqoridan pastga bajaradi — kelajakdagi qatorlarni oldindan ko'rmaydi."
+>
+	To'g'risi: avval `soni` va `narx` ga qiymat bering, `jami` ni undan keyin hisoblang.
+	Bu xato yozganda emas, **ishga tushirganda** chiqadi — 1-darsdagi qoida: interpretator
+	qatorma-qator ishlaydi.
+</Xato>
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Nega o'zgaruvchini 'quti' deb tasavvur qilish noto'g'ri?">
+	Quti metaforasi qiymat o'zgaruvchi ichida yotadi deb o'ylashga majbur qiladi.
+	Aslida qiymat xotirada alohida obyekt, o'zgaruvchi esa unga osilgan yorliq —
+	shuning uchun bitta obyektga bir nechta nom osilishi mumkin.
+</Sinov>
+
+<Sinov raqam={2} savol="a = 5, b = a bajarildi. id(a) va id(b) teng bo'ladimi?">
+	Ha, teng. <code>b = a</code> yangi son yasamadi, faqat ikkinchi yorliqni xuddi shu
+	obyektga osdi.
+</Sinov>
+
+<Sinov raqam={3} savol="x = 3 dan keyin x = x + 1 yozildi. Bu matematikada mumkinmi va Python'da nima bo'ladi?">
+	Matematikada <code>x = x + 1</code> ma'nosiz tenglama. Python'da esa bu buyruq:
+	o'ng tomonni hisobla (3+1=4) va <code>x</code> yorlig'ini yangi obyektga ko'chir.
+</Sinov>
+
+<Sinov raqam={4} savol="Qaysi nomlar to'g'ri: oquvchi_soni, 2sinf, print, narx-jami, Narx?">
+	<code>oquvchi_soni</code> va <code>Narx</code> to'g'ri. <code>2sinf</code> raqam bilan
+	boshlangan, <code>narx-jami</code> da chiziqcha bor (ayirish belgisi), <code>print</code>
+	esa tayyor funksiya nomini bosib qoladi.
+</Sinov>
+
+<Sinov raqam={5} savol="Nima uchun o'zgaruvchi ishlatish narxni 12 joyda yozishdan yaxshi?">
+	O'zgarish bitta joyda bo'ladi — xato qilish ehtimoli 12 barobar kamayadi. Kod
+	o'qilishi ham osonlashadi: <code>narx</code> so'zi <code>12000</code> raqamidan
+	ko'proq ma'no beradi.
+</Sinov>
+
+## Topshiriq
+
+<Qatlam>
+	<Fragment slot="asos">
+		`men.py` faylida to'rt o'zgaruvchi yarating: `ism`, `yosh`, `sinf`, `shahar`.
+		Har birini `print` bilan chiqaring. Keyin `yosh` ga 1 qo'shib yangi qatorda
+		chiqaring va eski qiymat o'zgarganini tekshiring. Daftarga yorliq-obyekt
+		sxemasini chizib keling.
+	</Fragment>
+	<Fragment slot="mustahkam">
+		Do'kon hisobi: `narx`, `soni`, `chegirma_foizi` o'zgaruvchilari orqali yakuniy
+		summani hisoblab chiqaruvchi programma yozing. Keyin faqat `narx` ni o'zgartirib
+		ishga tushiring — hisob o'zi qayta hisoblanishi kerak. Kodda birorta ham
+		"qo'lda yozilgan" son qolmasin.
+	</Fragment>
+	<Fragment slot="chuqur">
+		`a = 256`, `b = 256` va `a = 1000`, `b = 1000` juftliklari uchun `id(a) == id(b)`
+		ni tekshirib ko'ring. Natijalar farq qiladi — nega? (Kalit so'z: Python kichik
+		sonlarni oldindan yasab qo'yadi.) Kuzatganingizni bir paragrafda tushuntiring va
+		bundan `is` bilan `==` farqi haqida qanday xulosa chiqarish mumkinligini yozing —
+		bu 20-darsda AI kodini tekshirishda kerak bo'ladi.
+	</Fragment>
+</Qatlam>
+
+<AIOgoh />
+
+<DarsTugadi dars={2} blok={1} modul="python-basic" />

@@ -1,0 +1,175 @@
+---
+title: '4-dars: Kirish va chiqish'
+description: "input() har doim satr qaytaradi — boshlovchilarning birinchi haqiqiy xato manbai va uning yechimi."
+sidebar:
+  label: '4-dars'
+  order: 4
+---
+
+import { AIOgoh, Atama, Bloknoma, DarsTugadi, Hayotda, Kod, KodBashorat, Maqsad, Muhim, Qatlam, Sinov, Xato } from '@components';
+import BashoratQil from '../../../components/sim/BashoratQil.astro';
+
+<Bloknoma blok={1} modul="python-basic" />
+
+<Hayotda soha="Kalkulyator">
+	Telefon kalkulyatoriga 5 yozdingiz. Ekranda son ko'rinadi, lekin programma uchun
+	bu hali **matn** — tugma bosilgan belgi. Kalkulyator qo'shishdan oldin uni songa
+	aylantirishi kerak. Bu qadamni unutgan programma 5 va 3 dan 8 emas, 53 chiqaradi.
+</Hayotda>
+
+<Maqsad>
+- `input()` bilan foydalanuvchidan ma'lumot olasiz
+- `input()` satr qaytarishini eslab, kerakli joyda `int()` yoki `float()` qo'yasiz
+- `print()` ni bir nechta qiymat va `f-string` bilan boshqarasiz
+</Maqsad>
+
+## Nazariya
+
+### `input()` — programmaning eshigi
+
+`input()` programmani to'xtatib, foydalanuvchi Enter bosishini kutadi. Qavs ichiga
+yozilgan matn ko'rsatma bo'lib chiqadi: `ism = input("Ismingiz: ")`.
+
+<Atama soz="kirish" eng="input">
+	Programmaga tashqaridan tushadigan ma'lumot: klaviatura, fayl yoki tarmoqdan.
+	[CF 1-darsdagi IPOS tsikli](/computer-fundamentals/lesson-01/) ning birinchi bosqichi.
+</Atama>
+
+### Bitta qoida, yuzta xato
+
+`input()` **har doim** `str` qaytaradi. Foydalanuvchi 14 yozsa ham, programma `"14"`
+oladi. Shu bitta jumlani esdan chiqarish boshlovchilarning eng ko'p xatosi.
+
+<Kod
+	kod={`yosh = input("Yoshingiz: ")
+print(type(yosh))        # <class 'str'>
+print(yosh + 1)          # TypeError!
+# Tuzatilgan variant:
+yosh = int(input("Yoshingiz: "))
+print(yosh + 1)          # ishlaydi`}
+	sarlavha="yosh.py"
+	qatorlar={[3, 6]}
+/>
+
+<Muhim turi="gap">
+	`input()` satr qaytaradi. Son kerak bo'lsa — `int()` yoki `float()` bilan
+	o'rab oling. Aylantirmasdan hisoblasangiz, Python yo xato beradi, yo satrlarni
+	ulab tushunarsiz natija chiqaradi.
+</Muhim>
+
+### `print()` ni boshqarish
+
+`print()` ga vergul bilan bir nechta qiymat berish mumkin — orasiga bo'shliq qo'yadi:
+`print("Salom,", ism)`. Aniqroq boshqarish uchun `f-string` ishlatiladi: qo'shtirnoq
+oldiga `f` qo'yiladi, o'zgaruvchi `{}` ichiga yoziladi.
+
+<Kod
+	kod={`ism = "Aziza"
+yosh = 15
+print(f"{ism} {yosh} yoshda")
+print(f"Kelasi yil: {yosh + 1}")`}
+	sarlavha="salom.py"
+/>
+
+`f-string` ichida hisoblash ham mumkin, shuning uchun u satr ulashdan qulayroq va
+kamroq xato beradi.
+
+## Bashorat qiling
+
+<KodBashorat
+	kod={`# Foydalanuvchi 5 va 3 kiritdi
+a = input()
+b = input()
+print(a + b)`}
+	javob={`53`}
+	izoh="Ikkalasi ham satr, shuning uchun + qo'shish emas, ulash amali bo'ldi: 5 va 3 dan 53 chiqdi. Son kerak bo'lsa: int(a) + int(b) — natija 8."
+/>
+
+<KodBashorat
+	kod={`# Foydalanuvchi 3 kiritdi
+son = int(input())
+print(son * "ha")
+print(son * 2)`}
+	javob={`hahaha
+6`}
+	izoh="Son bilan satrni ko'paytirish — takrorlash: uch marta «ha». Son bilan sonni ko'paytirish esa oddiy arifmetika: 6. Bir xil belgi, tur o'zgarishi bilan ma'nosi ham o'zgardi."
+/>
+
+## Sinab ko'r
+
+Olti kichik kod, har birida natijani **oldin** tanlaysiz. Hammasi bitta qoida
+atrofida aylanadi — `input()` nima qaytaradi.
+
+<BashoratQil />
+
+## Xatoni toping
+
+<Xato
+	kod={`son = input("Son kiriting: ")
+# foydalanuvchi "besh" deb yozdi
+son = int(son)
+print(son * 2)`}
+	traceback={`Traceback (most recent call last):
+  File "son.py", line 3, in <module>
+    son = int(son)
+ValueError: invalid literal for int() with base 10: 'besh'`}
+	sabab="int() faqat raqamlardan iborat satrni aylantira oladi. «besh» so'zini son qilib bo'lmaydi — bu TypeError emas, ValueError: tur to'g'ri, qiymat noto'g'ri."
+>
+	Foydalanuvchi har doim kutgan narsani yozmaydi. Buni to'g'ri qarshi olishni
+	17-darsda `try/except` bilan o'rganasiz — hozircha xato xabarini o'qib,
+	`ValueError` bilan `TypeError` farqini eslab qolish yetarli.
+</Xato>
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="input() qanday turni qaytaradi va nima uchun bu muhim?">
+	Har doim <code>str</code> (satr). Muhim, chunki satr bilan arifmetik amal bajarilmaydi:
+	hisoblash kerak bo'lsa <code>int()</code> yoki <code>float()</code> bilan aylantirish shart.
+</Sinov>
+
+<Sinov raqam={2} savol="Foydalanuvchi 5 va 3 kiritdi, print(a + b) esa 53 chiqardi. Nega va qanday tuzatasiz?">
+	<code>a</code> va <code>b</code> satr, <code>+</code> esa satrlarni ulaydi.
+	Tuzatish: <code>print(int(a) + int(b))</code> — natija 8.
+</Sinov>
+
+<Sinov raqam={3} savol="int('besh') qanday xato beradi va nega TypeError emas?">
+	<code>ValueError</code>. Tur to'g'ri (satr berilgan), lekin qiymat aylantirishga
+	yaramaydi — shuning uchun "qiymat xatosi".
+</Sinov>
+
+<Sinov raqam={4} savol="f-string nima va oddiy satr ulashdan qanday afzalligi bor?">
+	Qo'shtirnoq oldiga <code>f</code> qo'yilgan satr: o'zgaruvchilar <code>{'{}'}</code>
+	ichida yoziladi. Afzalligi: turlarni qo'lda aylantirish kerak emas va ichida
+	hisoblash mumkin — <code>f"{'{yosh + 1}'}"</code>.
+</Sinov>
+
+<Sinov raqam={5} savol="float(input()) qachon int(input()) dan yaxshiroq?">
+	Foydalanuvchi kasr son kiritishi mumkin bo'lganda: narx 12.5, bo'y 1.65.
+	<code>int()</code> bunday satrni qabul qilmaydi va ValueError beradi.
+</Sinov>
+
+## Topshiriq
+
+<Qatlam>
+	<Fragment slot="asos">
+		Programma ismni va yoshni so'rasin, keyin `f-string` bilan bir qatorda chiqarsin:
+		`Aziza 15 yoshda, kelasi yil 16 yoshda bo'ladi`. Yoshni `int()` bilan olishni
+		unutmang — unutib ham ko'ring, qanday xato chiqishini daftarga yozib qo'ying.
+	</Fragment>
+	<Fragment slot="mustahkam">
+		Do'kon kalkulyatori: mahsulot nomi, narxi va sonini so'rab, jami summani hisoblab
+		chek ko'rinishida chiqaring. Narx kasr bo'lishi mumkin. Programma oxirida
+		summani 1000 so'mgacha yaxlitlab ham ko'rsating.
+	</Fragment>
+	<Fragment slot="chuqur">
+		Bitta `input()` bilan bo'shliq orqali ajratilgan ikki sonni oling
+		(masalan `12 34`) va ularning yig'indisini chiqaring. Kalit: `split()`.
+		Keyin dasturingizni "yomon kirish"ga sinab ko'ring: bitta son, uchta son,
+		harf. Har holatda qanday xato chiqadi — jadval qilib yozib keling. Bu jadval
+		17-darsda `try/except` yozganda ishga tushadi.
+	</Fragment>
+</Qatlam>
+
+<AIOgoh />
+
+<DarsTugadi dars={4} blok={1} modul="python-basic" />

@@ -1,0 +1,418 @@
+---
+/**
+ * XotiraSurati — Python Basic 2-dars simulyatori.
+ *
+ * Qadamli trey: har qatordan keyin xotirada nima borligini ko'rsatadi.
+ * Chapda nomlar (yorliqlar), o'ngda obyektlar. Strelka nomdan obyektga.
+ *
+ * Pedagogik maqsad: `a = b` qiymatni KO'CHIRMAYDI — ikkinchi nomni
+ * xuddi shu obyektga bog'laydi. `id()` shuni isbotlaydi. Bu 9-darsdagi
+ * aliasing uchun poydevor.
+ *
+ * Pyodide ishlatilmaydi: trey qo'lda yozilgan, oflaynda ham ishlaydi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+/* Har qadam: kod qatori, nomlar->obyekt bog'lanishi, obyektlar ro'yxati, izoh.
+   Obyekt id'lari o'quvchi ko'radigan "manzil" — Python id() qaytaradigan
+   raqamlarga o'xshash bo'lishi uchun katta sonlar. */
+const TREY = [
+	{
+		kod: 'narx = 5000',
+		boglanish: { narx: 'o1' },
+		obyektlar: [{ id: 'o1', qiymat: '5000', manzil: '140251' }],
+		izoh: "Python 5000 sonini xotiraga joylaydi va `narx` yorlig'ini unga osadi.",
+	},
+	{
+		kod: 'chegirma = narx',
+		boglanish: { narx: 'o1', chegirma: 'o1' },
+		obyektlar: [{ id: 'o1', qiymat: '5000', manzil: '140251' }],
+		izoh: 'Yangi son yasalmadi! Ikki yorliq bitta obyektga qaraydi — manzil bir xil.',
+	},
+	{
+		kod: 'chegirma = 4000',
+		boglanish: { narx: 'o1', chegirma: 'o2' },
+		obyektlar: [
+			{ id: 'o1', qiymat: '5000', manzil: '140251' },
+			{ id: 'o2', qiymat: '4000', manzil: '140379' },
+		],
+		izoh: "`chegirma` yorlig'i yangi obyektga ko'chdi. `narx` tegilmagan — 5000 bo'lib qoladi.",
+	},
+	{
+		kod: 'narx = narx + 1000',
+		boglanish: { narx: 'o3', chegirma: 'o2' },
+		obyektlar: [
+			{ id: 'o2', qiymat: '4000', manzil: '140379' },
+			{ id: 'o3', qiymat: '6000', manzil: '140507' },
+		],
+		izoh: "O'ng tomon avval hisoblandi (5000+1000), keyin natija yangi obyekt bo'lib `narx` ga bog'landi. Eski 5000 ga endi hech kim qaramaydi.",
+	},
+	{
+		kod: 'print(narx, chegirma)',
+		boglanish: { narx: 'o3', chegirma: 'o2' },
+		obyektlar: [
+			{ id: 'o2', qiymat: '4000', manzil: '140379' },
+			{ id: 'o3', qiymat: '6000', manzil: '140507' },
+		],
+		izoh: "Ekranda: 6000 4000. Har yorliq o'zi qaragan obyektning qiymatini beradi.",
+	},
+];
+
+const NOMLAR = ['narx', 'chegirma'];
+---
+
+<Simulyator
+	sarlavha="Xotira surati"
+	korsatma="Har qadamda xotirada nima o'zgarganini kuzatib boring. Klaviatura: → keyingi qadam, ← orqaga."
+	blok={1}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyator besh qatorli kodni qadam-qadam bajaradi va har qadamda xotirani
+			ko'rsatadi: chapda o'zgaruvchi nomlari, o'ngda sonlar. Strelka qaysi nom qaysi
+			sonni ko'rsatayotganini bildiradi.
+		</p>
+		<p>
+			JavaScript'siz sinash: daftarga ikki ustun chizing. Chapga `narx` va `chegirma`
+			nomlarini, o'ngga sonlarni yozing. Har kod qatoridan keyin strelkani qayta chizing —
+			`chegirma = narx` da ikki strelka bitta songa borishini ko'rasiz.
+		</p>
+	</Fragment>
+
+	<div class="xotira-surati not-content" tabindex="0" data-trey={JSON.stringify(TREY)}>
+		<div class="kod-ustun">
+			<p class="ustun-nom">Kod</p>
+			<ol class="kod-royxat">
+				{TREY.map((q, i) => <li data-qadam={i}>{q.kod}</li>)}
+			</ol>
+		</div>
+
+		<div class="xotira">
+			<p class="ustun-nom">Xotira</p>
+			{/* Grid: chap ustun nomlar, o'ng ustun obyektlar. Qator raqamlarini
+			    JS beradi — shu sababli umumiy obyekt ikki nom qatorini egallab,
+			    strelkalar bo'shliqqa qaramaydi. */}
+			<div class="xotira-ichi">
+				{
+					NOMLAR.map((n, i) => (
+						<div class="nom" data-nom={n} data-korinadi="yoq" style={`grid-row: ${i + 1}`}>
+							<span class="nom-matn">{n}</span>
+						</div>
+					))
+				}
+				{
+					['o1', 'o2', 'o3'].map((id) => (
+						<div class="obyekt" data-obyekt={id} data-korinadi="yoq">
+							<span class="obyekt-qiymat">—</span>
+							<span class="obyekt-manzil">id: —</span>
+						</div>
+					))
+				}
+			</div>
+			<p class="izoh" role="status" aria-live="polite">
+				«Keyingi qadam» tugmasini bosib boshlang.
+			</p>
+		</div>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="orqaga">Orqaga</button>
+		<button type="button" class="keyingi">Keyingi qadam</button>
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	interface Qadam {
+		kod: string;
+		boglanish: Record<string, string>;
+		obyektlar: { id: string; qiymat: string; manzil: string }[];
+		izoh: string;
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach((qobiq) => {
+		const quti = qobiq.querySelector<HTMLElement>('.xotira-surati');
+		if (!quti) return;
+
+		const trey = JSON.parse(quti.dataset.trey!) as Qadam[];
+		const kodQatorlar = [...quti.querySelectorAll<HTMLElement>('.kod-royxat li')];
+		const nomlar = [...quti.querySelectorAll<HTMLElement>('.nom')];
+		const obyektlar = [...quti.querySelectorAll<HTMLElement>('.obyekt')];
+		const izoh = quti.querySelector<HTMLElement>('.izoh')!;
+
+		const keyingi = qobiq.querySelector<HTMLButtonElement>('.keyingi')!;
+		const orqaga = qobiq.querySelector<HTMLButtonElement>('.orqaga')!;
+		const qayta = qobiq.querySelector<HTMLButtonElement>('.qayta')!;
+
+		/* -1 = hali boshlanmagan */
+		let joriy = -1;
+
+		function chiz() {
+			kodQatorlar.forEach((li, i) => {
+				if (i < joriy) li.dataset.holat = 'bajarildi';
+				else if (i === joriy) li.dataset.holat = 'joriy';
+				else delete li.dataset.holat;
+			});
+
+			if (joriy < 0) {
+				nomlar.forEach((n) => (n.dataset.korinadi = 'yoq'));
+				obyektlar.forEach((o) => {
+					o.dataset.korinadi = 'yoq';
+					delete o.dataset.umumiy;
+				});
+				izoh.textContent = '«Keyingi qadam» tugmasini bosib boshlang.';
+			} else {
+				const q = trey[joriy]!;
+
+				/* Har obyektga qaysi nom qatorlari qarayotganini yig'amiz:
+				   obyekt shu qatorlarni egallaydi -> strelkalar joyiga tushadi */
+				const qatorlar = new Map<string, number[]>();
+				nomlar.forEach((el, i) => {
+					const nishon = q.boglanish[el.dataset.nom!];
+					if (!nishon) return;
+					const ro = qatorlar.get(nishon) ?? [];
+					ro.push(i + 1);
+					qatorlar.set(nishon, ro);
+				});
+
+				nomlar.forEach((el) => {
+					const nishon = q.boglanish[el.dataset.nom!];
+					if (nishon) {
+						el.dataset.korinadi = 'ha';
+						/* Ikki nom bitta obyektga qarasa — ikkalasi ham ajratiladi */
+						el.dataset.umumiy = (qatorlar.get(nishon) ?? []).length > 1 ? 'ha' : 'yoq';
+					} else {
+						el.dataset.korinadi = 'yoq';
+						delete el.dataset.umumiy;
+					}
+				});
+
+				/* Obyektlar: faqat shu qadamda mavjudlari ko'rinadi.
+				   Hech kim qaramagan obyekt oxirgi qatorga tushadi. */
+				const xarita = new Map(q.obyektlar.map((o) => [o.id, o]));
+				let bosh = nomlar.length + 1;
+				obyektlar.forEach((el) => {
+					const ma = xarita.get(el.dataset.obyekt!);
+					if (!ma) {
+						el.dataset.korinadi = 'yoq';
+						delete el.dataset.umumiy;
+						el.style.gridRow = '';
+						return;
+					}
+					el.dataset.korinadi = 'ha';
+					el.querySelector<HTMLElement>('.obyekt-qiymat')!.textContent = ma.qiymat;
+					el.querySelector<HTMLElement>('.obyekt-manzil')!.textContent = `id: ${ma.manzil}`;
+
+					const ro = qatorlar.get(ma.id);
+					if (ro && ro.length > 0) {
+						el.style.gridRow = `${Math.min(...ro)} / ${Math.max(...ro) + 1}`;
+					} else {
+						el.style.gridRow = String(bosh++);
+					}
+					if (ro && ro.length > 1) el.dataset.umumiy = 'ha';
+					else delete el.dataset.umumiy;
+				});
+
+				izoh.textContent = q.izoh;
+			}
+
+			orqaga.disabled = joriy < 0;
+			keyingi.disabled = joriy >= trey.length - 1;
+		}
+
+		keyingi.addEventListener('click', () => {
+			if (joriy < trey.length - 1) {
+				joriy += 1;
+				chiz();
+			}
+		});
+
+		orqaga.addEventListener('click', () => {
+			if (joriy >= 0) {
+				joriy -= 1;
+				chiz();
+			}
+		});
+
+		qayta.addEventListener('click', () => {
+			joriy = -1;
+			chiz();
+		});
+
+		quti.addEventListener('keydown', (e) => {
+			if (e.key === 'ArrowRight' || e.key === 'Enter') {
+				e.preventDefault();
+				keyingi.click();
+			} else if (e.key === 'ArrowLeft') {
+				e.preventDefault();
+				orqaga.click();
+			}
+		});
+
+		chiz();
+	});
+</script>
+
+<style>
+	.xotira-surati {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem 1.75rem;
+		align-items: flex-start;
+	}
+
+	.xotira-surati:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 4px;
+		border-radius: var(--sa-radius-kichik);
+	}
+
+	.ustun-nom {
+		margin: 0 0 0.5rem 0;
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-4);
+	}
+
+	.kod-ustun {
+		flex: 1 1 13rem;
+		min-width: 0;
+	}
+
+	.kod-royxat {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		font-family: var(--sl-font-mono);
+		font-size: 0.82rem;
+		line-height: 1.5;
+	}
+
+	.kod-royxat li {
+		padding: 0.3rem 0.5rem;
+		border-left: 3px solid transparent;
+		color: var(--sl-color-gray-4);
+		white-space: pre;
+		overflow-x: auto;
+	}
+
+	.kod-royxat li[data-holat='bajarildi'] {
+		color: var(--sl-color-gray-3);
+	}
+
+	.kod-royxat li[data-holat='joriy'] {
+		border-left-color: var(--blok-1);
+		background: var(--blok-1-fon);
+		color: var(--sl-color-white);
+		font-weight: 600;
+	}
+
+	.xotira {
+		flex: 1 1 15rem;
+		min-width: 0;
+	}
+
+	.xotira-ichi {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: 0.5rem 1.5rem;
+		align-items: start;
+		padding: 0.75rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+	}
+
+	.nom {
+		grid-column: 1;
+	}
+
+	.obyekt {
+		grid-column: 2;
+		/* Ikki qatorni egallagan obyekt o'rtada turadi — strelkalar
+		   ikki tomondan unga tegib turadi */
+		align-self: center;
+	}
+
+	.nom,
+	.obyekt {
+		padding: 0.35rem 0.6rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		font-family: var(--sl-font-mono);
+		font-size: 0.8rem;
+	}
+
+	.nom {
+		position: relative;
+		color: var(--sl-color-gray-2);
+	}
+
+	/* Nomdan obyektga ketayotgan strelka — o'ng chetdagi kichik uchburchak.
+	   SVG emas, CSS shakl: qo'shimcha element yuklamaydi va rangi tokendan. */
+	.nom::after {
+		content: '';
+		position: absolute;
+		top: 50%;
+		right: -1.1rem;
+		width: 0.9rem;
+		height: 2px;
+		background: var(--sl-color-gray-4);
+		transform: translateY(-50%);
+	}
+
+	.nom[data-umumiy='ha'] {
+		border-color: var(--blok-2);
+		color: var(--blok-2);
+	}
+
+	.nom[data-umumiy='ha']::after {
+		background: var(--blok-2);
+	}
+
+	.obyekt {
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+		background: var(--sl-color-gray-6);
+	}
+
+	.obyekt-qiymat {
+		font-weight: 700;
+		color: var(--sl-color-white);
+	}
+
+	.obyekt-manzil {
+		font-size: 0.68rem;
+		color: var(--sl-color-gray-4);
+	}
+
+	/* Ikki yorliq bitta obyektga qaraganda — darsning asosiy g'oyasi */
+	.obyekt[data-umumiy='ha'] {
+		border-color: var(--blok-2);
+		background: var(--blok-2-fon);
+	}
+
+	.nom[data-korinadi='yoq'],
+	.obyekt[data-korinadi='yoq'] {
+		visibility: hidden;
+	}
+
+	.izoh {
+		margin: 0.75rem 0 0 0;
+		min-height: 3em;
+		font-size: 0.88rem;
+		line-height: 1.55;
+		color: var(--sl-color-gray-2);
+	}
+
+	/* Tugmalar Simulyator footer'ida, lekin shablon SHU komponentda —
+	   demak scoped klassni oladi va oddiy selektor ishlaydi */
+	.orqaga:disabled,
+	.keyingi:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+</style>

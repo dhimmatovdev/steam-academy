@@ -1,0 +1,255 @@
+---
+/**
+ * IfodaBaholovchi — Python Basic 3-dars simulyatori.
+ *
+ * Ifodani qadam-qadam soddalashtiradi: har qadamda bitta amal bajariladi
+ * va nima uchun aynan u tanlanganini aytadi (amallar tartibi).
+ *
+ * Pedagogik maqsad: Python ifodani chapdan o'ngga "o'qimaydi" — ustunlikka
+ * qarab bajaradi. `//` va `%` ni ko'rsatish, `"5" + 5` xatosini ko'rsatish.
+ *
+ * Trey qo'lda yozilgan (Pyodide yo'q).
+ */
+import Simulyator from '../Simulyator.astro';
+
+const IFODALAR = [
+	{
+		id: 'pul',
+		nom: '100000 // 7 + 100000 % 7',
+		qadamlar: [
+			{ ifoda: '100000 // 7 + 100000 % 7', izoh: 'Boshlang\'ich ifoda. Avval // va % bajariladi — ular + dan ustun.' },
+			{ ifoda: '14285 + 100000 % 7', izoh: '100000 // 7 = 14285 — butun bo\'linma. Har kishiga tegadigan so\'m.' },
+			{ ifoda: '14285 + 5', izoh: '100000 % 7 = 5 — qoldiq. Bo\'linmay qolgan 5 so\'m.' },
+			{ ifoda: '14290', izoh: 'Endi qo\'shish: 14285 + 5 = 14290. Tekshirish: 14285*7 + 5 = 100000.' },
+		],
+	},
+	{
+		id: 'tartib',
+		nom: '2 + 3 * 4 ** 2',
+		qadamlar: [
+			{ ifoda: '2 + 3 * 4 ** 2', izoh: 'Uch xil amal bor. Eng ustuni — daraja (**).' },
+			{ ifoda: '2 + 3 * 16', izoh: '4 ** 2 = 16. Endi ko\'paytirish qo\'shishdan ustun.' },
+			{ ifoda: '2 + 48', izoh: '3 * 16 = 48.' },
+			{ ifoda: '50', izoh: 'Oxirida qo\'shish: 50. Chapdan o\'ngga o\'qigan odam 400 deb xato qiladi.' },
+		],
+	},
+	{
+		id: 'kasr',
+		nom: '0.1 + 0.2 == 0.3',
+		qadamlar: [
+			{ ifoda: '0.1 + 0.2 == 0.3', izoh: 'Avval qo\'shish, keyin taqqoslash (== eng pastda).' },
+			{ ifoda: '0.30000000000000004 == 0.3', izoh: 'Kutilmagan natija! 0.1 ni ikkilikda aniq yozib bo\'lmaydi — CF 3-darsdagi muammo.' },
+			{ ifoda: 'False', izoh: 'Kasr sonlarni == bilan solishtirmang. To\'g\'ri yo\'l: abs(a - b) < 0.0001.' },
+		],
+	},
+	{
+		id: 'satr',
+		nom: '"5" + 5',
+		qadamlar: [
+			{ ifoda: '"5" + 5', izoh: 'Chapda satr, o\'ngda son. Python bunday qo\'shishni bilmaydi.' },
+			{ ifoda: 'TypeError', izoh: 'can only concatenate str (not "int") to str. To\'g\'risi: int("5") + 5 yoki "5" + str(5).' },
+		],
+	},
+];
+---
+
+<Simulyator
+	sarlavha="Ifoda baholovchi"
+	korsatma="Ifodani tanlang va qadam-qadam soddalashtiring. Klaviatura: → keyingi qadam."
+	blok={1}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyator ifodani Python bajaradigan tartibda soddalashtiradi: har qadamda
+			bitta amal yo'qoladi va nega aynan o'sha amal tanlangani izohlanadi.
+		</p>
+		<p>
+			JavaScript'siz sinash: `2 + 3 * 4 ** 2` ifodasini qo'lda soddalashtiring.
+			Tartib: daraja, keyin ko'paytirish, oxirida qo'shish. Javob 50, 400 emas.
+		</p>
+	</Fragment>
+
+	<div class="ifoda-baholovchi not-content" tabindex="0" data-ifodalar={JSON.stringify(IFODALAR)}>
+		<div class="tanlov" role="group" aria-label="Ifodani tanlash">
+			{
+				IFODALAR.map((f, i) => (
+					<button type="button" class="sim-tugma ifoda-tugma" data-id={f.id} aria-pressed={i === 0 ? 'true' : 'false'}>
+						{f.nom}
+					</button>
+				))
+			}
+		</div>
+
+		<div class="sahna">
+			<p class="ifoda-matn" aria-live="polite"></p>
+			<p class="qadam-hisob"></p>
+			<p class="izoh" role="status" aria-live="polite"></p>
+		</div>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="orqaga">Orqaga</button>
+		<button type="button" class="keyingi">Keyingi qadam</button>
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	interface Ifoda {
+		id: string;
+		nom: string;
+		qadamlar: { ifoda: string; izoh: string }[];
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach((qobiq) => {
+		const quti = qobiq.querySelector<HTMLElement>('.ifoda-baholovchi');
+		if (!quti) return;
+
+		const ifodalar = JSON.parse(quti.dataset.ifodalar!) as Ifoda[];
+		const tugmalar = [...quti.querySelectorAll<HTMLButtonElement>('.ifoda-tugma')];
+		const ifodaMatn = quti.querySelector<HTMLElement>('.ifoda-matn')!;
+		const qadamHisob = quti.querySelector<HTMLElement>('.qadam-hisob')!;
+		const izoh = quti.querySelector<HTMLElement>('.izoh')!;
+
+		const keyingi = qobiq.querySelector<HTMLButtonElement>('.keyingi')!;
+		const orqaga = qobiq.querySelector<HTMLButtonElement>('.orqaga')!;
+		const qayta = qobiq.querySelector<HTMLButtonElement>('.qayta')!;
+
+		let joriyIfoda = ifodalar[0]!;
+		let qadam = 0;
+
+		function chiz() {
+			const q = joriyIfoda.qadamlar[qadam]!;
+			ifodaMatn.textContent = q.ifoda;
+			qadamHisob.textContent = `${qadam + 1} / ${joriyIfoda.qadamlar.length} qadam`;
+			izoh.textContent = q.izoh;
+
+			const oxirgi = qadam === joriyIfoda.qadamlar.length - 1;
+			/* Oxirgi qadam natija — xato bo'lsa qizil, aks holda yashil */
+			if (oxirgi) {
+				quti.dataset.holat = /Error/.test(q.ifoda) ? 'xato' : 'natija';
+			} else {
+				delete quti.dataset.holat;
+			}
+
+			orqaga.disabled = qadam === 0;
+			keyingi.disabled = oxirgi;
+		}
+
+		tugmalar.forEach((tugma) => {
+			tugma.addEventListener('click', () => {
+				joriyIfoda = ifodalar.find((f) => f.id === tugma.dataset.id)!;
+				qadam = 0;
+				tugmalar.forEach((t) => t.setAttribute('aria-pressed', String(t === tugma)));
+				chiz();
+			});
+		});
+
+		keyingi.addEventListener('click', () => {
+			if (qadam < joriyIfoda.qadamlar.length - 1) {
+				qadam += 1;
+				chiz();
+			}
+		});
+
+		orqaga.addEventListener('click', () => {
+			if (qadam > 0) {
+				qadam -= 1;
+				chiz();
+			}
+		});
+
+		qayta.addEventListener('click', () => {
+			qadam = 0;
+			chiz();
+		});
+
+		quti.addEventListener('keydown', (e) => {
+			if (e.target instanceof HTMLButtonElement) return;
+			if (e.key === 'ArrowRight' || e.key === 'Enter') {
+				e.preventDefault();
+				keyingi.click();
+			} else if (e.key === 'ArrowLeft') {
+				e.preventDefault();
+				orqaga.click();
+			}
+		});
+
+		chiz();
+	});
+</script>
+
+<style>
+	.ifoda-baholovchi:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 4px;
+		border-radius: var(--sa-radius-kichik);
+	}
+
+	.tanlov {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin-bottom: 1rem;
+	}
+
+	.ifoda-tugma {
+		font-family: var(--sl-font-mono);
+		font-size: 0.78rem;
+	}
+
+	.ifoda-tugma[aria-pressed='true'] {
+		border-color: var(--blok-1);
+		color: var(--blok-1);
+	}
+
+	.sahna {
+		padding: 1rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+	}
+
+	.ifoda-matn {
+		margin: 0;
+		font-family: var(--sl-font-mono);
+		font-size: 1.15rem;
+		line-height: 1.5;
+		font-weight: 700;
+		color: var(--sl-color-white);
+		/* Uzun ifoda 360px'da sahifani emas, o'zini scroll qiladi */
+		overflow-x: auto;
+		white-space: nowrap;
+	}
+
+	.ifoda-baholovchi[data-holat='natija'] .ifoda-matn {
+		color: var(--blok-1);
+	}
+
+	.ifoda-baholovchi[data-holat='xato'] .ifoda-matn {
+		color: var(--blok-5);
+	}
+
+	.qadam-hisob {
+		margin: 0.5rem 0 0 0;
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-4);
+	}
+
+	.izoh {
+		margin: 0.6rem 0 0 0;
+		min-height: 3em;
+		font-size: 0.9rem;
+		line-height: 1.55;
+		color: var(--sl-color-gray-2);
+	}
+
+	.orqaga:disabled,
+	.keyingi:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+</style>

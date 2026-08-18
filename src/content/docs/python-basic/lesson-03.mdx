@@ -1,0 +1,175 @@
+---
+title: '3-dars: Turlar va ifodalar'
+description: "int, float, str, bool. Nega \"5\" + 5 xato, // va % nima uchun kerak, 0.1 + 0.2 nega 0.3 emas."
+sidebar:
+  label: '3-dars'
+  order: 3
+---
+
+import { AIOgoh, Atama, Bloknoma, DarsTugadi, Hayotda, Kod, KodBashorat, Maqsad, Muhim, Qatlam, Sinov, Xato } from '@components';
+import IfodaBaholovchi from '../../../components/sim/IfodaBaholovchi.astro';
+
+<Bloknoma blok={1} modul="python-basic" />
+
+<Hayotda soha="Sinf jamg'armasi">
+	Sinf jamg'armasida 100 000 so'm bor, 7 o'quvchiga teng bo'lish kerak. Har kishiga
+	14 285 so'm tegadi va 5 so'm ortib qoladi. Programmada bu ikki savolga ikki amal
+	javob beradi: `//` — har kishiga qancha, `%` — nechchi so'm ortdi.
+</Hayotda>
+
+<Maqsad>
+- to'rt asosiy turni ajratasiz va `type()` bilan tekshirasiz
+- `/`, `//`, `%` farqini bilib, mos joyda ishlatasiz
+- amallar tartibini hisobga olib ifoda natijasini oldindan aytasiz
+</Maqsad>
+
+## Nazariya
+
+### To'rt asosiy tur
+
+Python har qiymatning turini biladi va turga qarab amallarni boshqacha bajaradi.
+Boshlanish uchun to'rttasi yetadi: `int` (butun son), `float` (kasr son),
+`str` (satr, ya'ni matn) va `bool` (faqat `True` yoki `False`).
+
+<Atama soz="tur" eng="type">
+	Qiymatning qanday ma'lumot ekani. Tur amallarning ma'nosini o'zgartiradi:
+	`3 + 4` qo'shish, `"3" + "4"` esa ulash — natija `"34"`.
+</Atama>
+
+Shubha bo'lsa `type()` dan so'rang: `type(5)` → `<class 'int'>`,
+`type("5")` → `<class 'str'>`. Bu ikkisi ekranda bir xil ko'rinadi, lekin butunlay
+boshqa narsa.
+
+### Uch xil bo'lish
+
+`/` har doim kasr son qaytaradi, hatto teng bo'linsa ham: `10 / 2` → `5.0`.
+`//` butun bo'linmani beradi (kasr qismini tashlaydi): `10 // 3` → `3`.
+`%` qoldiqni beradi: `10 % 3` → `1`.
+
+<Kod
+	kod={`jami = 100000
+odam = 7
+print(jami // odam)   # 14285 — har kishiga
+print(jami % odam)    # 5     — ortgan pul
+print(jami / odam)    # 14285.714285714286`}
+	sarlavha="bolish.py"
+	qatorlar={[3, 4]}
+/>
+
+### Kasr sonlar aldaydi
+
+`0.1 + 0.2` ni Python `0.30000000000000004` deb hisoblaydi. Bu xato emas: 0.1 sonini
+ikkilik sanoqda **aniq** yozib bo'lmaydi, xuddi 1/3 ni o'nlikda aniq yozib
+bo'lmagani kabi. Sababi [CF 3-darsda](/computer-fundamentals/lesson-03/) batafsil.
+
+<Muhim turi="ogoh">
+	Kasr sonlarni `==` bilan solishtirmang. `0.1 + 0.2 == 0.3` natijasi `False`.
+	To'g'ri yo'l: `abs(a - b) < 0.0001` — ya'ni "farq juda kichikmi?"
+</Muhim>
+
+### Turlarni aylantirish
+
+`int("25")` satrni songa, `str(25)` sonni satrga, `float("3.5")` satrni kasr songa
+aylantiradi. Bu keyingi darsda hayotiy zarur bo'ladi: `input()` har doim satr qaytaradi.
+
+## Bashorat qiling
+
+<KodBashorat
+	kod={`print(7 // 2)
+print(7 % 2)
+print(7 / 2)`}
+	javob={`3
+1
+3.5`}
+	izoh="// butun bo'linma (3), % qoldiq (1), / esa har doim kasr (3.5). Uchtasi uch xil savolga javob beradi."
+/>
+
+<KodBashorat
+	kod={`print(2 + 3 * 4)
+print("2" + "3")
+print(10 == 10.0)`}
+	javob={`14
+23
+True`}
+	izoh="Ko'paytirish qo'shishdan ustun (14). Satrlar uchun + ulash amali ('23'). Son sifatida 10 va 10.0 teng, garchi turlari boshqa bo'lsa ham."
+/>
+
+## Sinab ko'r
+
+Har ifodani qadam-qadam soddalashtirib, Python qaysi amalni nega birinchi bajarayotganini
+kuzating. Oxirgi ikki misol — eng ko'p uchraydigan tuzoqlar.
+
+<IfodaBaholovchi />
+
+## Xatoni toping
+
+<Xato
+	kod={`yosh = "14"
+keyingi = yosh + 1
+print(keyingi)`}
+	traceback={`Traceback (most recent call last):
+  File "yosh.py", line 2, in <module>
+    keyingi = yosh + 1
+TypeError: can only concatenate str (not "int") to str`}
+	sabab="`yosh` satr (qo'shtirnoq ichida), 1 esa son. Python satr bilan sonni qo'shishni bilmaydi — bu ikki xil dunyoni qo'shish."
+>
+	Ikki yechim, ikki xil ma'no: `int(yosh) + 1` arifmetik qo'shish (natija `15`),
+	`yosh + "1"` esa satr ulash (natija `"141"`). Nima kerakligini siz hal qilasiz —
+	Python taxmin qilmaydi.
+</Xato>
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="type(5) va type('5') natijalari nima va farqi nimada?">
+	<code>&lt;class 'int'&gt;</code> va <code>&lt;class 'str'&gt;</code>. Birinchisi son —
+	hisoblashda ishlatiladi; ikkinchisi matn — faqat ulanadi va takrorlanadi.
+</Sinov>
+
+<Sinov raqam={2} savol="100 000 so'mni 7 kishiga bo'lishda // va % nimani beradi?">
+	<code>100000 // 7</code> = 14285 — har kishiga tegadigan summa.
+	<code>100000 % 7</code> = 5 — bo'linmay ortgan so'm.
+</Sinov>
+
+<Sinov raqam={3} savol="2 + 3 * 4 ** 2 ifodasining natijasi nima?">
+	50. Tartib: daraja (<code>4**2</code>=16), keyin ko'paytirish (<code>3*16</code>=48),
+	oxirida qo'shish (<code>2+48</code>=50).
+</Sinov>
+
+<Sinov raqam={4} savol="Nega 0.1 + 0.2 == 0.3 natijasi False?">
+	0.1 va 0.2 ikkilik sanoqda aniq ifodalanmaydi, shuning uchun yig'indi
+	<code>0.30000000000000004</code> bo'lib chiqadi. Kasr sonlarni tenglikka emas,
+	farqning kichikligiga tekshirish kerak.
+</Sinov>
+
+<Sinov raqam={5} savol="'10' satrini songa aylantirib 5 qo'shish uchun qanday yozasiz?">
+	<code>int("10") + 5</code> — natija 15. <code>"10" + str(5)</code> yozilsa natija
+	<code>"105"</code> satri bo'ladi.
+</Sinov>
+
+## Topshiriq
+
+<Qatlam>
+	<Fragment slot="asos">
+		Bir qutida 12 ta qalam bor. `qalam = 100` deb bering va: nechta to'la quti
+		chiqadi (`//`), nechta qalam ortadi (`%`) — ikkisini `print` bilan chiqaring.
+		Keyin `qalam` ni 50 va 7 ga o'zgartirib qayta ishga tushiring, natijalarni
+		daftarga yozing.
+	</Fragment>
+	<Fragment slot="mustahkam">
+		Do'kon cheki: `narx`, `soni` va `chegirma_foizi` dan yakuniy summani hisoblang.
+		Summani butun so'mga yaxlitlab chiqaring (`round` yoki `//` ishlatib) va
+		chekni ikki qatorda chiroyli chiqaring. Kodda `type()` bilan kamida bitta
+		o'zgaruvchining turini tekshirib ko'rsating.
+	</Fragment>
+	<Fragment slot="chuqur">
+		`0.1 + 0.2 == 0.3` ning `False` bo'lishini o'z kodingizda ko'rsatib, keyin
+		`abs(a - b) < 1e-9` usuli bilan to'g'ri taqqoslashni yozing. Qo'shimcha:
+		pulni kasr `float` bilan hisoblash nega xavfli va buning o'rniga nimani
+		ishlatish mumkin (masalan, hammasini tiyinda butun son sifatida saqlash) —
+		bir paragrafda tushuntiring va misol kodda ko'rsating.
+	</Fragment>
+</Qatlam>
+
+<AIOgoh />
+
+<DarsTugadi dars={3} blok={1} modul="python-basic" />

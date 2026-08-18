@@ -1,0 +1,362 @@
+---
+/**
+ * BashoratQil — Python Basic 4-dars simulyatori.
+ *
+ * Olti kichik kod. Har birida o'quvchi natijani OLDIN tanlaydi (variantlardan),
+ * keyin haqiqiy natija ochiladi. Hammasi `input()` va turlar atrofida:
+ * `input()` HAR DOIM satr qaytaradi — birinchi haqiqiy xato manbai.
+ *
+ * KodBashorat'dan farqi: bu yerda variantli tez o'yin (6 ta ketma-ket),
+ * o'quvchi yozib emas, tanlab bashorat qiladi. Ball hisoblanadi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+const SAVOLLAR = [
+	{
+		kod: 'yosh = input("Yoshingiz: ")\n# foydalanuvchi 14 yozdi\nprint(yosh + 1)',
+		variantlar: ['15', '141', 'TypeError'],
+		togri: 2,
+		izoh: "input() satr qaytaradi, ya'ni \"14\". Satrga son qo'shib bo'lmaydi — TypeError. To'g'risi: int(yosh) + 1.",
+	},
+	{
+		kod: 'a = input()\nb = input()\n# 3 va 4 kiritildi\nprint(a + b)',
+		variantlar: ['7', '34', 'TypeError'],
+		togri: 1,
+		izoh: 'Ikkalasi ham satr: "3" + "4" = "34". Satrlar uchun + qo\'shish emas, ulash (birlashtirish) demakdir.',
+	},
+	{
+		kod: 'son = int(input())\n# 7 kiritildi\nprint(son * 2)',
+		variantlar: ['14', '77', 'TypeError'],
+		togri: 0,
+		izoh: "int() satrni sonda aylantirdi, shundan keyin * arifmetik ko'paytirish bo'ldi: 14.",
+	},
+	{
+		kod: 'matn = "ha"\nprint(matn * 3)',
+		variantlar: ['hahaha', 'TypeError', 'ha ha ha'],
+		togri: 0,
+		izoh: 'Satrni songa ko\'paytirish — takrorlash. Bo\'shliq qo\'shilmaydi: "hahaha".',
+	},
+	{
+		kod: 'baho = input("Baho: ")\n# 5 kiritildi\nprint(type(baho))',
+		variantlar: ["<class 'int'>", "<class 'str'>", "<class 'float'>"],
+		togri: 1,
+		izoh: "Ekranda 5 ko'rinsa ham, u satr. type() shuni ochiq ko'rsatadi — shubha bo'lsa har doim type() bilan tekshiring.",
+	},
+	{
+		kod: 'narx = float(input())\n# 12.5 kiritildi\nprint(narx / 2)',
+		variantlar: ['6.25', '6', 'TypeError'],
+		togri: 0,
+		izoh: 'float() kasr sonni qabul qiladi, / esa har doim kasr natija beradi: 6.25.',
+	},
+];
+---
+
+<Simulyator
+	sarlavha="Bashorat qil"
+	korsatma="Har kod uchun natijani tanlang, keyin tekshiring. Klaviatura: 1-2-3 tanlash, Enter tekshirish."
+	blok={1}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda olti kichik kod bor. Har birida siz natijani uch variantdan
+			tanlaysiz, keyin haqiqiy javob va izoh ochiladi. Hammasi bitta qoida atrofida:
+			`input()` har doim satr qaytaradi.
+		</p>
+		<p>
+			JavaScript'siz sinash: `input()` bilan olingan qiymatni songa aylantirmasdan
+			ishlatsangiz nima bo'lishini daftarga yozib chiqing, keyin VS Code'da tekshiring.
+		</p>
+	</Fragment>
+
+	<div class="bashorat-qil not-content" tabindex="0" data-savollar={JSON.stringify(SAVOLLAR)}>
+		<p class="hisob">
+			<span class="joriy-raqam">1</span><span class="jami">/{SAVOLLAR.length}</span>
+			<span class="ball" role="status" aria-live="polite">To'g'ri: 0</span>
+		</p>
+
+		<pre class="kod"></pre>
+
+		<div class="variantlar" role="group" aria-label="Natija variantlari"></div>
+
+		<p class="natija" role="status" aria-live="polite"></p>
+		<p class="izoh"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="tekshir">Tekshirish</button>
+		<button type="button" class="keyingi" hidden>Keyingi kod</button>
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	interface Savol {
+		kod: string;
+		variantlar: string[];
+		togri: number;
+		izoh: string;
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach((qobiq) => {
+		const quti = qobiq.querySelector<HTMLElement>('.bashorat-qil');
+		if (!quti) return;
+
+		const savollar = JSON.parse(quti.dataset.savollar!) as Savol[];
+		const kodEl = quti.querySelector<HTMLElement>('.kod')!;
+		const variantlarEl = quti.querySelector<HTMLElement>('.variantlar')!;
+		const natijaEl = quti.querySelector<HTMLElement>('.natija')!;
+		const izohEl = quti.querySelector<HTMLElement>('.izoh')!;
+		const joriyRaqam = quti.querySelector<HTMLElement>('.joriy-raqam')!;
+		const ballEl = quti.querySelector<HTMLElement>('.ball')!;
+
+		const tekshir = qobiq.querySelector<HTMLButtonElement>('.tekshir')!;
+		const keyingi = qobiq.querySelector<HTMLButtonElement>('.keyingi')!;
+		const qayta = qobiq.querySelector<HTMLButtonElement>('.qayta')!;
+
+		let indeks = 0;
+		let tanlangan = -1;
+		let ball = 0;
+		let ochildi = false;
+
+		function chiz() {
+			const s = savollar[indeks]!;
+			kodEl.textContent = s.kod;
+			joriyRaqam.textContent = String(indeks + 1);
+			ballEl.textContent = `To'g'ri: ${ball}`;
+
+			/* Variant tugmalari JS bilan yasaladi — CSS'da :global kerak bo'ladi
+			   (chegara: shablondagi .variantlar) */
+			variantlarEl.replaceChildren();
+			s.variantlar.forEach((v, i) => {
+				const b = document.createElement('button');
+				b.type = 'button';
+				b.className = 'variant';
+				b.dataset.indeks = String(i);
+				b.setAttribute('aria-pressed', 'false');
+				b.append(Object.assign(document.createElement('span'), {
+					className: 'variant-raqam',
+					textContent: String(i + 1),
+				}));
+				b.append(Object.assign(document.createElement('span'), {
+					className: 'variant-matn',
+					textContent: v,
+				}));
+				b.addEventListener('click', () => {
+					if (ochildi) return;
+					tanlangan = i;
+					[...variantlarEl.children].forEach((el, j) =>
+						el.setAttribute('aria-pressed', String(i === j))
+					);
+					natijaEl.textContent = '';
+					delete quti.dataset.baho;
+				});
+				variantlarEl.append(b);
+			});
+
+			natijaEl.textContent = '';
+			izohEl.textContent = '';
+			delete quti.dataset.baho;
+			tanlangan = -1;
+			ochildi = false;
+			tekshir.hidden = false;
+			keyingi.hidden = true;
+		}
+
+		tekshir.addEventListener('click', () => {
+			if (tanlangan < 0) {
+				natijaEl.textContent = 'Avval variantlardan birini tanlang.';
+				quti.dataset.baho = 'bosh';
+				return;
+			}
+			const s = savollar[indeks]!;
+			ochildi = true;
+
+			[...variantlarEl.children].forEach((el, j) => {
+				const b = el as HTMLElement;
+				if (j === s.togri) b.dataset.holat = 'togri';
+				else if (j === tanlangan) b.dataset.holat = 'xato';
+			});
+
+			if (tanlangan === s.togri) {
+				ball += 1;
+				natijaEl.textContent = "To'g'ri.";
+				quti.dataset.baho = 'togri';
+			} else {
+				natijaEl.textContent = `To'g'ri javob: ${s.variantlar[s.togri]}`;
+				quti.dataset.baho = 'xato';
+			}
+			izohEl.textContent = s.izoh;
+			ballEl.textContent = `To'g'ri: ${ball}`;
+
+			tekshir.hidden = true;
+			if (indeks < savollar.length - 1) {
+				keyingi.hidden = false;
+			} else {
+				natijaEl.textContent += ` Yakuniy natija: ${ball} / ${savollar.length}.`;
+			}
+		});
+
+		keyingi.addEventListener('click', () => {
+			if (indeks < savollar.length - 1) {
+				indeks += 1;
+				chiz();
+			}
+		});
+
+		qayta.addEventListener('click', () => {
+			indeks = 0;
+			ball = 0;
+			chiz();
+		});
+
+		quti.addEventListener('keydown', (e) => {
+			if (e.target instanceof HTMLButtonElement) return;
+			if (e.key >= '1' && e.key <= '3') {
+				const b = variantlarEl.children[Number(e.key) - 1] as HTMLButtonElement | undefined;
+				if (b) {
+					e.preventDefault();
+					b.click();
+				}
+			} else if (e.key === 'Enter') {
+				e.preventDefault();
+				if (tekshir.hidden) keyingi.click();
+				else tekshir.click();
+			}
+		});
+
+		chiz();
+	});
+</script>
+
+<style>
+	.bashorat-qil:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 4px;
+		border-radius: var(--sa-radius-kichik);
+	}
+
+	.hisob {
+		display: flex;
+		align-items: baseline;
+		gap: 0.15rem;
+		margin: 0 0 0.75rem 0;
+		font-family: var(--sl-font-mono);
+		font-size: 0.75rem;
+		color: var(--sl-color-gray-4);
+	}
+
+	.joriy-raqam {
+		font-size: 1rem;
+		font-weight: 700;
+		color: var(--blok-1);
+	}
+
+	.ball {
+		margin-left: auto;
+		color: var(--sl-color-gray-3);
+	}
+
+	.kod {
+		margin: 0;
+		padding: 0.75rem 0.9rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		font-family: var(--sl-font-mono);
+		font-size: 0.82rem;
+		line-height: 1.6;
+		color: var(--sl-color-gray-1);
+		overflow-x: auto;
+	}
+
+	.variantlar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-top: 0.85rem;
+	}
+
+	/* Variantlar JS bilan yasaladi -> scoped klass olmaydi.
+	   Chegara — shablondagi .variantlar. */
+	.variantlar :global(.variant) {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		padding: 0.45rem 0.8rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-1);
+		font: inherit;
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+
+	.variantlar :global(.variant:hover) {
+		border-color: var(--blok-1);
+	}
+
+	.variantlar :global(.variant:focus-visible) {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 2px;
+	}
+
+	.variantlar :global(.variant-raqam) {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.15rem;
+		height: 1.15rem;
+		border-radius: 3px;
+		background: var(--sl-color-gray-6);
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.variantlar :global(.variant-matn) {
+		font-family: var(--sl-font-mono);
+	}
+
+	.variantlar :global(.variant[aria-pressed='true']) {
+		border-color: var(--sl-color-accent);
+		background: var(--sl-color-accent-low);
+	}
+
+	.variantlar :global(.variant[data-holat='togri']) {
+		border-color: var(--blok-1);
+		background: var(--blok-1-fon);
+		color: var(--blok-1);
+	}
+
+	.variantlar :global(.variant[data-holat='xato']) {
+		border-color: var(--blok-5);
+		background: var(--blok-5-fon);
+		color: var(--blok-5);
+		text-decoration: line-through;
+	}
+
+	.natija {
+		margin: 0.85rem 0 0 0;
+		min-height: 1.5em;
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--sl-color-gray-2);
+	}
+
+	.bashorat-qil[data-baho='togri'] .natija {
+		color: var(--blok-1);
+	}
+
+	.bashorat-qil[data-baho='xato'] .natija {
+		color: var(--blok-5);
+	}
+
+	.izoh {
+		margin: 0.35rem 0 0 0;
+		min-height: 3em;
+		font-size: 0.88rem;
+		line-height: 1.55;
+		color: var(--sl-color-gray-2);
+	}
+</style>

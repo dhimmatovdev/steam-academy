@@ -50,7 +50,18 @@ Matn shu yerda, normal paragraf ko'rinishida.
 
 ## Bashorat qiling
 
-{/* MAJBURIY: kod ko'rsatilishidan oldin o'quvchi natijani yozadi. */}
+{/* MAJBURIY: kod ko'rsatilishidan oldin o'quvchi natijani yozadi.
+
+    IKKI TUZOQ — ikkalasi ham "Unexpected character after `<`" xatosini beradi
+    va butun build to'xtaydi:
+
+    1. `kod={...}` ichidagi template literal'da BO'SH QATOR bo'lmasin. MDX
+       bo'sh qatorni "blok tugadi" deb hisoblaydi. Bo'sh qator o'rniga
+       `# izoh` qatori yozing.
+
+    2. Atribut ichida `\"` YOZILMAYDI: `izoh="... \"5\" ..."` — JSX atributi
+       JS satri emas, escape ishlamaydi va satr o'sha yerda uziladi.
+       O'rniga «...» qo'shtirnoqlarini ishlating. */}
 
 <KodBashorat
 	kod={`print("Salom")`}

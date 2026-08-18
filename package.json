@@ -7,7 +7,8 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "kod-tekshir": "node scripts/kod-tekshir.mjs"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.41.3",
