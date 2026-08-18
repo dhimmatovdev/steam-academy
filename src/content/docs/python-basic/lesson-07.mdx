@@ -1,0 +1,190 @@
+---
+title: '7-dars: for va range'
+description: "To'rt akkumulyator naqshi — yig'indi, sanoq, maksimum, filtr — boshlang'ich masalalarning 80% ini yechadi."
+sidebar:
+  label: '7-dars'
+  order: 7
+---
+
+import { AIOgoh, Atama, Bloknoma, DarsTugadi, Hayotda, Kod, KodBashorat, Maqsad, Muhim, Qatlam, Sinov, Xato } from '@components';
+import NaqshKutubxonasi from '../../../components/sim/NaqshKutubxonasi.astro';
+
+<Bloknoma blok={2} modul="python-basic" />
+
+<Hayotda soha="Sinf jurnali">
+	Sinfda 30 o'quvchi bor. O'rtacha bahoni topish uchun hammasini qo'shib 30 ga
+	bo'lish kerak, eng yuqori bahoni topish uchun esa bittalab solishtirib chiqish.
+	Ikkalasi ham bir xil harakat: ro'yxat bo'ylab yurish va yo'l-yo'lakay bitta
+	o'zgaruvchini to'ldirish.
+</Hayotda>
+
+<Maqsad>
+- `for` bilan ro'yxat va `range` bo'ylab yurasiz
+- to'rt akkumulyator naqshini tanib olasiz va yozasiz
+- `while` va `for` dan qaysi biri qachon qulay ekanini bilasiz
+</Maqsad>
+
+## Nazariya
+
+### `for` — sanashni Python o'zi qiladi
+
+`while` da hisoblagichni siz boshqarasiz: yaratasiz, oshirasiz, kuzatasiz. `for` esa
+tayyor ketma-ketlik bo'ylab o'zi yuradi — adashish joyi qolmaydi.
+
+<Atama soz="iteratsiya" eng="iteration">
+	Sikl bir marta aylanishi. `for b in baholar` yozilganda Python ro'yxatning har
+	elementi uchun bitta iteratsiya bajaradi.
+</Atama>
+
+<Kod
+	kod={`baholar = [4, 5, 3, 5, 2]
+for b in baholar:
+    print(b)`}
+	sarlavha="royxat.py"
+/>
+
+### `range` — sonlar ketma-ketligi
+
+`range(5)` → 0, 1, 2, 3, 4 (oxirgisi kirmaydi). `range(1, 6)` → 1..5.
+`range(0, 10, 2)` → 0, 2, 4, 6, 8. Uchinchi son — qadam.
+
+<Kod
+	kod={`for i in range(1, 6):
+    print(i, "x 7 =", i * 7)`}
+	sarlavha="jadval.py"
+/>
+
+### To'rt akkumulyator naqshi
+
+Boshlang'ich masalalarning katta qismi to'rt naqshdan biriga tushadi. Hammasi bir
+xil skelet ustiga qurilgan: sikldan oldin **boshlang'ich qiymat**, sikl ichida
+**yangilash**, sikldan keyin **natija**.
+
+<Kod
+	kod={`jami = 0                      # 1. Yig'indi
+for b in baholar:
+    jami = jami + b
+soni = 0                      # 2. Sanoq
+for b in baholar:
+    if b == 5:
+        soni = soni + 1
+eng = baholar[0]              # 3. Maksimum
+for b in baholar:
+    if b > eng:
+        eng = b
+yaxshi = []                   # 4. Filtr
+for b in baholar:
+    if b >= 4:
+        yaxshi.append(b)`}
+	sarlavha="naqshlar.py"
+/>
+
+<Muhim turi="gap">
+	Bu to'rt naqsh — yig'indi, sanoq, maksimum, filtr — birgalikda boshlang'ich
+	masalalarning 80% ini yechadi. Ularni yodlash emas, **tanib olish** kerak:
+	masalani ko'rganda «bu qaysi naqsh?» deb so'rang.
+</Muhim>
+
+Maksimum naqshida boshlang'ich qiymat 0 emas, `baholar[0]` bo'lgani muhim: ro'yxatdagi
+barcha sonlar manfiy bo'lsa, 0 dan boshlagan kod xato javob beradi.
+
+## Bashorat qiling
+
+<KodBashorat
+	kod={`for i in range(3):
+    print(i)`}
+	javob={`0
+1
+2`}
+	izoh="range(3) noldan boshlanadi va 3 ga yetmaydi: 0, 1, 2. Uchta son — lekin 3 ning o'zi yo'q."
+/>
+
+<KodBashorat
+	kod={`sonlar = [3, 1, 4, 1, 5]
+eng = sonlar[0]
+for s in sonlar:
+    if s > eng:
+        eng = s
+print(eng)`}
+	javob={`5`}
+	izoh="Maksimum naqshi: eng dastlab 3, keyin 4 ga, keyin 5 ga yangilandi. 1 lar hech narsani o'zgartirmadi."
+/>
+
+## Sinab ko'r
+
+Bitta ro'yxat, to'rt naqsh bir vaqtda. Har qadamda bitta baho olinadi — to'rt natija
+qanday to'lishini yonma-yon kuzating.
+
+<NaqshKutubxonasi />
+
+## Xatoni toping
+
+<Xato
+	kod={`baholar = [4, 5, 3]
+for b in baholar:
+    jami = jami + b
+print(jami)`}
+	traceback={`Traceback (most recent call last):
+  File "yigindi.py", line 3, in <module>
+    jami = jami + b
+NameError: name 'jami' is not defined`}
+	sabab="Boshlang'ich qiymat yo'q. Birinchi iteratsiyada Python `jami` ni o'qishga urinadi, lekin bunday nom hali mavjud emas."
+>
+	To'g'risi: sikldan **oldin** `jami = 0` yozish. Har akkumulyator naqshida
+	boshlang'ich qiymat majburiy — bu naqshning birinchi qadami.
+</Xato>
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="range(1, 6) qanday sonlarni beradi?">
+	1, 2, 3, 4, 5. Boshlanishi kiradi, oxiri kirmaydi.
+</Sinov>
+
+<Sinov raqam={2} savol="Qachon for, qachon while qulayroq?">
+	Ketma-ketlik oldindan ma'lum bo'lsa (ro'yxat, <code>range</code>) —
+	<code>for</code>. Necha marta aylanishi noma'lum bo'lsa (to'g'ri parolgacha) —
+	<code>while</code>.
+</Sinov>
+
+<Sinov raqam={3} savol="To'rt akkumulyator naqshini nomlab bering va har biri qanday savolga javob beradi.">
+	Yig'indi (jami qancha), sanoq (nechta shunday element bor), maksimum (eng kattasi
+	qaysi), filtr (shartga mos elementlar ro'yxati).
+</Sinov>
+
+<Sinov raqam={4} savol="Maksimum naqshida nega eng = 0 emas, eng = royxat[0] deb boshlanadi?">
+	Ro'yxatdagi barcha sonlar manfiy bo'lsa, <code>0</code> dan boshlangan kod
+	maksimum sifatida 0 ni qaytaradi — bu esa ro'yxatda yo'q son.
+</Sinov>
+
+<Sinov raqam={5} savol="30 o'quvchi bahosining o'rtachasini topish uchun qaysi naqsh kerak?">
+	Yig'indi naqshi, keyin natijani element soniga bo'lish:
+	<code>jami / len(baholar)</code>.
+</Sinov>
+
+## Topshiriq
+
+<Qatlam>
+	<Fragment slot="asos">
+		`for` va `range` bilan 7 ning ko'paytirish jadvalini chiqaring (1 dan 10 gacha).
+		Keyin sinf baholari ro'yxatini yozib, ularning yig'indisini toping. Uchinchi
+		vazifa: `range` ning uchinchi argumenti bilan 2 dan 20 gacha juft sonlarni
+		chiqaring.
+	</Fragment>
+	<Fragment slot="mustahkam">
+		Sinf jurnali: kamida 10 bahodan iborat ro'yxat tuzib, to'rt naqshni ham
+		ishlatib hisobot chiqaring — o'rtacha baho, beshlar soni, eng yuqori va
+		eng past baho, hamda 4 dan yuqori baholar ro'yxati. Hisobot chiroyli
+		formatda, `f-string` bilan chiqsin.
+	</Fragment>
+	<Fragment slot="chuqur">
+		Baholar ro'yxatida eng ko'p uchraydigan bahoni (modani) topuvchi programma
+		yozing — faqat `for`, `if` va ro'yxat ishlatib. Chegara holatlari: bo'sh
+		ro'yxat, ikki bahoning teng ko'p uchrashi. Samaradorlik savoli: sizning
+		yechimingiz ro'yxat bo'ylab necha marta yuradi va buni kamaytirish mumkinmi?
+		(Lug'at bilan yechish 11-darsda ko'rsatiladi — hozircha faqat ro'yxat bilan.)
+	</Fragment>
+</Qatlam>
+
+<AIOgoh />
+
+<DarsTugadi dars={7} blok={2} modul="python-basic" />

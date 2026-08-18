@@ -1,0 +1,482 @@
+---
+/**
+ * SiklQadamlovchi — Python Basic 6-dars simulyatori.
+ *
+ * `while` siklini qadamlab bajaradi va har aylanishda o'zgaruvchilar
+ * jadvalini yangilaydi. Uchinchi variant — o'zgarish qatori olib
+ * tashlangan cheksiz sikl: 50 qadamdan keyin to'xtaydi va sabab aytadi.
+ *
+ * Pedagogik maqsad: sikl uch qismdan iborat — boshlang'ich holat, shart,
+ * o'zgarish. Bittasi yo'q bo'lsa sikl buziladi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+const DASTURLAR = [
+	{
+		id: 'yigindi',
+		nom: "Yig'indi: 1+2+...+5",
+		kod: ['jami = 0', 'i = 1', 'while i <= 5:', '    jami = jami + i', '    i = i + 1', 'print(jami)'],
+		ozgaruvchilar: ['jami', 'i'],
+		cheksiz: false,
+	},
+	{
+		id: 'sanoq',
+		nom: 'Teskari sanoq: 3, 2, 1',
+		kod: ['n = 3', 'while n > 0:', '    print(n)', '    n = n - 1', 'print("Boshladik!")'],
+		ozgaruvchilar: ['n'],
+		cheksiz: false,
+	},
+	{
+		id: 'cheksiz',
+		nom: "Cheksiz sikl (o'zgarish yo'q)",
+		kod: ['i = 1', 'while i <= 5:', '    print(i)', '# i = i + 1  <- ESDAN CHIQDI', 'print("tugadi")'],
+		ozgaruvchilar: ['i'],
+		cheksiz: true,
+	},
+];
+---
+
+<Simulyator
+	sarlavha="Sikl qadamlovchi"
+	korsatma="Har qadamda o'zgaruvchilar jadvalini kuzating. Klaviatura: → bitta qadam."
+	blok={2}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyator `while` siklini qadamlab bajaradi: har aylanishda o'zgaruvchilar
+			qanday qiymat olayotgani jadvalda ko'rinadi. Uchinchi variantda `i = i + 1`
+			qatori ataylab yo'q — sikl hech qachon tugamaydi.
+		</p>
+		<p>
+			JavaScript'siz sinash: daftarga `jami` va `i` ustunlarini chizing va
+			`while i &lt;= 5` siklining har aylanishida ikkisining qiymatini yozib boring.
+			Oxirida `jami` 15 bo'lishi kerak.
+		</p>
+	</Fragment>
+
+	<div class="sikl-qadamlovchi not-content" tabindex="0" data-dasturlar={JSON.stringify(DASTURLAR)}>
+		<div class="tanlov" role="group" aria-label="Programmani tanlash">
+			{
+				DASTURLAR.map((d, i) => (
+					<button type="button" class="sim-tugma dastur-tugma" data-id={d.id} aria-pressed={i === 0 ? 'true' : 'false'}>
+						{d.nom}
+					</button>
+				))
+			}
+		</div>
+
+		<div class="ish">
+			<ol class="kod-royxat"></ol>
+
+			<div class="holat-panel">
+				<table class="jadval">
+					<caption>O'zgaruvchilar</caption>
+					<thead>
+						<tr class="bosh-qator"></tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+
+				<div class="chiqish-blok">
+					<p class="chiqish-yorliq">Ekranga chiqdi</p>
+					<pre class="chiqish"></pre>
+				</div>
+			</div>
+		</div>
+
+		<p class="izoh" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qadam">Bitta qadam</button>
+		<button type="button" class="oxirigacha">Oxirigacha</button>
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	interface Dastur {
+		id: string;
+		nom: string;
+		kod: string[];
+		ozgaruvchilar: string[];
+		cheksiz: boolean;
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach((qobiq) => {
+		const quti = qobiq.querySelector<HTMLElement>('.sikl-qadamlovchi');
+		if (!quti) return;
+
+		const MAKS_QADAM = 50;
+		const dasturlar = JSON.parse(quti.dataset.dasturlar!) as Dastur[];
+
+		const kodRoyxat = quti.querySelector<HTMLOListElement>('.kod-royxat')!;
+		const boshQator = quti.querySelector<HTMLTableRowElement>('.bosh-qator')!;
+		const tanaEl = quti.querySelector<HTMLTableSectionElement>('.jadval tbody')!;
+		const chiqishEl = quti.querySelector<HTMLElement>('.chiqish')!;
+		const izohEl = quti.querySelector<HTMLElement>('.izoh')!;
+		const tugmalar = [...quti.querySelectorAll<HTMLButtonElement>('.dastur-tugma')];
+
+		const qadamTugma = qobiq.querySelector<HTMLButtonElement>('.qadam')!;
+		const oxirigacha = qobiq.querySelector<HTMLButtonElement>('.oxirigacha')!;
+		const qayta = qobiq.querySelector<HTMLButtonElement>('.qayta')!;
+
+		let dastur = dasturlar[0]!;
+		/* Qadamli treyni programmani "bajarib" tuzamiz — shu sababli har
+		   dastur uchun alohida holat kerak emas, JS'da hisoblanadi. */
+		let holat: Record<string, number> = {};
+		let qatorIndeks = 0;
+		let chiqish: string[] = [];
+		let qadamlar = 0;
+		let tugadi = false;
+		let aylanish = 0;
+
+		function kodChiz() {
+			kodRoyxat.replaceChildren();
+			dastur.kod.forEach((q, i) => {
+				const li = document.createElement('li');
+				li.className = 'kod-qator';
+				li.textContent = q;
+				li.dataset.indeks = String(i);
+				kodRoyxat.append(li);
+			});
+
+			boshQator.replaceChildren();
+			['Aylanish', ...dastur.ozgaruvchilar].forEach((nom) => {
+				const th = document.createElement('th');
+				th.scope = 'col';
+				th.textContent = nom;
+				boshQator.append(th);
+			});
+		}
+
+		function boshlash() {
+			holat = {};
+			qatorIndeks = 0;
+			chiqish = [];
+			qadamlar = 0;
+			aylanish = 0;
+			tugadi = false;
+			tanaEl.replaceChildren();
+			chiqishEl.textContent = '';
+			izohEl.textContent = 'Programma boshlanmadi. «Bitta qadam» bilan yuring.';
+			delete quti.dataset.natija;
+			belgilaQator();
+			qadamTugma.disabled = false;
+			oxirigacha.disabled = false;
+		}
+
+		function belgilaQator() {
+			kodRoyxat.querySelectorAll<HTMLElement>('.kod-qator').forEach((li) => {
+				if (Number(li.dataset.indeks) === qatorIndeks && !tugadi) li.dataset.holat = 'joriy';
+				else delete li.dataset.holat;
+			});
+		}
+
+		function jadvalQator() {
+			const tr = document.createElement('tr');
+			const td0 = document.createElement('td');
+			td0.textContent = String(aylanish);
+			tr.append(td0);
+			dastur.ozgaruvchilar.forEach((nom) => {
+				const td = document.createElement('td');
+				td.textContent = nom in holat ? String(holat[nom]) : '—';
+				tr.append(td);
+			});
+			tanaEl.append(tr);
+		}
+
+		/** Bitta qator bajaradi. Davom etish mumkin bo'lsa true. */
+		function bittaQadam(): boolean {
+			if (tugadi) return false;
+
+			qadamlar += 1;
+			if (qadamlar > MAKS_QADAM) {
+				tugadi = true;
+				izohEl.textContent =
+					`${MAKS_QADAM} qadamdan keyin to'xtatdik: bu cheksiz sikl. ` +
+					"Sababi — sikl ichida `i` o'zgarmayapti, demak shart hech qachon False bo'lmaydi.";
+				quti.dataset.natija = 'cheksiz';
+				belgilaQator();
+				return false;
+			}
+
+			const qator = dastur.kod[qatorIndeks];
+			if (qator === undefined) {
+				tugadi = true;
+				izohEl.textContent = `Programma tugadi. ${aylanish} aylanish bo'ldi.`;
+				quti.dataset.natija = 'tugadi';
+				belgilaQator();
+				return false;
+			}
+
+			const toza = qator.trim();
+
+			/* Har dastur qatorlari oldindan ma'lum — shu sababli oddiy
+			   "tanib olish" yetadi, ifoda tahlilchisi kerak emas. */
+			if (toza.startsWith('#') || toza === '') {
+				qatorIndeks += 1;
+			} else if (toza === 'jami = 0') {
+				holat.jami = 0;
+				qatorIndeks += 1;
+				izohEl.textContent = "Boshlang'ich holat: jami = 0.";
+			} else if (toza === 'i = 1') {
+				holat.i = 1;
+				qatorIndeks += 1;
+				izohEl.textContent = "Boshlang'ich holat: i = 1.";
+			} else if (toza === 'n = 3') {
+				holat.n = 3;
+				qatorIndeks += 1;
+				izohEl.textContent = "Boshlang'ich holat: n = 3.";
+			} else if (toza.startsWith('while ')) {
+				const shart = toza.slice(6, -1).trim();
+				let rost: boolean;
+				if (shart === 'i <= 5') rost = (holat.i ?? 0) <= 5;
+				else rost = (holat.n ?? 0) > 0;
+
+				if (rost) {
+					aylanish += 1;
+					jadvalQator();
+					izohEl.textContent = `Shart (${shart}) rost — sikl tanasiga kiramiz. ${aylanish}-aylanish.`;
+					qatorIndeks += 1;
+				} else {
+					izohEl.textContent = `Shart (${shart}) yolg'on — sikldan chiqdik.`;
+					/* Sikl tanasini o'tkazib yuboramiz: keyingi kirmaydigan qatorgacha */
+					let j = qatorIndeks + 1;
+					while (j < dastur.kod.length && /^\s/.test(dastur.kod[j]!)) j += 1;
+					qatorIndeks = j;
+				}
+			} else if (toza.startsWith('print(')) {
+				const ichi = toza.slice(6, -1);
+				if (ichi.startsWith('"')) chiqish.push(ichi.slice(1, -1));
+				else chiqish.push(String(holat[ichi] ?? ''));
+				chiqishEl.textContent = chiqish.join('\n');
+				qatorIndeks += 1;
+				izohEl.textContent = `Ekranga chiqdi: ${chiqish[chiqish.length - 1]}`;
+			} else if (toza === 'jami = jami + i') {
+				holat.jami = (holat.jami ?? 0) + (holat.i ?? 0);
+				qatorIndeks += 1;
+				izohEl.textContent = `Yig'ib qo'ydik: jami = ${holat.jami}.`;
+			} else if (toza === 'i = i + 1') {
+				holat.i = (holat.i ?? 0) + 1;
+				qatorIndeks += 1;
+				izohEl.textContent = `O'zgarish: i = ${holat.i}. Bu qator bo'lmasa sikl cheksiz bo'ladi.`;
+			} else if (toza === 'n = n - 1') {
+				holat.n = (holat.n ?? 0) - 1;
+				qatorIndeks += 1;
+				izohEl.textContent = `O'zgarish: n = ${holat.n}.`;
+			} else {
+				qatorIndeks += 1;
+			}
+
+			/* Sikl tanasi tugadi — while qatoriga qaytamiz */
+			const keyingi = dastur.kod[qatorIndeks];
+			const hozirIchda = /^\s/.test(qator);
+			if (hozirIchda && (keyingi === undefined || !/^\s/.test(keyingi))) {
+				const whileIndeks = dastur.kod.findIndex((q) => q.trim().startsWith('while '));
+				if (whileIndeks >= 0) qatorIndeks = whileIndeks;
+			}
+
+			/* Jadvalning oxirgi qatorini joriy qiymatlar bilan yangilaymiz */
+			const oxirgi = tanaEl.lastElementChild;
+			if (oxirgi) {
+				const hujayralar = [...oxirgi.querySelectorAll('td')];
+				dastur.ozgaruvchilar.forEach((nom, i) => {
+					const td = hujayralar[i + 1];
+					if (td) td.textContent = nom in holat ? String(holat[nom]) : '—';
+				});
+			}
+
+			belgilaQator();
+			return true;
+		}
+
+		tugmalar.forEach((tugma) => {
+			tugma.addEventListener('click', () => {
+				dastur = dasturlar.find((d) => d.id === tugma.dataset.id)!;
+				tugmalar.forEach((t) => t.setAttribute('aria-pressed', String(t === tugma)));
+				kodChiz();
+				boshlash();
+			});
+		});
+
+		qadamTugma.addEventListener('click', () => {
+			if (!bittaQadam()) {
+				qadamTugma.disabled = true;
+				oxirigacha.disabled = true;
+			}
+		});
+
+		oxirigacha.addEventListener('click', () => {
+			let hisob = 0;
+			while (bittaQadam() && hisob < MAKS_QADAM + 5) hisob += 1;
+			qadamTugma.disabled = true;
+			oxirigacha.disabled = true;
+		});
+
+		qayta.addEventListener('click', boshlash);
+
+		quti.addEventListener('keydown', (e) => {
+			if (e.target instanceof HTMLButtonElement) return;
+			if (e.key === 'ArrowRight' || e.key === 'Enter') {
+				e.preventDefault();
+				qadamTugma.click();
+			}
+		});
+
+		kodChiz();
+		boshlash();
+	});
+</script>
+
+<style>
+	.sikl-qadamlovchi:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 4px;
+		border-radius: var(--sa-radius-kichik);
+	}
+
+	.tanlov {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin-bottom: 1rem;
+	}
+
+	.dastur-tugma {
+		font-size: 0.78rem;
+	}
+
+	.dastur-tugma[aria-pressed='true'] {
+		border-color: var(--blok-2);
+		color: var(--blok-2);
+	}
+
+	.ish {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem 1.5rem;
+		align-items: flex-start;
+	}
+
+	.kod-royxat {
+		flex: 1 1 14rem;
+		min-width: 0;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		font-family: var(--sl-font-mono);
+		font-size: 0.8rem;
+		line-height: 1.5;
+	}
+
+	/* Qatorlar JS bilan yasaladi -> :global, chegara .kod-royxat */
+	.kod-royxat :global(.kod-qator) {
+		padding: 0.25rem 0.5rem;
+		border-left: 3px solid transparent;
+		color: var(--sl-color-gray-4);
+		white-space: pre;
+		overflow-x: auto;
+	}
+
+	.kod-royxat :global(.kod-qator[data-holat='joriy']) {
+		border-left-color: var(--blok-2);
+		background: var(--blok-2-fon);
+		color: var(--sl-color-white);
+		font-weight: 600;
+	}
+
+	.holat-panel {
+		flex: 1 1 13rem;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.85rem;
+	}
+
+	.jadval {
+		width: 100%;
+		margin: 0;
+		border-collapse: collapse;
+		font-family: var(--sl-font-mono);
+		font-size: 0.78rem;
+	}
+
+	.jadval caption {
+		margin-bottom: 0.35rem;
+		text-align: left;
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-4);
+	}
+
+	.jadval th,
+	.jadval td {
+		padding: 0.25rem 0.5rem;
+		border: 1px solid var(--sl-color-gray-6);
+		text-align: right;
+	}
+
+	.jadval th {
+		background: var(--sl-color-gray-6);
+		color: var(--sl-color-gray-3);
+		font-weight: 600;
+	}
+
+	.jadval td {
+		color: var(--sl-color-gray-1);
+	}
+
+	/* Oxirgi qator — hozirgi holat */
+	.jadval :global(tbody tr:last-child td) {
+		background: var(--blok-2-fon);
+		color: var(--blok-2);
+		font-weight: 700;
+	}
+
+	.chiqish-yorliq {
+		margin: 0 0 0.3rem 0;
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--sl-color-gray-4);
+	}
+
+	.chiqish {
+		margin: 0;
+		min-height: 3.5em;
+		padding: 0.5rem 0.7rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		font-family: var(--sl-font-mono);
+		font-size: 0.8rem;
+		line-height: 1.5;
+		color: var(--sl-color-gray-1);
+		overflow-x: auto;
+	}
+
+	.izoh {
+		margin: 0.85rem 0 0 0;
+		min-height: 3em;
+		font-size: 0.88rem;
+		line-height: 1.55;
+		color: var(--sl-color-gray-2);
+	}
+
+	.sikl-qadamlovchi[data-natija='cheksiz'] .izoh {
+		color: var(--blok-5);
+		font-weight: 600;
+	}
+
+	.sikl-qadamlovchi[data-natija='tugadi'] .izoh {
+		color: var(--blok-1);
+	}
+
+	.qadam:disabled,
+	.oxirigacha:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+</style>

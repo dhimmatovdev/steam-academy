@@ -1,0 +1,336 @@
+---
+/**
+ * NaqshKutubxonasi — Python Basic 7-dars simulyatori.
+ *
+ * Bitta ro'yxat, to'rt akkumulyator naqshi yonma-yon: yig'indi, sanoq,
+ * maksimum, filtr. Har qadamda ro'yxatning bir elementi olinadi va
+ * to'rt naqsh o'z holatini yangilaydi.
+ *
+ * Pedagogik maqsad: bu to'rt naqsh boshlang'ich masalalarning 80% ini
+ * yechadi. Ular bir xil skelet ustiga qurilgan: boshlang'ich qiymat,
+ * har element uchun yangilash, oxirida natija.
+ */
+import Simulyator from '../Simulyator.astro';
+
+/* Sinf baholari — 7-dars misollarida shu ro'yxat ishlatiladi */
+const BAHOLAR = [4, 5, 3, 5, 2, 4, 5];
+
+const NAQSHLAR = [
+	{
+		id: 'yigindi',
+		nom: "Yig'indi",
+		kod: 'jami = 0\nfor b in baholar:\n    jami = jami + b',
+		bosh: '0',
+		savol: "Baholar yig'indisi",
+	},
+	{
+		id: 'sanoq',
+		nom: 'Sanoq',
+		kod: 'soni = 0\nfor b in baholar:\n    if b == 5:\n        soni = soni + 1',
+		bosh: '0',
+		savol: "Nechta 5 bor",
+	},
+	{
+		id: 'maksimum',
+		nom: 'Maksimum',
+		kod: 'eng = baholar[0]\nfor b in baholar:\n    if b > eng:\n        eng = b',
+		bosh: '4',
+		savol: 'Eng yuqori baho',
+	},
+	{
+		id: 'filtr',
+		nom: 'Filtr',
+		kod: 'yaxshi = []\nfor b in baholar:\n    if b >= 4:\n        yaxshi.append(b)',
+		bosh: '[]',
+		savol: "4 va undan yuqorilari",
+	},
+];
+---
+
+<Simulyator
+	sarlavha="Naqsh kutubxonasi"
+	korsatma="Ro'yxat bo'ylab yuring va to'rt naqsh bir vaqtda qanday to'lishini kuzating."
+	blok={2}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyator bitta baholar ro'yxati ustida to'rt naqshni bir vaqtda ishlatadi:
+			yig'indi, sanoq, maksimum va filtr. Har qadamda bitta baho olinadi va to'rt
+			natija yangilanadi.
+		</p>
+		<p>
+			JavaScript'siz sinash: `[4, 5, 3, 5, 2, 4, 5]` ro'yxatini daftarga yozing va
+			to'rt ustun chizing. Har bahoni ketma-ket olib, to'rt ustunni qo'lda to'ldirib
+			chiqing. Javoblar: 28, uchta 5, maksimum 5, filtr `[4, 5, 5, 4, 5]`.
+		</p>
+	</Fragment>
+
+	<div
+		class="naqsh-kutubxonasi not-content"
+		tabindex="0"
+		data-baholar={JSON.stringify(BAHOLAR)}
+		data-naqshlar={JSON.stringify(NAQSHLAR)}
+	>
+		<div class="royxat" aria-label="Baholar ro'yxati">
+			<span class="royxat-nom">baholar =</span>
+			{
+				BAHOLAR.map((b, i) => (
+					<span class="element" data-indeks={i} data-holat="kutilmoqda">
+						{b}
+					</span>
+				))
+			}
+		</div>
+
+		<div class="naqshlar">
+			{
+				NAQSHLAR.map((n) => (
+					<div class="naqsh" data-id={n.id}>
+						<p class="naqsh-nom">{n.nom}</p>
+						<p class="naqsh-savol">{n.savol}</p>
+						<pre class="naqsh-kod">{n.kod}</pre>
+						<p class="naqsh-qiymat">{n.bosh}</p>
+					</div>
+				))
+			}
+		</div>
+
+		<p class="izoh" role="status" aria-live="polite">
+			«Bitta qadam» bilan ro'yxat bo'ylab yura boshlang.
+		</p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qadam">Bitta qadam</button>
+		<button type="button" class="oxirigacha">Oxirigacha</button>
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach((qobiq) => {
+		const quti = qobiq.querySelector<HTMLElement>('.naqsh-kutubxonasi');
+		if (!quti) return;
+
+		const baholar = JSON.parse(quti.dataset.baholar!) as number[];
+		const elementlar = [...quti.querySelectorAll<HTMLElement>('.element')];
+		const izoh = quti.querySelector<HTMLElement>('.izoh')!;
+
+		const qadamTugma = qobiq.querySelector<HTMLButtonElement>('.qadam')!;
+		const oxirigacha = qobiq.querySelector<HTMLButtonElement>('.oxirigacha')!;
+		const qayta = qobiq.querySelector<HTMLButtonElement>('.qayta')!;
+
+		function qiymatEl(id: string) {
+			return quti.querySelector<HTMLElement>(`.naqsh[data-id="${id}"] .naqsh-qiymat`)!;
+		}
+
+		let indeks = -1;
+		let jami = 0;
+		let soni = 0;
+		let eng = baholar[0]!;
+		let yaxshi: number[] = [];
+
+		function chiz() {
+			elementlar.forEach((el, i) => {
+				if (i < indeks) el.dataset.holat = 'olindi';
+				else if (i === indeks) el.dataset.holat = 'joriy';
+				else el.dataset.holat = 'kutilmoqda';
+			});
+
+			qiymatEl('yigindi').textContent = String(jami);
+			qiymatEl('sanoq').textContent = String(soni);
+			qiymatEl('maksimum').textContent = String(eng);
+			qiymatEl('filtr').textContent = `[${yaxshi.join(', ')}]`;
+
+			qadamTugma.disabled = indeks >= baholar.length - 1;
+			oxirigacha.disabled = qadamTugma.disabled;
+		}
+
+		function bittaQadam(): boolean {
+			if (indeks >= baholar.length - 1) return false;
+			indeks += 1;
+			const b = baholar[indeks]!;
+
+			/* Naqshlar bir-biridan mustaqil: har biri o'z shartini tekshiradi */
+			const engOzgardi = b > eng;
+
+			jami += b;
+			if (b === 5) soni += 1;
+			if (engOzgardi) eng = b;
+			if (b >= 4) yaxshi.push(b);
+
+			const qismlar = [
+				`jami = ${jami}`,
+				b === 5 ? `soni = ${soni}` : "soni o'zgarmadi",
+				engOzgardi ? `eng = ${eng}` : `eng o'zgarmadi (${eng})`,
+				b >= 4 ? "filtrga qo'shildi" : 'filtrga tushmadi',
+			];
+
+			izoh.textContent = `${indeks + 1}-element: b = ${b}. ${qismlar.join(', ')}.`;
+
+			chiz();
+
+			if (indeks === baholar.length - 1) {
+				izoh.textContent =
+					`Ro'yxat tugadi. Yig'indi ${jami}, beshlar soni ${soni}, maksimum ${eng}, ` +
+					`filtrda ${yaxshi.length} element. O'rtacha: ${jami} / ${baholar.length} = ` +
+					`${(jami / baholar.length).toFixed(2)}.`;
+				quti.dataset.natija = 'tugadi';
+			}
+			return true;
+		}
+
+		function boshlash() {
+			indeks = -1;
+			jami = 0;
+			soni = 0;
+			eng = baholar[0]!;
+			yaxshi = [];
+			delete quti.dataset.natija;
+			izoh.textContent = "«Bitta qadam» bilan ro'yxat bo'ylab yura boshlang.";
+			chiz();
+		}
+
+		qadamTugma.addEventListener('click', () => bittaQadam());
+
+		oxirigacha.addEventListener('click', () => {
+			while (bittaQadam()) {
+				/* oxirigacha */
+			}
+		});
+
+		qayta.addEventListener('click', boshlash);
+
+		quti.addEventListener('keydown', (e) => {
+			if (e.target instanceof HTMLButtonElement) return;
+			if (e.key === 'ArrowRight' || e.key === 'Enter') {
+				e.preventDefault();
+				qadamTugma.click();
+			}
+		});
+
+		boshlash();
+	});
+</script>
+
+<style>
+	.naqsh-kutubxonasi:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 4px;
+		border-radius: var(--sa-radius-kichik);
+	}
+
+	.royxat {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.35rem;
+		margin-bottom: 1rem;
+		font-family: var(--sl-font-mono);
+		font-size: 0.85rem;
+	}
+
+	.royxat-nom {
+		color: var(--sl-color-gray-3);
+	}
+
+	.element {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.9rem;
+		height: 1.9rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		color: var(--sl-color-gray-2);
+		font-weight: 600;
+	}
+
+	.element[data-holat='joriy'] {
+		border-color: var(--blok-2);
+		background: var(--blok-2-fon);
+		color: var(--blok-2);
+		transform: translateY(-2px);
+	}
+
+	.element[data-holat='olindi'] {
+		opacity: 0.45;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.element {
+			transform: none !important;
+		}
+	}
+
+	.naqshlar {
+		display: grid;
+		/* 360px da bitta ustun, kengroq ekranda 2 va 4 ta */
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+		gap: 0.6rem;
+	}
+
+	.naqsh {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		padding: 0.6rem 0.7rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+	}
+
+	.naqsh-nom {
+		margin: 0;
+		font-weight: 700;
+		font-size: 0.85rem;
+		color: var(--blok-2);
+	}
+
+	.naqsh-savol {
+		margin: 0;
+		font-size: 0.75rem;
+		line-height: 1.4;
+		color: var(--sl-color-gray-4);
+	}
+
+	.naqsh-kod {
+		margin: 0;
+		padding: 0.4rem 0.5rem;
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-gray-6);
+		font-family: var(--sl-font-mono);
+		font-size: 0.72rem;
+		line-height: 1.45;
+		color: var(--sl-color-gray-2);
+		overflow-x: auto;
+	}
+
+	.naqsh-qiymat {
+		margin: 0;
+		font-family: var(--sl-font-mono);
+		font-size: 1.05rem;
+		font-weight: 700;
+		color: var(--sl-color-white);
+		overflow-x: auto;
+	}
+
+	.naqsh-kutubxonasi[data-natija='tugadi'] .naqsh-qiymat {
+		color: var(--blok-1);
+	}
+
+	.izoh {
+		margin: 0.85rem 0 0 0;
+		min-height: 3em;
+		font-size: 0.88rem;
+		line-height: 1.55;
+		color: var(--sl-color-gray-2);
+	}
+
+	.qadam:disabled,
+	.oxirigacha:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+</style>

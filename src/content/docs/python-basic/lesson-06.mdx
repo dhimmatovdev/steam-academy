@@ -1,0 +1,185 @@
+---
+title: '6-dars: while sikli'
+description: "Sikl uch qismdan iborat: boshlang'ich holat, shart va o'zgarish. Bittasi yo'q bo'lsa — cheksiz sikl."
+sidebar:
+  label: '6-dars'
+  order: 6
+---
+
+import { AIOgoh, Atama, Bloknoma, DarsTugadi, Hayotda, Kod, KodBashorat, Maqsad, Muhim, Qatlam, Sinov, Xato } from '@components';
+import SiklQadamlovchi from '../../../components/sim/SiklQadamlovchi.astro';
+
+<Bloknoma blok={2} modul="python-basic" />
+
+<Hayotda soha="Xavfsizlik">
+	Telefon parol so'raydi. To'g'ri kiritilmaguncha yana so'raydi — o'n marta ham,
+	yuz marta ham. Programmachi bu holatni yozganda «necha marta so'ralsin?» degan
+	savolga javob bermaydi: u «to'g'ri bo'lmaguncha» deb yozadi. Bu — `while`.
+</Hayotda>
+
+<Maqsad>
+- `while` bilan takrorlanadigan amalni yozasiz
+- siklning uch qismini (holat, shart, o'zgarish) ajratib ko'rsatasiz
+- cheksiz sikl sababini topasiz va tuzatasiz
+</Maqsad>
+
+## Nazariya
+
+### Sikl uch qismdan iborat
+
+Har ishlaydigan `while` siklida uchta narsa bo'ladi: sikl boshlanishidan oldingi
+**boshlang'ich holat**, har aylanishda tekshirilib turadigan **shart** va sikl ichidagi
+**o'zgarish**. O'zgarish shartga ta'sir qilmasa, sikl to'xtamaydi.
+
+<Atama soz="sikl" eng="loop">
+	Kodning bir bo'lagini shart bajarilib turgan vaqtda qayta-qayta bajarish.
+	`while` — «shu shart rost ekan, davom et» degani.
+</Atama>
+
+<Kod
+	kod={`jami = 0        # 1. boshlang'ich holat
+i = 1
+while i <= 5:   # 2. shart
+    jami = jami + i
+    i = i + 1   # 3. o'zgarish
+print(jami)     # 15`}
+	sarlavha="yigindi.py"
+	qatorlar={[1, 3, 5]}
+/>
+
+### Cheksiz sikl
+
+`i = i + 1` qatorini olib tashlasangiz, `i` doim 1 bo'lib qoladi, shart doim rost
+bo'ladi va programma to'xtamaydi. Terminalda `Ctrl+C` bosib to'xtatiladi.
+
+<Muhim turi="ogoh">
+	Cheksiz sikl — xato emas, **belgi**: siz o'zgarishni yozishni unutgansiz yoki
+	o'zgarish shartga ta'sir qilmayapti. `while` yozganda birinchi savol: «bu shart
+	qachon yolg'on bo'ladi?»
+</Muhim>
+
+### `break` va shartli chiqish
+
+Ba'zan chiqish sharti sikl o'rtasida ma'lum bo'ladi — o'shanda `break` ishlatiladi.
+U siklni darhol to'xtatadi va shartni ham tekshirmaydi.
+
+<Kod
+	kod={`while True:
+    parol = input("Parol: ")
+    if parol == "steam":
+        print("Kirdingiz")
+        break
+    print("Xato, yana urinib ko'ring")`}
+	sarlavha="parol.py"
+	qatorlar={[5]}
+/>
+
+`while True` — ataylab cheksiz sikl, chiqish esa `break` orqali. Bu naqsh parol,
+menyu va o'yin siklida ko'p uchraydi.
+
+## Bashorat qiling
+
+<KodBashorat
+	kod={`n = 3
+while n > 0:
+    print(n)
+    n = n - 1
+print("Boshladik!")`}
+	javob={`3
+2
+1
+Boshladik!`}
+	izoh="Har aylanishda n chiqariladi va bittaga kamayadi. n = 0 bo'lganda shart yolg'on bo'ladi va sikldan chiqiladi — 0 chiqarilmaydi."
+/>
+
+<KodBashorat
+	kod={`i = 1
+jami = 0
+while i < 4:
+    jami = jami + i * i
+    i = i + 1
+print(jami)`}
+	javob={`14`}
+	izoh="Kvadratlar yig'indisi: 1 + 4 + 9 = 14. i = 4 bo'lganda shart yolg'on, shuning uchun 16 qo'shilmaydi."
+/>
+
+## Sinab ko'r
+
+Uch programma bor. Uchinchisida `i = i + 1` qatori ataylab izohga olingan — cheksiz
+sikl qanday ko'rinishini xavfsiz kuzatishingiz mumkin.
+
+<SiklQadamlovchi />
+
+## Xatoni toping
+
+<Xato
+	kod={`i = 1
+while i <= 3:
+    print(i)
+i = i + 1`}
+	traceback={`1
+1
+1
+1
+... (cheksiz davom etadi, Ctrl+C bilan to'xtatiladi)
+KeyboardInterrupt`}
+	sabab="`i = i + 1` qatorining otstupi yo'q — u sikl ichida emas, sikldan KEYIN turadi. Sikl esa unga hech qachon yetib bormaydi."
+>
+	Bu xatoning yomon tomoni: Python xato xabarini bermaydi, kod «shunchaki ishlamaydi».
+	Shu sababli otstup — bezak emas, mantiq. To'g'risi: `i = i + 1` ni 4 bo'shliq bilan
+	surib, `print(i)` bilan bir qatorga tenglashtirish.
+</Xato>
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Siklning uch qismi qaysilar?">
+	Boshlang'ich holat (sikldan oldin), shart (<code>while</code> yonida) va o'zgarish
+	(sikl ichida). O'zgarish shartga ta'sir qilmasa, sikl cheksiz bo'ladi.
+</Sinov>
+
+<Sinov raqam={2} savol="n = 3 bo'lsa, while n > 0 sikli nechta son chiqaradi va nechtasi?">
+	Uchta: 3, 2, 1. <code>n = 0</code> bo'lganda shart yolg'on bo'ladi, shuning uchun
+	0 chiqmaydi.
+</Sinov>
+
+<Sinov raqam={3} savol="Cheksiz sikl paydo bo'lganda uni qanday to'xtatasiz va sababini qanday topasiz?">
+	Terminalda <code>Ctrl+C</code>. Sababni topish uchun savol berish kerak: «shart
+	qachon yolg'on bo'ladi?» — agar javob yo'q bo'lsa, o'zgarish yozilmagan yoki
+	shartga ta'sir qilmayapti.
+</Sinov>
+
+<Sinov raqam={4} savol="while True: qachon ishlatiladi va undan qanday chiqiladi?">
+	Chiqish sharti sikl o'rtasida ma'lum bo'lganda (parol so'rash, menyu).
+	Chiqish <code>break</code> orqali bo'ladi.
+</Sinov>
+
+<Sinov raqam={5} savol="Sikl ichidagi qatorning otstupi bo'lmasa nima bo'ladi?">
+	U qator sikldan tashqarida qoladi va sikl tugagandan keyin bajariladi. Agar bu
+	qator o'zgarish bo'lsa — sikl cheksiz bo'ladi, lekin Python xato bermaydi.
+</Sinov>
+
+## Topshiriq
+
+<Qatlam>
+	<Fragment slot="asos">
+		1 dan 10 gacha sonlarni chiqaruvchi `while` sikli yozing. Keyin uni teskari
+		qiling: 10 dan 1 gacha. Uchinchi variant: faqat juft sonlar (kalit: `i = i + 2`).
+		Har uchi ishlaganini terminalda ko'rsatib, o'qituvchiga topshiring.
+	</Fragment>
+	<Fragment slot="mustahkam">
+		Parol so'raydigan programma yozing: to'g'ri parol `steam`, lekin uchta urinishdan
+		keyin «Bloklandi» chiqib to'xtasin. Ya'ni ikki chiqish yo'li bo'ladi — to'g'ri
+		parol va urinishlar tugashi. Urinishlar sonini o'zgaruvchida hisoblang.
+	</Fragment>
+	<Fragment slot="chuqur">
+		Sonni so'rab, uning raqamlari yig'indisini hisoblovchi programma yozing
+		(masalan 4589 → 26). Faqat `while`, `%` va `//` ishlatiladi — satrga
+		aylantirish taqiqlanadi. Chegara holatlarini sinang: 0, bitta raqamli son,
+		manfiy son. Qo'shimcha savol: sikl necha marta aylanadi va bu sonning
+		kattaligiga qanday bog'liq?
+	</Fragment>
+</Qatlam>
+
+<AIOgoh />
+
+<DarsTugadi dars={6} blok={2} modul="python-basic" />

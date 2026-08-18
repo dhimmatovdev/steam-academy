@@ -1,0 +1,178 @@
+---
+title: '8-dars: Ichma-ich sikllar'
+description: "Tashqi sikl x ichki sikl = qadamlar ko'paytmasi. 100x100 = 10 000 qadam — tezlik hissi shu yerda tug'iladi."
+sidebar:
+  label: '8-dars'
+  order: 8
+---
+
+import { AIOgoh, Atama, Bloknoma, DarsTugadi, Hayotda, Kod, KodBashorat, Maqsad, Muhim, Qatlam, Sinov, Xato } from '@components';
+import JadvalChizuvchi from '../../../components/sim/JadvalChizuvchi.astro';
+
+<Bloknoma blok={2} modul="python-basic" />
+
+<Hayotda soha="Hunarmandchilik">
+	Koshin naqshini yotqizayotgan usta bir qatorni to'ldiradi, keyin keyingi qatorga
+	o'tadi. Shaxmat taxtasi ham shunday: 8 qator, har qatorda 8 katak — jami 64.
+	Programmada bu ikkita bir-birining ichida turgan sikl bilan yoziladi.
+</Hayotda>
+
+<Maqsad>
+- ichma-ich sikl yozib, ikki o'lchamli naqsh chiqarasiz
+- qadamlar soni ko'paytma bo'lishini hisoblaysiz
+- ichki va tashqi sikl hisoblagichlarini adashtirmaysiz
+</Maqsad>
+
+## Nazariya
+
+### Sikl ichidagi sikl
+
+Tashqi sikl bir marta aylanganda, ichki sikl **to'liq** aylanib chiqadi. Shu sababli
+jami qadam soni ikkisining ko'paytmasiga teng.
+
+<Atama soz="ichma-ich sikl" eng="nested loop">
+	Bir siklning tanasi ichida turgan boshqa sikl. Har tashqi iteratsiyada ichki sikl
+	boshidan oxirigacha ishlaydi.
+</Atama>
+
+<Kod
+	kod={`for i in range(1, 4):
+    for j in range(1, 4):
+        print(i * j, end=" ")
+    print()`}
+	sarlavha="jadval.py"
+	qatorlar={[2, 4]}
+/>
+
+Bu kod uch qatorli jadval chiqaradi. `end=" "` sonlarni bir qatorda qoldiradi,
+oxirgi `print()` esa qatorni yopadi — u ichki sikldan tashqarida, lekin tashqi
+sikl ichida.
+
+### Tezlik hissi
+
+3×3 — 9 qadam, buni odam ham hisoblaydi. 100×100 — 10 000 qadam, kompyuter uchun bir
+lahza. 10 000×10 000 esa 100 million qadam — bu allaqachon seziladigan kutish.
+
+<Muhim turi="gap">
+	Ichma-ich sikl qadamlarini **qo'shmaydi, ko'paytiradi**. O'lchamni ikki barobar
+	oshirsangiz, ish to'rt barobar oshadi. Shu sababli ichma-ich sikl yozganda
+	«bu qancha qadam bo'ladi?» degan savol har doim beriladi.
+</Muhim>
+
+Bu savolni chuqur o'rganish — [Algorithms moduli](/algorithms/) ishi. Bu darsda
+faqat hissiyot kerak: ko'paytma tez o'sadi.
+
+### Ikki hisoblagichni adashtirmaslik
+
+Tashqi hisoblagich odatda `i`, ichki `j` deb nomlanadi. Lekin ma'noli nom yaxshiroq:
+`qator` va `ustun`. Ichki siklda tashqi hisoblagichni o'zgartirish — chalkashlikning
+eng tez yo'li, shuning uchun bunday qilinmaydi.
+
+## Bashorat qiling
+
+<KodBashorat
+	kod={`for i in range(2):
+    for j in range(3):
+        print(i, j)`}
+	javob={`0 0
+0 1
+0 2
+1 0
+1 1
+1 2`}
+	izoh="Tashqi sikl 2 marta, ichki 3 marta — jami 6 qator. Ichki hisoblagich har tashqi aylanishda 0 dan qayta boshlanadi."
+/>
+
+<KodBashorat
+	kod={`qadam = 0
+for i in range(4):
+    for j in range(5):
+        qadam = qadam + 1
+print(qadam)`}
+	javob={`20`}
+	izoh="4 × 5 = 20. Hisoblagich ichki siklning eng ichida turgani uchun har katak sanaladi."
+/>
+
+## Sinab ko'r
+
+O'lchamni suring va kataklar qanday tartibda to'lishini kuzating. «jami qadam»
+hisoblagichi o'lchamni oshirganda qanday o'sishiga e'tibor bering.
+
+<JadvalChizuvchi />
+
+## Xatoni toping
+
+<Xato
+	kod={`for i in range(1, 4):
+    for j in range(1, 4):
+        print(i * j, end=" ")
+        print()`}
+	traceback={`1
+2
+3
+2
+4
+6
+3
+6
+9
+(kutilgan uch qatorli jadval o'rniga to'qqiz qator)`}
+	sabab="Oxirgi `print()` ichki sikl ICHIDA qolib ketgan — har sondan keyin qator yopilyapti. Natijada jadval emas, ustun chiqadi."
+>
+	To'g'risi: oxirgi `print()` ni bir daraja chapga surish — u ichki sikldan chiqib,
+	tashqi sikl ichida qolishi kerak. Python xato bermaydi, chunki kod sintaktik
+	to'g'ri; xato faqat natijada ko'rinadi.
+</Xato>
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="Tashqi sikl 5 marta, ichki sikl 4 marta aylansa, jami necha qadam bo'ladi?">
+	20 qadam. Ichma-ich sikllar qo'shilmaydi, ko'paytiriladi.
+</Sinov>
+
+<Sinov raqam={2} savol="Ichki siklning hisoblagichi har tashqi aylanishda nima bo'ladi?">
+	Boshidan qayta boshlanadi. <code>range</code> har tashqi iteratsiyada yangidan
+	yaratiladi.
+</Sinov>
+
+<Sinov raqam={3} savol="print(i * j, end=' ') dagi end nima qiladi?">
+	Chiqarishdan keyin qator yopilmaydi, o'rniga bo'shliq qo'yiladi — sonlar bitta
+	qatorda ketma-ket chiqadi.
+</Sinov>
+
+<Sinov raqam={4} savol="O'lchamni 10 dan 20 ga oshirsangiz, ichma-ich sikl qadamlari qancha ko'payadi?">
+	To'rt barobar: 100 dan 400 ga. Har o'lchamning ikki barobar oshishi ko'paytmani
+	to'rt barobar oshiradi.
+</Sinov>
+
+<Sinov raqam={5} savol="Jadvalni yopadigan print() ni qaysi darajaga qo'yish kerak va nega?">
+	Ichki sikldan tashqarida, tashqi sikl ichida — ya'ni ichki sikl bilan bir xil
+	otstupda. Shunda har qator tugagandan keyin bir marta bajariladi.
+</Sinov>
+
+## Topshiriq
+
+<Qatlam>
+	<Fragment slot="asos">
+		Ichma-ich sikl bilan 5 qator uzunlikda yulduzchalardan uchburchak chizing
+		(birinchi qatorda 1 yulduz, beshinchisida 5). Keyin uni teskari qilib ko'ring.
+		Kalit: ichki siklning `range` i tashqi hisoblagichga bog'liq bo'ladi.
+	</Fragment>
+	<Fragment slot="mustahkam">
+		To'liq ko'paytirish jadvalini (1–9) chiroyli tekislangan holda chiqaring:
+		har son 4 belgi joy egallasin, jadval boshida sarlavha qatori bo'lsin.
+		Keyin shaxmat taxtasi naqshini chiqaring: qora va oq kataklar navbat bilan
+		(kalit: `(i + j) % 2`).
+	</Fragment>
+	<Fragment slot="chuqur">
+		Ichma-ich sikl bilan 2 dan 100 gacha tub sonlarni topuvchi programma yozing.
+		Keyin qadamlar sonini hisoblagich bilan o'lchang. Optimallashtirish: ichki
+		siklni sonning kvadrat ildizigacha qisqartirsangiz, qadamlar qancha kamayadi?
+		Ikki variantning qadam sonini jadvalga solishtirib yozing. (Murakkablik
+		tahlilining o'zi — [Algorithms moduli](/algorithms/) mavzusi.)
+	</Fragment>
+</Qatlam>
+
+<AIOgoh />
+
+<DarsTugadi dars={8} blok={2} modul="python-basic" />

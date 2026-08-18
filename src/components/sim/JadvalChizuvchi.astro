@@ -1,0 +1,322 @@
+---
+/**
+ * JadvalChizuvchi — Python Basic 8-dars simulyatori.
+ *
+ * Ichma-ich sikl: tashqi sikl qatorlar bo'ylab, ichki sikl ustunlar
+ * bo'ylab yuradi. Kataklar bittalab to'ladi va qadam hisoblagichi
+ * tashqi x ichki = ko'paytma ekanini raqamda ko'rsatadi.
+ *
+ * O'lchamni surganda hisoblagich kvadratik o'sishini his qilish
+ * mumkin: 3x3 = 9, 10x10 = 100. Tezlik hissi — darsning maqsadi.
+ */
+import Simulyator from '../Simulyator.astro';
+
+const MAKS = 10;
+/* Kataklar soni qat'iy (MAKS x MAKS) -> shablonda yasaymiz, JS faqat
+   matnini va holatini yangilaydi (uchinchi tuzoq qoidasi). */
+const KATAKLAR = Array.from({ length: MAKS * MAKS }, (_, i) => ({
+	qator: Math.floor(i / MAKS),
+	ustun: i % MAKS,
+}));
+---
+
+<Simulyator
+	sarlavha="Jadval chizuvchi"
+	korsatma="O'lchamni suring va ichma-ich sikl kataklarni qanday to'ldirishini kuzating."
+	blok={2}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda ichma-ich sikl ko'paytirish jadvalini to'ldiradi: tashqi sikl
+			qatorni tanlaydi, ichki sikl esa o'sha qatorning barcha kataklarini bosib
+			o'tadi. Qadam hisoblagichi tashqi va ichki sikl ko'paytmasini ko'rsatadi.
+		</p>
+		<p>
+			JavaScript'siz sinash: 3×3 jadvalni daftarga chizib, kataklarni qaysi tartibda
+			to'ldirganingizni raqamlab chiqing. 9 qadam bo'ladi. Keyin 10×10 uchun necha
+			qadam kerakligini hisoblang.
+		</p>
+	</Fragment>
+
+	<div class="jadval-chizuvchi not-content" tabindex="0" data-maks={MAKS}>
+		<label class="olcham-yorliq">
+			O'lcham: <output class="olcham-qiymat">3</output> × <output class="olcham-qiymat-2">3</output>
+			<input type="range" class="olcham-surgich" min="2" max={MAKS} step="1" value="3" />
+		</label>
+
+		<pre class="kod">for i in range(1, n + 1):
+    for j in range(1, n + 1):
+        print(i * j, end=" ")
+    print()</pre>
+
+		<div class="hisoblagich">
+			<span class="hisob-qism">tashqi: <b class="tashqi">0</b></span>
+			<span class="hisob-qism">ichki: <b class="ichki">0</b></span>
+			<span class="hisob-qism jami-qism">jami qadam: <b class="jami">0</b></span>
+		</div>
+
+		<div class="panjara" role="img" aria-label="Ko'paytirish jadvali">
+			{
+				KATAKLAR.map((k) => (
+					<span class="katak" data-qator={k.qator} data-ustun={k.ustun} data-holat="tashqarida" />
+				))
+			}
+		</div>
+
+		<p class="izoh" role="status" aria-live="polite">
+			«Bitta qadam» yoki «Oxirigacha» bilan boshlang.
+		</p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qadam">Bitta qadam</button>
+		<button type="button" class="oxirigacha">Oxirigacha</button>
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach((qobiq) => {
+		const quti = qobiq.querySelector<HTMLElement>('.jadval-chizuvchi');
+		if (!quti) return;
+
+		const kataklar = [...quti.querySelectorAll<HTMLElement>('.katak')];
+		const surgich = quti.querySelector<HTMLInputElement>('.olcham-surgich')!;
+		const olchamQiymat = quti.querySelector<HTMLElement>('.olcham-qiymat')!;
+		const olchamQiymat2 = quti.querySelector<HTMLElement>('.olcham-qiymat-2')!;
+		const tashqiEl = quti.querySelector<HTMLElement>('.tashqi')!;
+		const ichkiEl = quti.querySelector<HTMLElement>('.ichki')!;
+		const jamiEl = quti.querySelector<HTMLElement>('.jami')!;
+		const izoh = quti.querySelector<HTMLElement>('.izoh')!;
+
+		const qadamTugma = qobiq.querySelector<HTMLButtonElement>('.qadam')!;
+		const oxirigacha = qobiq.querySelector<HTMLButtonElement>('.oxirigacha')!;
+		const qayta = qobiq.querySelector<HTMLButtonElement>('.qayta')!;
+
+		let n = 3;
+		/* Bajarilgan qadamlar soni: 0 dan n*n gacha */
+		let qadam = 0;
+
+		function chiz() {
+			quti.style.setProperty('--n', String(n));
+			olchamQiymat.textContent = String(n);
+			olchamQiymat2.textContent = String(n);
+
+			const tashqi = qadam === 0 ? 0 : Math.floor((qadam - 1) / n) + 1;
+			const ichki = qadam === 0 ? 0 : ((qadam - 1) % n) + 1;
+
+			tashqiEl.textContent = String(tashqi);
+			ichkiEl.textContent = String(ichki);
+			jamiEl.textContent = String(qadam);
+
+			kataklar.forEach((el) => {
+				const q = Number(el.dataset.qator);
+				const u = Number(el.dataset.ustun);
+
+				if (q >= n || u >= n) {
+					el.dataset.holat = 'tashqarida';
+					el.textContent = '';
+					return;
+				}
+
+				const tartib = q * n + u + 1;
+				el.textContent = String((q + 1) * (u + 1));
+
+				if (tartib < qadam) el.dataset.holat = 'toldi';
+				else if (tartib === qadam) el.dataset.holat = 'joriy';
+				else el.dataset.holat = 'bosh';
+			});
+
+			const tugadi = qadam >= n * n;
+			qadamTugma.disabled = tugadi;
+			oxirigacha.disabled = tugadi;
+			if (tugadi) quti.dataset.natija = 'tugadi';
+			else delete quti.dataset.natija;
+		}
+
+		function bittaQadam(): boolean {
+			if (qadam >= n * n) return false;
+			qadam += 1;
+			chiz();
+
+			const tashqi = Math.floor((qadam - 1) / n) + 1;
+			const ichki = ((qadam - 1) % n) + 1;
+
+			if (qadam >= n * n) {
+				izoh.textContent =
+					`Tugadi. Tashqi sikl ${n} marta aylandi, har aylanishda ichki sikl ${n} marta — ` +
+					`jami ${n} × ${n} = ${n * n} qadam. O'lchamni ikki barobar oshirsangiz, ` +
+					'qadamlar to\'rt barobar ko\'payadi.';
+			} else {
+				izoh.textContent = `i = ${tashqi}, j = ${ichki} → ${tashqi} × ${ichki} = ${tashqi * ichki}`;
+			}
+			return true;
+		}
+
+		surgich.addEventListener('input', () => {
+			n = Number(surgich.value);
+			qadam = 0;
+			izoh.textContent = `Yangi o'lcham: ${n} × ${n} = ${n * n} qadam kutilmoqda.`;
+			chiz();
+		});
+
+		qadamTugma.addEventListener('click', () => bittaQadam());
+
+		oxirigacha.addEventListener('click', () => {
+			/* Chegara MAKS*MAKS = 100 — brauzerni bloklamaydi */
+			while (bittaQadam()) {
+				/* oxirigacha */
+			}
+		});
+
+		qayta.addEventListener('click', () => {
+			qadam = 0;
+			izoh.textContent = '«Bitta qadam» yoki «Oxirigacha» bilan boshlang.';
+			chiz();
+		});
+
+		quti.addEventListener('keydown', (e) => {
+			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLButtonElement) return;
+			if (e.key === 'ArrowRight' || e.key === 'Enter') {
+				e.preventDefault();
+				qadamTugma.click();
+			}
+		});
+
+		chiz();
+	});
+</script>
+
+<style>
+	.jadval-chizuvchi {
+		--n: 3;
+	}
+
+	.jadval-chizuvchi:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 4px;
+		border-radius: var(--sa-radius-kichik);
+	}
+
+	.olcham-yorliq {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem 0.6rem;
+		font-size: 0.9rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.olcham-qiymat,
+	.olcham-qiymat-2 {
+		font-family: var(--sl-font-mono);
+		font-size: 1.1rem;
+		font-weight: 700;
+		color: var(--blok-2);
+	}
+
+	.olcham-surgich {
+		flex: 1 1 9rem;
+		min-width: 0;
+		accent-color: var(--blok-2);
+	}
+
+	.olcham-surgich:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 3px;
+	}
+
+	.kod {
+		margin: 0.85rem 0;
+		padding: 0.6rem 0.8rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		font-family: var(--sl-font-mono);
+		font-size: 0.78rem;
+		line-height: 1.55;
+		color: var(--sl-color-gray-2);
+		overflow-x: auto;
+	}
+
+	.hisoblagich {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem 1rem;
+		margin-bottom: 0.85rem;
+		font-family: var(--sl-font-mono);
+		font-size: 0.78rem;
+		color: var(--sl-color-gray-3);
+	}
+
+	.hisoblagich b {
+		color: var(--sl-color-white);
+	}
+
+	.jami-qism b {
+		color: var(--blok-2);
+	}
+
+	.panjara {
+		display: grid;
+		grid-template-columns: repeat(var(--n), minmax(0, 2.1rem));
+		gap: 2px;
+	}
+
+	.katak {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		aspect-ratio: 1 / 1;
+		border: 1px solid var(--sl-color-gray-6);
+		border-radius: 3px;
+		background: var(--sl-color-black);
+		font-family: var(--sl-font-mono);
+		font-size: 0.7rem;
+		color: var(--sl-color-gray-4);
+	}
+
+	/* Panjara o'lchamidan tashqarida qolgan kataklar — o'lcham surgichi
+	   kichraytirilganda. Ular DOM'da qoladi, lekin ko'rinmaydi. */
+	.katak[data-holat='tashqarida'] {
+		display: none;
+	}
+
+	.katak[data-holat='bosh'] {
+		opacity: 0.35;
+		color: transparent;
+	}
+
+	.katak[data-holat='toldi'] {
+		border-color: var(--blok-2-chegara);
+		background: var(--blok-2-fon);
+		color: var(--blok-2);
+	}
+
+	.katak[data-holat='joriy'] {
+		border-color: var(--blok-2);
+		background: var(--blok-2);
+		color: var(--sl-color-black);
+		font-weight: 700;
+	}
+
+	.izoh {
+		margin: 0.85rem 0 0 0;
+		min-height: 3em;
+		font-family: var(--sl-font-mono);
+		font-size: 0.82rem;
+		line-height: 1.55;
+		color: var(--sl-color-gray-2);
+	}
+
+	.jadval-chizuvchi[data-natija='tugadi'] .izoh {
+		font-family: inherit;
+		color: var(--blok-1);
+	}
+
+	.qadam:disabled,
+	.oxirigacha:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+</style>

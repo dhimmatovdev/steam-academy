@@ -1,0 +1,176 @@
+---
+title: '5-dars: if, elif, else'
+description: "Shart — Bul ifoda. elif zinapoyasida tartib natijani o'zgartiradi: birinchi mos shart ishga tushadi."
+sidebar:
+  label: '5-dars'
+  order: 5
+---
+
+import { AIOgoh, Atama, Bloknoma, DarsTugadi, Hayotda, Kod, KodBashorat, Maqsad, Muhim, Qatlam, Sinov, Xato } from '@components';
+import ShartDaraxti from '../../../components/sim/ShartDaraxti.astro';
+
+<Bloknoma blok={2} modul="python-basic" />
+
+<Hayotda soha="Maktab">
+	Baho qo'yish qoidasi oddiy: 90 balldan yuqori — 5, 70 dan yuqori — 4, 50 dan
+	yuqori — 3. Lekin programmada shartlarni teskari tartibda yozsangiz, 95 ball olgan
+	o'quvchi ham 3 oladi. Bitta qatorning joyi butun sinfning bahosini buzadi.
+</Hayotda>
+
+<Maqsad>
+- `if`, `elif`, `else` bilan programmaga qaror qabul qilishni o'rgatasiz
+- taqqoslash va mantiqiy amallardan shart tuzasiz
+- `elif` zinapoyasida tartibning ahamiyatini tushuntirasiz
+</Maqsad>
+
+## Nazariya
+
+### Shart — Bul ifoda
+
+`if` dan keyin yozilgan narsa faqat ikki qiymatdan birini beradi: `True` yoki `False`.
+Bu [CF 5-darsdagi Bul mantiqi](/computer-fundamentals/lesson-05/) ning aynan o'zi,
+faqat darvozalar o'rniga kod.
+
+<Atama soz="shart" eng="condition">
+	`True` yoki `False` qaytaradigan ifoda. Taqqoslashdan tuziladi: `==` (teng),
+	`!=` (teng emas), `<`, `>`, `<=`, `>=`.
+</Atama>
+
+Bir nechta shartni `and`, `or`, `not` bilan bog'lash mumkin: `yosh >= 13 and yosh <= 17`.
+`==` bilan `=` ni aralashtirmang: `=` bog'laydi, `==` taqqoslaydi.
+
+### Otstup — bu sintaksis
+
+Python'da `if` ostidagi qatorlar 4 bo'shliq bilan surilib yoziladi. Otstup faqat
+chiroylik uchun emas — u kodning **qaysi qismi shart ichida** ekanini belgilaydi.
+Boshqa tillarda bu vazifani qavslar bajaradi.
+
+<Kod
+	kod={`ball = 85
+if ball >= 90:
+    print("Baho: 5")
+elif ball >= 70:
+    print("Baho: 4")
+elif ball >= 50:
+    print("Baho: 3")
+else:
+    print("Baho: 2")`}
+	sarlavha="baho.py"
+	qatorlar={[4]}
+/>
+
+### Zinapoyada faqat bitta shox ishlaydi
+
+Python shartlarni yuqoridan pastga tekshiradi va **birinchi** mos kelganini bajaradi.
+Qolgan `elif` lar hatto tekshirilmaydi. Shu sababli shartlar qattiqdan yumshoqqa
+tartibda yozilishi kerak.
+
+<Muhim turi="gap">
+	`elif` zinapoyasida tartib natijani o'zgartiradi. `ball >= 50` shartini
+	yuqoriga qo'ysangiz, 95 ball olgan o'quvchi ham unga tushadi va 3 oladi —
+	qolgan shartlarga navbat kelmaydi.
+</Muhim>
+
+## Bashorat qiling
+
+<KodBashorat
+	kod={`yosh = 15
+if yosh >= 18:
+    print("Voyaga yetgan")
+elif yosh >= 13:
+    print("O'smir")
+else:
+    print("Bola")
+print("Tekshirish tugadi")`}
+	javob={`O'smir
+Tekshirish tugadi`}
+	izoh="Birinchi shart yolg'on, ikkinchisi rost — shu shox ishladi va zinapoya tugadi. Oxirgi print zinapoyadan tashqarida (otstupi yo'q), shuning uchun har holatda bajariladi."
+/>
+
+<KodBashorat
+	kod={`ball = 95
+if ball >= 50:
+    print("3")
+elif ball >= 90:
+    print("5")`}
+	javob={`3`}
+	izoh="Tartib buzilgan: birinchi shart 95 ball uchun ham rost, shuning uchun 3 chiqdi va ikkinchi shart tekshirilmadi ham."
+/>
+
+## Sinab ko'r
+
+Ballni suring va qaysi shox ishlayotganini kuzating. Keyin «Teskari tartib» tugmasini
+bosib, xuddi shu ballni qayta sinang — natija o'zgaradi.
+
+<ShartDaraxti />
+
+## Xatoni toping
+
+<Xato
+	kod={`ball = 85
+if ball = 90:
+    print("Aynan 90")`}
+	traceback={`  File "baho.py", line 2
+    if ball = 90:
+       ^^^^^^^^^
+SyntaxError: invalid syntax. Maybe you meant '==' or ':=' instead of '='?`}
+	sabab="Shart ichida bitta `=` yozilgan. Bitta teng — bog'lash amali, taqqoslash uchun ikkita kerak: `==`."
+>
+	Python bu xatoni ishga tushirmasdanoq ushlaydi va hatto to'g'ri variantni ham
+	aytadi. Xato xabarining oxirgi qatorini o'qish odati ko'p vaqtni tejaydi.
+</Xato>
+
+## O'zingizni sinang
+
+<Sinov raqam={1} savol="if dan keyin yozilgan ifoda qanday qiymat qaytarishi kerak?">
+	Bul qiymat: <code>True</code> yoki <code>False</code>. Taqqoslash amallari
+	(<code>==</code>, <code>&gt;=</code>, <code>!=</code>) aynan shuni beradi.
+</Sinov>
+
+<Sinov raqam={2} savol="= va == farqi nimada?">
+	<code>=</code> qiymatni o'zgaruvchiga bog'laydi (buyruq), <code>==</code> ikki
+	qiymatni taqqoslaydi va Bul natija beradi (savol).
+</Sinov>
+
+<Sinov raqam={3} savol="ball = 95, birinchi shart ball >= 50 bo'lsa natija nima va nega?">
+	3 chiqadi. Python birinchi mos shartni bajaradi va zinapoyani tark etadi —
+	<code>ball &gt;= 90</code> shartiga navbat kelmaydi.
+</Sinov>
+
+<Sinov raqam={4} savol="Python'da otstup (4 bo'shliq) nima vazifani bajaradi?">
+	Qaysi qatorlar shart ichida ekanini belgilaydi. Boshqa tillardagi qavslarning
+	o'rnini bosadi — ya'ni bezak emas, sintaksis.
+</Sinov>
+
+<Sinov raqam={5} savol="13 dan 17 gacha bo'lgan yoshni bitta shartda qanday tekshirasiz?">
+	<code>yosh &gt;= 13 and yosh &lt;= 17</code>. Python'da qisqartma ham ishlaydi:
+	<code>13 &lt;= yosh &lt;= 17</code>.
+</Sinov>
+
+## Topshiriq
+
+<Qatlam>
+	<Fragment slot="asos">
+		Havo haroratini so'rab, kiyim maslahatini beruvchi programma yozing: 25 dan
+		yuqori — «futbolka», 15 dan yuqori — «kofta», 5 dan yuqori — «kurtka», aks
+		holda — «palto». Har shartni sinab, to'rt holat ham ishlashiga ishonch hosil
+		qiling.
+	</Fragment>
+	<Fragment slot="mustahkam">
+		Ballni so'rab baho qo'yuvchi programma yozing (90/70/50 chegaralari bilan).
+		Qo'shimcha shart: ball 0 dan kichik yoki 100 dan katta bo'lsa «Xato: ball
+		0–100 orasida bo'lishi kerak» chiqarsin. Bu tekshiruvni zinapoyaning
+		**boshiga** qo'ying va nega aynan boshiga qo'yilishini izohda yozing.
+	</Fragment>
+	<Fragment slot="chuqur">
+		Uchburchakning uch tomonini so'rab, uni turini aniqlovchi programma yozing:
+		umuman uchburchak bo'la oladimi (har tomon qolgan ikkitasining yig'indisidan
+		kichikmi), teng tomonlimi, teng yonlimi, to'g'ri burchaklimi. Chegara
+		holatlarini alohida sinang: 0 tomon, 1-2-3 (uchburchak emas), 3-4-5.
+		Shartlar tartibini qanday tanladingiz va nega — qisqa izoh yozing.
+	</Fragment>
+</Qatlam>
+
+<AIOgoh />
+
+<DarsTugadi dars={5} blok={2} modul="python-basic" />

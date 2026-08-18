@@ -1,0 +1,307 @@
+---
+/**
+ * ShartDaraxti — Python Basic 5-dars simulyatori.
+ *
+ * O'quvchi bahoni suradi, `if/elif/else` zinapoyasi yuqoridan pastga
+ * tekshiriladi va o'tilgan shox yoritiladi. Ikkinchi tugma shartlar
+ * TARTIBINI teskari qiladi — o'shanda hamma "5" olib qoladi.
+ *
+ * Pedagogik maqsad: `elif` zinapoyasida tartib natijani o'zgartiradi.
+ * Shart — Bul ifoda (CF 5-dars), lekin bu yerda muhimi tartib.
+ */
+import Simulyator from '../Simulyator.astro';
+
+/* To'g'ri tartib: yuqoridan pastga, qattiqdan yumshoqqa */
+const TOGRI = [
+	{ shart: 'ball >= 90', natija: '5' },
+	{ shart: 'ball >= 70', natija: '4' },
+	{ shart: 'ball >= 50', natija: '3' },
+	{ shart: 'else', natija: '2' },
+];
+
+/* Teskari tartib: birinchi shart hammani ushlab qoladi */
+const TESKARI = [
+	{ shart: 'ball >= 50', natija: '3' },
+	{ shart: 'ball >= 70', natija: '4' },
+	{ shart: 'ball >= 90', natija: '5' },
+	{ shart: 'else', natija: '2' },
+];
+---
+
+<Simulyator
+	sarlavha="Shart daraxti"
+	korsatma="Ballni suring va qaysi shox ishlayotganini kuzating. Tartibni almashtirib ko'ring."
+	blok={2}
+>
+	<Fragment slot="fallback">
+		<p>
+			Bu simulyatorda baho qo'yish zinapoyasi bor: `ball >= 90` bo'lsa 5, `>= 70`
+			bo'lsa 4, `>= 50` bo'lsa 3, aks holda 2. Ballni surganda qaysi shart birinchi
+			bajarilishini ko'rasiz.
+		</p>
+		<p>
+			JavaScript'siz sinash: 95 balli o'quvchini `ball >= 50` shartidan boshlanadigan
+			zinapoyaga qo'ying. Birinchi shart ham to'g'ri chiqadi — demak o'quvchi 3 oladi
+			va qolgan shartlar hatto tekshirilmaydi.
+		</p>
+	</Fragment>
+
+	<div
+		class="shart-daraxti not-content"
+		data-togri={JSON.stringify(TOGRI)}
+		data-teskari={JSON.stringify(TESKARI)}
+	>
+		<label class="ball-yorliq">
+			Ball: <output class="ball-qiymat">85</output>
+			<input type="range" class="ball-surgich" min="0" max="100" step="1" value="85" />
+		</label>
+
+		<div class="tartib-tanlov">
+			<button type="button" class="sim-tugma tartib" data-tartib="togri" aria-pressed="true">
+				To'g'ri tartib
+			</button>
+			<button type="button" class="sim-tugma tartib" data-tartib="teskari" aria-pressed="false">
+				Teskari tartib
+			</button>
+		</div>
+
+		<ol class="zinapoya"></ol>
+
+		<p class="xulosa" role="status" aria-live="polite"></p>
+	</div>
+
+	<Fragment slot="boshqaruv">
+		<button type="button" class="qayta">Qayta boshlash</button>
+	</Fragment>
+</Simulyator>
+
+<script>
+	interface Shox {
+		shart: string;
+		natija: string;
+	}
+
+	document.querySelectorAll<HTMLElement>('.simulyator').forEach((qobiq) => {
+		const quti = qobiq.querySelector<HTMLElement>('.shart-daraxti');
+		if (!quti) return;
+
+		const TARTIBLAR: Record<string, Shox[]> = {
+			togri: JSON.parse(quti.dataset.togri!),
+			teskari: JSON.parse(quti.dataset.teskari!),
+		};
+
+		const surgich = quti.querySelector<HTMLInputElement>('.ball-surgich')!;
+		const ballQiymat = quti.querySelector<HTMLElement>('.ball-qiymat')!;
+		const zinapoya = quti.querySelector<HTMLOListElement>('.zinapoya')!;
+		const xulosa = quti.querySelector<HTMLElement>('.xulosa')!;
+		const tartibTugmalar = [...quti.querySelectorAll<HTMLButtonElement>('.tartib')];
+		const qayta = qobiq.querySelector<HTMLButtonElement>('.qayta')!;
+
+		let tartib = 'togri';
+
+		/** Shartni haqiqiy Bul qiymatga aylantiradi (eval yo'q — qo'lda). */
+		function bahola(shart: string, ball: number): boolean {
+			if (shart === 'else') return true;
+			const son = Number(shart.replace('ball >= ', ''));
+			return ball >= son;
+		}
+
+		function chiz() {
+			const ball = Number(surgich.value);
+			ballQiymat.textContent = String(ball);
+			const shoxlar = TARTIBLAR[tartib]!;
+
+			zinapoya.replaceChildren();
+			let tanlandi = -1;
+
+			shoxlar.forEach((sh, i) => {
+				const li = document.createElement('li');
+				li.className = 'shox';
+
+				const kalit = i === 0 ? 'if' : sh.shart === 'else' ? 'else' : 'elif';
+				const kod = sh.shart === 'else' ? 'else:' : `${kalit} ${sh.shart}:`;
+
+				li.append(
+					Object.assign(document.createElement('span'), { className: 'shox-kod', textContent: kod }),
+					Object.assign(document.createElement('span'), {
+						className: 'shox-natija',
+						textContent: `baho = ${sh.natija}`,
+					}),
+					Object.assign(document.createElement('span'), { className: 'shox-holat' })
+				);
+
+				const holatEl = li.querySelector<HTMLElement>('.shox-holat')!;
+
+				if (tanlandi >= 0) {
+					/* Yuqoridagi shart bajarilgan — bu shart umuman tekshirilmaydi */
+					li.dataset.holat = 'tekshirilmadi';
+					holatEl.textContent = 'tekshirilmaydi';
+				} else if (bahola(sh.shart, ball)) {
+					li.dataset.holat = 'bajarildi';
+					holatEl.textContent = sh.shart === 'else' ? 'qolgan hamma holat' : 'True';
+					tanlandi = i;
+				} else {
+					li.dataset.holat = 'otdi';
+					holatEl.textContent = 'False';
+				}
+
+				zinapoya.append(li);
+			});
+
+			const natija = shoxlar[tanlandi]!.natija;
+			const kutilgan = ball >= 90 ? '5' : ball >= 70 ? '4' : ball >= 50 ? '3' : '2';
+
+			if (natija === kutilgan) {
+				xulosa.textContent = `Natija: baho = ${natija}. To'g'ri.`;
+				quti.dataset.baho = 'togri';
+			} else {
+				xulosa.textContent =
+					`Natija: baho = ${natija}, lekin ${ball} ball uchun ${kutilgan} bo'lishi kerak. ` +
+					'Birinchi mos shart ishga tushdi va qolganlari tekshirilmadi.';
+				quti.dataset.baho = 'xato';
+			}
+		}
+
+		surgich.addEventListener('input', chiz);
+
+		tartibTugmalar.forEach((tugma) => {
+			tugma.addEventListener('click', () => {
+				tartib = tugma.dataset.tartib!;
+				tartibTugmalar.forEach((t) => t.setAttribute('aria-pressed', String(t === tugma)));
+				chiz();
+			});
+		});
+
+		qayta.addEventListener('click', () => {
+			surgich.value = '85';
+			tartib = 'togri';
+			tartibTugmalar.forEach((t) => t.setAttribute('aria-pressed', String(t.dataset.tartib === 'togri')));
+			chiz();
+		});
+
+		chiz();
+	});
+</script>
+
+<style>
+	.ball-yorliq {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem 0.75rem;
+		font-size: 0.9rem;
+		color: var(--sl-color-gray-2);
+	}
+
+	.ball-qiymat {
+		min-width: 2.5rem;
+		font-family: var(--sl-font-mono);
+		font-size: 1.15rem;
+		font-weight: 700;
+		color: var(--blok-2);
+	}
+
+	.ball-surgich {
+		flex: 1 1 10rem;
+		min-width: 0;
+		accent-color: var(--blok-2);
+	}
+
+	.ball-surgich:focus-visible {
+		outline: 2px solid var(--sl-color-accent);
+		outline-offset: 3px;
+	}
+
+	.tartib-tanlov {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin: 0.85rem 0;
+	}
+
+	.tartib[aria-pressed='true'] {
+		border-color: var(--blok-2);
+		color: var(--blok-2);
+	}
+
+	.zinapoya {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: var(--sa-radius-kichik);
+		background: var(--sl-color-black);
+		overflow: hidden;
+	}
+
+	/* Shoxlar JS bilan yasaladi -> scoped klass olmaydi.
+	   Chegara: shablondagi .zinapoya */
+	.zinapoya :global(.shox) {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.35rem 0.75rem;
+		padding: 0.5rem 0.75rem;
+		border-left: 3px solid transparent;
+		font-family: var(--sl-font-mono);
+		font-size: 0.82rem;
+		line-height: 1.5;
+	}
+
+	.zinapoya :global(.shox + .shox) {
+		border-top: 1px solid var(--sl-color-gray-6);
+	}
+
+	.zinapoya :global(.shox-kod) {
+		color: var(--sl-color-gray-2);
+	}
+
+	.zinapoya :global(.shox-natija) {
+		color: var(--sl-color-gray-4);
+	}
+
+	.zinapoya :global(.shox-holat) {
+		margin-left: auto;
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--sl-color-gray-4);
+	}
+
+	/* Bajarilgan shox — darsning markazi: faqat BITTA shox ishlaydi */
+	.zinapoya :global(.shox[data-holat='bajarildi']) {
+		border-left-color: var(--blok-2);
+		background: var(--blok-2-fon);
+	}
+
+	.zinapoya :global(.shox[data-holat='bajarildi'] .shox-kod),
+	.zinapoya :global(.shox[data-holat='bajarildi'] .shox-natija),
+	.zinapoya :global(.shox[data-holat='bajarildi'] .shox-holat) {
+		color: var(--blok-2);
+		font-weight: 700;
+	}
+
+	.zinapoya :global(.shox[data-holat='tekshirilmadi']) {
+		opacity: 0.45;
+	}
+
+	.zinapoya :global(.shox[data-holat='tekshirilmadi'] .shox-kod) {
+		text-decoration: line-through;
+	}
+
+	.xulosa {
+		margin: 0.85rem 0 0 0;
+		min-height: 3em;
+		font-size: 0.9rem;
+		line-height: 1.55;
+		color: var(--sl-color-gray-2);
+	}
+
+	.shart-daraxti[data-baho='xato'] .xulosa {
+		color: var(--blok-5);
+	}
+
+	.shart-daraxti[data-baho='togri'] .xulosa {
+		color: var(--blok-1);
+	}
+</style>
